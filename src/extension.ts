@@ -5,6 +5,7 @@ import * as path from "path";
 import * as os from "os";
 
 import { ElectronBuildToolsConfigsProvider } from "./configsView";
+import { getConfigs } from "./utils";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];
@@ -50,6 +51,20 @@ function registerElectronBuildToolsCommands(
           encoding: "utf8",
         });
         configsProvider.refresh();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.useConfigQuickPick",
+      async () => {
+        const { configs } = getConfigs();
+        const selected = await vscode.window.showQuickPick(configs);
+
+        if (selected) {
+          childProcess.execSync(`electron-build-tools use ${selected}`, {
+            encoding: "utf8",
+          });
+          configsProvider.refresh();
+        }
       }
     ),
     vscode.commands.registerCommand(
