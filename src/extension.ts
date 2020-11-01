@@ -2,6 +2,9 @@ import * as vscode from "vscode";
 import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import * as os from "os";
+
+import { ElectronBuildToolsConfigsProvider } from "./configsView";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];
@@ -25,7 +28,10 @@ async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   }
 }
 
-function registerElectronBuildToolsCommands(context: vscode.ExtensionContext) {
+function registerElectronBuildToolsCommands(
+  context: vscode.ExtensionContext,
+  configsProvider: ElectronBuildToolsConfigsProvider
+) {
   context.subscriptions.push(
     vscode.commands.registerCommand("electron-build-tools.show.exe", () => {
       return childProcess
@@ -90,8 +96,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (workspaceFolders) {
     if (electronIsInWorkspace(workspaceFolders[0])) {
-      registerElectronBuildToolsCommands(context);
+      const configsProvider = new ElectronBuildToolsConfigsProvider();
+      registerElectronBuildToolsCommands(context, configsProvider);
       registerHelperCommands(context);
+      context.subscriptions.push(
+        vscode.window.registerTreeDataProvider(
+          "electron-build-tools:configs",
+          configsProvider
+        )
+      );
     }
   }
 }
