@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import * as childProcess from "child_process";
+import { getConfigs } from "./utils";
 
 export class ElectronBuildToolsConfigsProvider
   implements vscode.TreeDataProvider<Config> {
@@ -22,15 +22,12 @@ export class ElectronBuildToolsConfigsProvider
     const configs = [];
 
     if (!element) {
-      const configsOutput = childProcess
-        .execSync("electron-build-tools show configs", { encoding: "utf8" })
-        .trim();
-      for (const configName of configsOutput.split("\n")) {
-        const isActive = configName.trim().startsWith("*");
+      const { configs: configNames, activeConfig } = getConfigs();
+      for (const configName of configNames) {
         configs.push(
           new Config(
-            configName.replace("*", "").trim(),
-            isActive,
+            configName,
+            configName === activeConfig,
             vscode.TreeItemCollapsibleState.None
           )
         );

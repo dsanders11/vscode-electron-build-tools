@@ -55,6 +55,10 @@
         "command": "electron-build-tools.useConfig",
         "title": "Use Config",
         "icon": "$(check)"
+      },
+      {
+        "command": "electron-build-tools.useConfigQuickPick",
+        "title": "Electron Build Tools: Use Config"
       }
     ],
     "viewsContainers": {
@@ -78,8 +82,11 @@
     "menus": {
 			"commandPalette": [
 				{
-					"command": "electron-build-tools.useConfig",
+          "command": "electron-build-tools.useConfig",
 					"when": "false"
+        },
+				{
+          "command": "electron-build-tools.useConfigQuickPick"
         }
       ],
       "view/item/context": [
