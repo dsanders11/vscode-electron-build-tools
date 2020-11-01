@@ -20,7 +20,8 @@
 		"workspaceContains:ELECTRON_VERSION",
     "workspaceContains:electron/ELECTRON_VERSION",
     "onDebug",
-    "onDebugInitialConfigurations"
+    "onDebugInitialConfigurations",
+    "onView:electron-build-tools"
   ],
   "contributes": {
     "debuggers": [
@@ -48,7 +49,51 @@
           }
         ]
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "electron-build-tools.useConfig",
+        "title": "Use Config",
+        "icon": "$(check)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "electron-build-tools",
+          "title": "Electron Build Tools",
+          "icon": "images/icon.svg"
+        }
+      ]
+    },
+		"views": {
+			"electron-build-tools": [
+				{
+					"id": "electron-build-tools:configs",
+					"name": "Configs",
+					"contextualTitle": "Electron Build Tools"
+				}
+      ]
+    },
+    "menus": {
+			"commandPalette": [
+				{
+					"command": "electron-build-tools.useConfig",
+					"when": "false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "electron-build-tools.useConfig",
+          "when": "view == electron-build-tools:configs"
+        },
+        {
+          "command": "electron-build-tools.useConfig",
+          "when": "view == electron-build-tools:configs",
+          "group": "inline"
+        }
+      ]
+    }
   },
 	"main": "./out/extension.js",
 	"scripts": {
