@@ -47,10 +47,19 @@ function registerElectronBuildToolsCommands(
     vscode.commands.registerCommand(
       "electron-build-tools.useConfig",
       (config) => {
-        childProcess.execSync(`electron-build-tools use ${config.label}`, {
-          encoding: "utf8",
-        });
-        configsProvider.refresh();
+        // Do an optimistic update for snappier UI
+        configsProvider.setActive(config.label);
+
+        childProcess.exec(
+          `electron-build-tools use ${config.label}`,
+          {
+            encoding: "utf8",
+          },
+          () => {
+            // Hard refresh in case something has gone awry
+            configsProvider.refresh();
+          }
+        );
       }
     ),
     vscode.commands.registerCommand(
@@ -60,10 +69,19 @@ function registerElectronBuildToolsCommands(
         const selected = await vscode.window.showQuickPick(configs);
 
         if (selected) {
-          childProcess.execSync(`electron-build-tools use ${selected}`, {
-            encoding: "utf8",
-          });
-          configsProvider.refresh();
+          // Do an optimistic update for snappier UI
+          configsProvider.setActive(selected);
+
+          childProcess.exec(
+            `electron-build-tools use ${selected}`,
+            {
+              encoding: "utf8",
+            },
+            () => {
+              // Hard refresh in case something has gone awry
+              configsProvider.refresh();
+            }
+          );
         }
       }
     ),
