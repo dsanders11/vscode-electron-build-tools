@@ -61,6 +61,10 @@
     ],
     "commands": [
       {
+        "command": "electron-build-tools.build",
+        "title": "Electron Build Tools: Build"
+      },
+      {
         "command": "electron-build-tools.useConfig",
         "title": "Use Config",
         "icon": "$(check)"
@@ -72,6 +76,10 @@
       {
         "command": "electron-build-tools.show.goma",
         "title": "Electron Build Tools: Show Goma"
+      },
+      {
+        "command": "electron-build-tools.sync",
+        "title": "Electron Build Tools: Sync"
       }
     ],
     "viewsContainers": {
@@ -95,6 +103,9 @@
     "menus": {
       "commandPalette": [
         {
+          "command": "electron-build-tools.build"
+        },
+        {
           "command": "electron-build-tools.useConfig",
           "when": "false"
         },
@@ -103,6 +114,9 @@
         },
         {
           "command": "electron-build-tools.show.goma"
+        },
+        {
+          "command": "electron-build-tools.sync"
         }
       ],
       "view/item/context": [
