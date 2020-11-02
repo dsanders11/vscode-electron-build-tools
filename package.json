@@ -24,6 +24,12 @@
     "onView:electron-build-tools"
   ],
   "contributes": {
+    "jsonValidation": [
+      {
+        "fileMatch": "evm.*.json",
+        "url": "./evm-config-schema.json"
+      }
+    ],
     "debuggers": [
       {
         "type": "electron.cpp.windows",
