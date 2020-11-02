@@ -2,10 +2,9 @@ import * as vscode from "vscode";
 import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import * as os from "os";
 
 import { ElectronBuildToolsConfigsProvider } from "./configsView";
-import { getConfigs } from "./utils";
+import { getConfigs, getConfigsFilePath } from "./utils";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];
@@ -55,9 +54,14 @@ function registerElectronBuildToolsCommands(
           {
             encoding: "utf8",
           },
-          () => {
-            // Hard refresh in case something has gone awry
-            configsProvider.refresh();
+          (error, stdout) => {
+            if (error || stdout.trim() !== `Now using config ${config.label}`) {
+              vscode.window.showErrorMessage(
+                "Failed to set active Electron build-tools config"
+              );
+              configsProvider.setActive(null);
+              configsProvider.refresh();
+            }
           }
         );
       }
@@ -77,9 +81,14 @@ function registerElectronBuildToolsCommands(
             {
               encoding: "utf8",
             },
-            () => {
-              // Hard refresh in case something has gone awry
-              configsProvider.refresh();
+            (error, stdout) => {
+              if (error || stdout.trim() !== `Now using config ${selected}`) {
+                vscode.window.showErrorMessage(
+                  "Failed to set active Electron build-tools config"
+                );
+                configsProvider.setActive(null);
+                configsProvider.refresh();
+              }
             }
           );
         }
@@ -89,9 +98,7 @@ function registerElectronBuildToolsCommands(
       "electron-build-tools.openConfig",
       async (configName) => {
         const configFilePath = path.join(
-          os.homedir(),
-          ".electron_build_tools",
-          "configs",
+          getConfigsFilePath(),
           `evm.${configName}.json`
         );
         try {
