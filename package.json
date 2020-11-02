@@ -8,7 +8,7 @@
     "url": "https://github.com/dsanders11/vscode-electron-build-tools.git"
   },
   "license": "MIT",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.50.0"
   },
