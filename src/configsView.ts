@@ -10,8 +10,7 @@ export class ElectronBuildToolsConfigsProvider
   private _onDidChangeTreeData = new vscode.EventEmitter<
     Config | undefined | void
   >();
-  readonly onDidChangeTreeData: vscode.Event<Config | undefined | void> = this
-    ._onDidChangeTreeData.event;
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private _cachedConfigs: Config[] = [];
 
   constructor() {
