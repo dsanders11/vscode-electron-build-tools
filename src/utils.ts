@@ -2,8 +2,17 @@ import * as childProcess from "child_process";
 import * as path from "path";
 import * as os from "os";
 
+export function isBuildToolsInstalled() {
+  const result = childProcess.spawnSync(
+    os.platform() === "win32" ? "where" : "which",
+    ["electron-build-tools"]
+  );
+
+  return result.status === 0;
+}
+
 export function getConfigs() {
-  const configs = [];
+  const configs: string[] = [];
   let activeConfig = null;
 
   const configsOutput = childProcess
