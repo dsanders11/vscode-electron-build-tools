@@ -25,3 +25,12 @@ export function getConfigs() {
 export function getConfigsFilePath() {
   return path.join(os.homedir(), ".electron_build_tools", "configs");
 }
+
+export function killThemAll(cp: childProcess.ChildProcess) {
+  if (os.platform() === "win32") {
+    // Kill the child processes or they'll keep running
+    childProcess.spawn("taskkill", ["/pid", cp.pid.toString(), "/f", "/t"]);
+  } else {
+    cp.kill("SIGINT");
+  }
+}
