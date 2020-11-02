@@ -112,6 +112,52 @@ function registerElectronBuildToolsCommands(
         }
       );
     }),
+    vscode.commands.registerCommand(
+      "electron-build-tools.remove-config",
+      (config) => {
+        childProcess.exec(
+          `electron-build-tools remove ${config.label}`,
+          {
+            encoding: "utf8",
+          },
+          (error, stdout, stderr) => {
+            if (error || stdout.trim() !== `Removed config ${config.label}`) {
+              vscode.window.showErrorMessage(
+                `Failed to remove config: ${stderr.trim()}`
+              );
+            } else {
+              // TBD - This isn't very noticeable
+              vscode.window.setStatusBarMessage("Removed config");
+              configsProvider.refresh();
+            }
+          }
+        );
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.sanitize-config",
+      (config) => {
+        childProcess.exec(
+          `electron-build-tools sanitize-config ${config.label}`,
+          {
+            encoding: "utf8",
+          },
+          (error, stdout, stderr) => {
+            if (
+              error ||
+              stdout.trim() !== `SUCCESS Sanitized contents of ${config.label}`
+            ) {
+              vscode.window.showErrorMessage(
+                `Failed to sanitize config: ${stderr.trim()}`
+              );
+            } else {
+              // TBD - This isn't very noticeable
+              vscode.window.setStatusBarMessage("Sanitized config");
+            }
+          }
+        );
+      }
+    ),
     vscode.commands.registerCommand("electron-build-tools.show.exe", () => {
       return childProcess
         .execSync("electron-build-tools show exe", { encoding: "utf8" })

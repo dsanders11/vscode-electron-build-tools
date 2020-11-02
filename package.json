@@ -76,6 +76,14 @@
         "icon": "$(check)"
       },
       {
+        "command": "electron-build-tools.remove-config",
+        "title": "Remove Config"
+      },
+      {
+        "command": "electron-build-tools.sanitize-config",
+        "title": "Sanitize Config"
+      },
+      {
         "command": "electron-build-tools.useConfigQuickPick",
         "title": "Electron Build Tools: Use Config"
       },
@@ -131,6 +139,14 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "electron-build-tools.remove-config",
+          "when": "view == electron-build-tools:configs && viewItem != active-config"
+        },
+        {
+          "command": "electron-build-tools.sanitize-config",
+          "when": "view == electron-build-tools:configs"
+        },
         {
           "command": "electron-build-tools.useConfig",
           "when": "view == electron-build-tools:configs"
