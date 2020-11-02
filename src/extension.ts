@@ -100,7 +100,7 @@ function registerElectronBuildToolsCommands(
                     lastBuildProgress = buildProgress;
                   }
                 } else {
-                  if (/goma/.test(line)) {
+                  if (/Running.*goma/.test(line)) {
                     progress.report({ message: "Starting Goma" });
                   } else if (/Running.*ninja/.test(line)) {
                     progress.report({ message: "Starting" });
