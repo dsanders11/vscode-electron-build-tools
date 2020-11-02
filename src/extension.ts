@@ -38,6 +38,9 @@ function registerElectronBuildToolsCommands(
         .execSync("electron-build-tools show exe", { encoding: "utf8" })
         .trim();
     }),
+    vscode.commands.registerCommand("electron-build-tools.show.goma", () => {
+      childProcess.execSync("electron-build-tools show goma");
+    }),
     vscode.commands.registerCommand("electron-build-tools.show.root", () => {
       return childProcess
         .execSync("electron-build-tools show root", { encoding: "utf8" })
