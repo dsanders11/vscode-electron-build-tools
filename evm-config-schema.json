@@ -1,0 +1,68 @@
+{
+  "title": "JSON schema for EVM configuration files",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "goma": {
+      "description": "Goma mode to use",
+      "type": "string",
+      "enum": ["cache-only", "cluster", "none"],
+      "default": "cache-only"
+    },
+    "root": {
+      "description": "Path of the top directory. Home of the .gclient file",
+      "type": "string"
+    },
+    "remotes": {
+      "description": "Remotes for Git checkouts",
+      "type": "object",
+      "properties": {
+        "electron": {
+          "description": "Remotes for the Electron repo",
+          "type": "object",
+          "properties": {
+            "fork": {
+              "description": "Fork remote",
+              "type": "string"
+            },
+            "origin": {
+              "description": "Origin remote",
+              "type": "string"
+            }
+          }
+        },
+        "node": {
+          "description": "Remotes for the Node repo",
+          "type": "object",
+          "properties": {
+            "origin": {
+              "description": "Origin remote",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "gen": {
+      "description": "???",
+      "type": "object",
+      "properties": {
+        "args": {
+          "description": "Extra arguments for GN",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "out": {
+          "description": "Output directory",
+          "type": "string"
+        }
+      }
+    },
+    "env": {
+      "description": "Environment variables set when building Electron",
+      "type": "object"
+    }
+  }
+}
