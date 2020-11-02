@@ -1,6 +1,9 @@
+import * as path from "path";
+
+import * as chokidar from "chokidar";
 import * as vscode from "vscode";
 
-import { getConfigs } from "./utils";
+import { getConfigs, getConfigsFilePath } from "./utils";
 
 export class ElectronBuildToolsConfigsProvider
   implements vscode.TreeDataProvider<Config> {
@@ -11,9 +14,19 @@ export class ElectronBuildToolsConfigsProvider
     ._onDidChangeTreeData.event;
   private _cachedConfigs: Config[] = [];
 
-  setActive(configName: string) {
-    let oldActiveConfig;
-    let newActiveConfig;
+  constructor() {
+    const watcher = chokidar.watch(
+      path.join(getConfigsFilePath(), "evm-current.txt"),
+      { ignoreInitial: true }
+    );
+    watcher.on("change", () => {
+      this.refresh();
+    });
+  }
+
+  setActive(configName: string | null): Config {
+    let oldActiveConfig: Config;
+    let newActiveConfig: Config;
 
     for (const config of this._cachedConfigs) {
       const isActive = config.label === configName;
@@ -27,8 +40,10 @@ export class ElectronBuildToolsConfigsProvider
     }
 
     // Take off the old label first, then apply new label
-    this._onDidChangeTreeData.fire(oldActiveConfig);
-    this._onDidChangeTreeData.fire(newActiveConfig);
+    this._onDidChangeTreeData.fire(oldActiveConfig!);
+    this._onDidChangeTreeData.fire(newActiveConfig!);
+
+    return oldActiveConfig!;
   }
 
   refresh(): void {
