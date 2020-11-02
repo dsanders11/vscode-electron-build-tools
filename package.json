@@ -114,6 +114,12 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "electron-build-tools:configs",
+        "contents": "In order to use the Electron Build Tools extension, you need build-tools installed.\nFind out more at the [build-tools repository](https://githbu.com/electron/build-tools)."
+      }
+    ],
     "menus": {
       "commandPalette": [
         {
@@ -141,19 +147,19 @@
       "view/item/context": [
         {
           "command": "electron-build-tools.remove-config",
-          "when": "view == electron-build-tools:configs && viewItem != active-config"
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
           "command": "electron-build-tools.sanitize-config",
-          "when": "view == electron-build-tools:configs"
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
           "command": "electron-build-tools.useConfig",
-          "when": "view == electron-build-tools:configs"
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
           "command": "electron-build-tools.useConfig",
-          "when": "view == electron-build-tools:configs",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
           "group": "inline"
         }
       ]

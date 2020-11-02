@@ -3,12 +3,12 @@ import * as path from "path";
 import * as chokidar from "chokidar";
 import * as vscode from "vscode";
 
-import { getConfigs, getConfigsFilePath } from "./utils";
+import { getConfigs, getConfigsFilePath, isBuildToolsInstalled } from "./utils";
 
 export class ElectronBuildToolsConfigsProvider
-  implements vscode.TreeDataProvider<Config> {
+  implements vscode.TreeDataProvider<vscode.TreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<
-    Config | undefined | void
+    vscode.TreeItem | undefined | void
   >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private _cachedConfigs: Config[] = [];
@@ -49,15 +49,16 @@ export class ElectronBuildToolsConfigsProvider
     this._onDidChangeTreeData.fire();
   }
 
-  getTreeItem(element: Config): vscode.TreeItem {
+  getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }
 
-  getChildren(element?: Config): Thenable<Config[]> {
-    const configs = [];
+  getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
+    const configs: vscode.TreeItem[] = [];
 
-    if (!element) {
+    if (!element && isBuildToolsInstalled()) {
       const { configs: configNames, activeConfig } = getConfigs();
+
       for (const configName of configNames) {
         configs.push(
           new Config(
@@ -67,9 +68,13 @@ export class ElectronBuildToolsConfigsProvider
           )
         );
       }
-    }
 
-    this._cachedConfigs = configs;
+      if (configs.length === 0) {
+        configs.push(new vscode.TreeItem("There are no configs"));
+      } else {
+        this._cachedConfigs = configs as Config[];
+      }
+    }
 
     return Promise.resolve(configs);
   }
@@ -96,7 +101,7 @@ class Config extends vscode.TreeItem {
     const currentDescription = this.description;
 
     this.description = isActive ? "(Active)" : undefined;
-    this.contextValue = isActive ? "active-config" : undefined;
+    this.contextValue = isActive ? "active-config" : "config";
 
     return currentDescription !== this.description;
   }
