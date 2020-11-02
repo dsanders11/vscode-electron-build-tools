@@ -103,20 +103,25 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "electron-build-tools.build"
+          "command": "electron-build-tools.build",
+          "group": "Electron Build Tools"
         },
         {
           "command": "electron-build-tools.useConfig",
-          "when": "false"
+          "when": "false",
+          "group": "Electron Build Tools"
         },
         {
-          "command": "electron-build-tools.useConfigQuickPick"
+          "command": "electron-build-tools.useConfigQuickPick",
+          "group": "Electron Build Tools"
         },
         {
-          "command": "electron-build-tools.show.goma"
+          "command": "electron-build-tools.show.goma",
+          "group": "Electron Build Tools"
         },
         {
-          "command": "electron-build-tools.sync"
+          "command": "electron-build-tools.sync",
+          "group": "Electron Build Tools"
         }
       ],
       "view/item/context": [
