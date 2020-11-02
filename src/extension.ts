@@ -330,7 +330,12 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:configs",
           configsProvider
-        )
+        ),
+        vscode.workspace.onDidOpenTextDocument((document) => {
+          if (path.basename(document.fileName) === "DEPS") {
+            vscode.languages.setTextDocumentLanguage(document, "python");
+          }
+        })
       );
     }
   }
