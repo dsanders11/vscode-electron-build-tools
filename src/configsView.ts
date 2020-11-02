@@ -96,6 +96,7 @@ class Config extends vscode.TreeItem {
     const currentDescription = this.description;
 
     this.description = isActive ? "(Active)" : undefined;
+    this.contextValue = isActive ? "active-config" : undefined;
 
     return currentDescription !== this.description;
   }
