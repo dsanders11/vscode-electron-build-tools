@@ -6,7 +6,11 @@
     "goma": {
       "description": "Goma mode to use",
       "type": "string",
-      "enum": ["cache-only", "cluster", "none"],
+      "enum": [
+        "cache-only",
+        "cluster",
+        "none"
+      ],
       "default": "cache-only"
     },
     "root": {
@@ -44,7 +48,7 @@
       }
     },
     "gen": {
-      "description": "???",
+      "description": "Configuration for GN",
       "type": "object",
       "properties": {
         "args": {
@@ -62,7 +66,17 @@
     },
     "env": {
       "description": "Environment variables set when building Electron",
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "GIT_CACHE_PATH": {
+          "description": "Path to use as git cache for gclient",
+          "type": "string"
+        },
+        "CHROMIUM_BUILDTOOLS_PATH": {
+          "description": "Path of Chromium buildtools in the checkout",
+          "type": "string"
+        }
+      }
     }
   }
 }

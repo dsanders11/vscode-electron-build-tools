@@ -47,7 +47,7 @@
     "jsonValidation": [
       {
         "fileMatch": "evm.*.json",
-        "url": "./evm-config-schema.json"
+        "url": "./schema/evm-config-schema.json"
       }
     ],
     "debuggers": [
