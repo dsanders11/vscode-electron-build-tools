@@ -91,7 +91,7 @@
         "title": "Electron Build Tools: Build"
       },
       {
-        "command": "electron-build-tools.useConfig",
+        "command": "electron-build-tools.use-config",
         "title": "Use Config",
         "icon": "$(check)"
       },
@@ -104,7 +104,7 @@
         "title": "Sanitize Config"
       },
       {
-        "command": "electron-build-tools.useConfigQuickPick",
+        "command": "electron-build-tools.use-config.quick-pick",
         "title": "Electron Build Tools: Use Config"
       },
       {
@@ -147,12 +147,12 @@
           "group": "Electron Build Tools"
         },
         {
-          "command": "electron-build-tools.useConfig",
+          "command": "electron-build-tools.use-config",
           "when": "false",
           "group": "Electron Build Tools"
         },
         {
-          "command": "electron-build-tools.useConfigQuickPick",
+          "command": "electron-build-tools.use-config.quick-pick",
           "group": "Electron Build Tools"
         },
         {
@@ -174,11 +174,11 @@
           "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
-          "command": "electron-build-tools.useConfig",
+          "command": "electron-build-tools.use-config",
           "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
-          "command": "electron-build-tools.useConfig",
+          "command": "electron-build-tools.use-config",
           "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
           "group": "inline"
         }

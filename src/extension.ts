@@ -171,7 +171,7 @@ function registerElectronBuildToolsCommands(
       );
     }),
     vscode.commands.registerCommand(
-      "electron-build-tools.useConfig",
+      "electron-build-tools.use-config",
       (config) => {
         // Do an optimistic update for snappier UI
         configsProvider.setActive(config.label);
@@ -194,7 +194,7 @@ function registerElectronBuildToolsCommands(
       }
     ),
     vscode.commands.registerCommand(
-      "electron-build-tools.useConfigQuickPick",
+      "electron-build-tools.use-config.quick-pick",
       async () => {
         const { configs } = getConfigs();
         const selected = await vscode.window.showQuickPick(configs);
