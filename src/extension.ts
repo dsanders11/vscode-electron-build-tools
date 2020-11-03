@@ -39,6 +39,7 @@ function registerElectronBuildToolsCommands(
 
       const buildEnv = {
         ...process.env,
+        FORCE_COLOR: "true",
         NINJA_STATUS: "%p %f/%t ",
       };
 
@@ -145,18 +146,29 @@ function registerElectronBuildToolsCommands(
       const command = "electron-build-tools sync";
       const operationName = "Electron Build Tools - Syncing";
 
+      const syncEnv = {
+        ...process.env,
+        FORCE_COLOR: "true",
+      };
+
       let initialProgress = false;
 
-      runAsTask(operationName, "sync", command, {}, (progress, line) => {
-        if (/running.*apply_all_patches\.py/.test(line)) {
-          progress.report({ message: "Applying Patches" });
-        } else if (/Hook.*apply_all_patches\.py.*took/.test(line)) {
-          progress.report({ message: "Finishing Up" });
-        } else if (!initialProgress) {
-          initialProgress = true;
-          progress.report({ message: "Dependencies" });
+      runAsTask(
+        operationName,
+        "sync",
+        command,
+        { env: syncEnv },
+        (progress, line) => {
+          if (/running.*apply_all_patches\.py/.test(line)) {
+            progress.report({ message: "Applying Patches" });
+          } else if (/Hook.*apply_all_patches\.py.*took/.test(line)) {
+            progress.report({ message: "Finishing Up" });
+          } else if (!initialProgress) {
+            initialProgress = true;
+            progress.report({ message: "Dependencies" });
+          }
         }
-      });
+      );
     }),
     vscode.commands.registerCommand(
       "electron-build-tools.useConfig",
