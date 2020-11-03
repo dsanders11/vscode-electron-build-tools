@@ -1,4 +1,5 @@
 import * as childProcess from "child_process";
+import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
@@ -43,4 +44,15 @@ export function getConfigs() {
 
 export function getConfigsFilePath() {
   return path.join(os.homedir(), ".electron_build_tools", "configs");
+}
+
+export function getConfigDefaultTarget() {
+  const configFilename = childProcess
+    .execSync("electron-build-tools show current --filename --no-name", {
+      encoding: "utf8",
+    })
+    .trim();
+
+  return JSON.parse(fs.readFileSync(configFilename, { encoding: "utf8" }))
+    .defaultTarget;
 }

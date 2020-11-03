@@ -4,9 +4,15 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { ElectronBuildToolsConfigsProvider } from "./configsView";
+import { blankConfigEnumValue, buildTargets } from "./constants";
 import { HelpTreeDataProvider } from "./helpView";
 import { runAsTask } from "./tasks";
-import { getConfigs, getConfigsFilePath, isBuildToolsInstalled } from "./utils";
+import {
+  getConfigDefaultTarget,
+  getConfigs,
+  getConfigsFilePath,
+  isBuildToolsInstalled,
+} from "./utils";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];
@@ -35,9 +41,92 @@ function registerElectronBuildToolsCommands(
   configsProvider: ElectronBuildToolsConfigsProvider
 ) {
   context.subscriptions.push(
-    vscode.commands.registerCommand("electron-build-tools.build", () => {
-      const command = "electron-build-tools build";
+    vscode.commands.registerCommand("electron-build-tools.build", async () => {
       const operationName = "Electron Build Tools - Building";
+
+      const buildConfig = vscode.workspace.getConfiguration(
+        "vscode-electron-build-tools.config.electronBuildTools.build"
+      );
+      const options = Object.entries(
+        buildConfig.get("buildOptions") as object
+      ).reduce((opts, [key, value]) => {
+        opts.push(`${key} ${value}`.trim());
+        return opts;
+      }, [] as string[]);
+      const ninjaArgs = Object.entries(
+        buildConfig.get("ninjaArgs") as object
+      ).reduce((opts, [key, value]) => {
+        opts.push(`${key} ${value}`.trim());
+        return opts;
+      }, [] as string[]);
+
+      let settingsDefaultTarget = buildConfig.get("target");
+      settingsDefaultTarget =
+        settingsDefaultTarget === blankConfigEnumValue
+          ? ""
+          : settingsDefaultTarget;
+      let target = settingsDefaultTarget;
+
+      let quickPick: vscode.QuickPick<vscode.QuickPickItem> | undefined;
+
+      if (buildConfig.get("showTargets")) {
+        // Settings default target takes precedence
+        const defaultTarget = settingsDefaultTarget || getConfigDefaultTarget();
+        const quickPickItems: vscode.QuickPickItem[] = [];
+
+        if (defaultTarget) {
+          quickPickItems.push({
+            label: defaultTarget,
+            description: `Default from ${
+              settingsDefaultTarget ? "Settings" : "Config"
+            }`,
+          });
+        } else {
+          quickPickItems.push({
+            label: "electron",
+            description: "Default",
+          });
+        }
+
+        for (const buildTarget of buildTargets) {
+          if (buildTarget !== quickPickItems[0].label) {
+            quickPickItems.push({
+              label: buildTarget,
+            });
+          }
+        }
+
+        quickPick = vscode.window.createQuickPick();
+        quickPick.items = quickPickItems;
+        quickPick.placeholder = "Target To Build";
+      }
+
+      if (quickPick) {
+        const userQuit = await new Promise((resolve) => {
+          quickPick!.onDidAccept(() => {
+            target = quickPick!.selectedItems[0].label || target;
+            resolve();
+          });
+          quickPick!.onDidHide(() => {
+            resolve(true);
+          });
+          quickPick!.show();
+        });
+
+        if (userQuit) {
+          return;
+        }
+      }
+
+      const command = [
+        "electron-build-tools",
+        "build",
+        ...options,
+        target,
+        ...ninjaArgs,
+      ]
+        .join(" ")
+        .trim();
 
       const buildEnv = {
         ...process.env,

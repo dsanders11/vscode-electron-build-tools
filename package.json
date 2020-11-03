@@ -24,6 +24,67 @@
     "onView:electron-build-tools"
   ],
   "contributes": {
+    "configuration": {
+      "title": "Electron Build Tools",
+      "properties": {
+        "vscode-electron-build-tools.config.electronBuildTools.build.showTargets": {
+          "type": "boolean",
+          "default": false,
+          "title": "Show Targets",
+          "description": "When building, show a list of build targets to choose from."
+        },
+        "vscode-electron-build-tools.config.electronBuildTools.build.target": {
+          "type": "string",
+          "description": "Target to build. Leave blank to use the config default.",
+          "enum": [
+            "----",
+            "breakpad",
+            "chromedriver",
+            "electron",
+            "electron:dist",
+            "mksnapshot",
+            "node:headers"
+          ],
+          "default": "----"
+        },
+        "vscode-electron-build-tools.config.electronBuildTools.build.ninjaArgs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Ninja Args",
+          "description": "Args to pass to Ninja when building."
+        },
+        "vscode-electron-build-tools.config.electronBuildTools.build.buildOptions": {
+          "type": "object",
+          "properties": {
+            "--no-goma": {
+              "type": "string",
+              "description": "Build without goma.",
+              "enum": [
+                ""
+              ]
+            },
+            "--gen": {
+              "type": "string",
+              "description": "Force a re-run of `gn gen` before building.",
+              "enum": [
+                ""
+              ]
+            },
+            "--target": {
+              "type": "string",
+              "description": "Forces a specific ninja target.",
+              "minLength": 1
+            }
+          },
+          "default": {},
+          "title": "Build Options",
+          "description": "Options to use when building."
+        }
+      }
+    },
     "languages": [
       {
         "id": "python",
