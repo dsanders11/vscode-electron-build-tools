@@ -272,7 +272,11 @@ function registerElectronBuildToolsCommands(
         );
 
         task.onDidWriteLine(({ progress, line }) => {
-          if (/running.*apply_all_patches\.py/.test(line)) {
+          // TODO - Regex for syncing dependencies: /^(\S+)\s+\(Elapsed: ([:\d]+)\)$/
+
+          if (/^gclient.*verify_validity:/.test(line)) {
+            progress.report({ message: "Verifying Validity" });
+          } else if (/running.*apply_all_patches\.py/.test(line)) {
             progress.report({ message: "Applying Patches" });
           } else if (/Hook.*apply_all_patches\.py.*took/.test(line)) {
             progress.report({ message: "Finishing Up" });
