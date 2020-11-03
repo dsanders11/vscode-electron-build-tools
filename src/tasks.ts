@@ -21,7 +21,8 @@ export function runAsTask(
   operationName: string,
   taskName: string,
   command: string,
-  shellOptions?: vscode.ShellExecutionOptions
+  shellOptions?: vscode.ShellExecutionOptions,
+  exitCodeHandler?: (exitCode: number) => boolean | undefined
 ): ElectronBuildToolsTask {
   const socketName = generateSocketName();
 
@@ -80,9 +81,13 @@ export function runAsTask(
 
         vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
           if (execution === taskExecution && exitCode && exitCode !== 0) {
-            vscode.window.showErrorMessage(
-              `'${operationName}' failed with exit code ${exitCode}`
-            );
+            const handled = exitCodeHandler ? exitCodeHandler(exitCode) : false;
+
+            if (!handled) {
+              vscode.window.showErrorMessage(
+                `'${operationName}' failed with exit code ${exitCode}`
+              );
+            }
           }
         });
 

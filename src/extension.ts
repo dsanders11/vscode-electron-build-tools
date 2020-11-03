@@ -141,30 +141,58 @@ function registerElectronBuildToolsCommands(
         .execSync("electron-build-tools show root", { encoding: "utf8" })
         .trim();
     }),
-    vscode.commands.registerCommand("electron-build-tools.sync", () => {
-      const command = "electron-build-tools sync";
-      const operationName = "Electron Build Tools - Syncing";
+    vscode.commands.registerCommand(
+      "electron-build-tools.sync",
+      (force?: boolean) => {
+        const command = `electron-build-tools sync${force ? " --force" : ""}`;
+        const operationName = `Electron Build Tools - ${
+          force ? "Force " : ""
+        }Syncing`;
 
-      const syncEnv = {
-        ...process.env,
-        FORCE_COLOR: "true",
-      };
+        const syncEnv = {
+          ...process.env,
+          FORCE_COLOR: "true",
+        };
 
-      let initialProgress = false;
+        let initialProgress = false;
 
-      const task = runAsTask(operationName, "sync", command, { env: syncEnv });
+        const task = runAsTask(
+          operationName,
+          "sync",
+          command,
+          { env: syncEnv },
+          (exitCode) => {
+            if (exitCode === 1 && !force) {
+              const confirm = "Force";
 
-      task.onDidWriteLine(({ progress, line }) => {
-        if (/running.*apply_all_patches\.py/.test(line)) {
-          progress.report({ message: "Applying Patches" });
-        } else if (/Hook.*apply_all_patches\.py.*took/.test(line)) {
-          progress.report({ message: "Finishing Up" });
-        } else if (!initialProgress) {
-          initialProgress = true;
-          progress.report({ message: "Dependencies" });
-        }
-      });
-    }),
+              vscode.window
+                .showErrorMessage("Sync failed. Try force sync?", confirm)
+                .then((value) => {
+                  if (value && value === confirm) {
+                    vscode.commands.executeCommand(
+                      "electron-build-tools.sync",
+                      true
+                    );
+                  }
+                });
+
+              return true;
+            }
+          }
+        );
+
+        task.onDidWriteLine(({ progress, line }) => {
+          if (/running.*apply_all_patches\.py/.test(line)) {
+            progress.report({ message: "Applying Patches" });
+          } else if (/Hook.*apply_all_patches\.py.*took/.test(line)) {
+            progress.report({ message: "Finishing Up" });
+          } else if (!initialProgress) {
+            initialProgress = true;
+            progress.report({ message: "Dependencies" });
+          }
+        });
+      }
+    ),
     vscode.commands.registerCommand(
       "electron-build-tools.use-config",
       (config) => {
