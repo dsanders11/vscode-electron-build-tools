@@ -204,25 +204,21 @@
         {
           "id": "electron-build-tools:welcome",
           "name": "Welcome",
-          "contextualTitle": "Electron Build Tools",
           "when": "electron-build-tools:ready && !electron-build-tools:build-tools-installed"
         },
         {
           "id": "electron-build-tools:workspace",
           "name": "Workspace",
-          "contextualTitle": "Electron Build Tools",
           "when": "electron-build-tools:ready && electron-build-tools:build-tools-installed && !electron-build-tools:is-electron-workspace "
         },
         {
           "id": "electron-build-tools:configs",
           "name": "Configs",
-          "contextualTitle": "Electron Build Tools",
           "when": "!electron-build-tools:ready || electron-build-tools:active"
         },
         {
           "id": "electron-build-tools:help",
           "name": "Help and Feedback",
-          "contextualTitle": "Electron Build Tools",
           "visibility": "collapsed"
         }
       ]
@@ -241,42 +237,34 @@
       "commandPalette": [
         {
           "command": "electron-build-tools.build",
-          "group": "Electron Build Tools",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
           "command": "electron-build-tools.use-config",
-          "group": "Electron Build Tools",
           "when": "false"
         },
         {
           "command": "electron-build-tools.use-config.quick-pick",
-          "group": "Electron Build Tools",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
           "command": "electron-build-tools.show.goma",
-          "group": "Electron Build Tools",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
           "command": "electron-build-tools.sync",
-          "group": "Electron Build Tools",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
           "command": "electron-build-tools.sync.force",
-          "group": "Electron Build Tools",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
           "command": "electron-build-tools.remove-config",
-          "group": "Electron Build Tools",
           "when": "false"
         },
         {
           "command": "electron-build-tools.sanitize-config",
-          "group": "Electron Build Tools",
           "when": "false"
         }
       ],
