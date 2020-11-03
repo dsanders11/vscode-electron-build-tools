@@ -14,11 +14,10 @@ export class ElectronBuildToolsConfigsProvider
   private _cachedConfigs: Config[] = [];
 
   constructor() {
-    const watcher = chokidar.watch(
-      path.join(getConfigsFilePath(), "evm-current.txt"),
-      { ignoreInitial: true }
-    );
-    watcher.on("change", () => {
+    const watcher = chokidar.watch(getConfigsFilePath(), {
+      ignoreInitial: true,
+    });
+    watcher.on("all", () => {
       this.refresh();
     });
   }
