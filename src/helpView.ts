@@ -28,7 +28,7 @@ export class HelpTreeDataProvider
           "Extension Documentation",
           new vscode.ThemeIcon("remote-explorer-documentation"),
           vscode.Uri.parse(
-            "https://github.com/dsanders11/vscode-electron-build-tools/tree/main/docs"
+            "https://github.com/dsanders11/vscode-electron-build-tools/wiki"
           )
         ),
         new LinkHelpTreeItem(
