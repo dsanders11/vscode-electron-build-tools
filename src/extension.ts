@@ -381,6 +381,8 @@ function registerHelperCommands(context: vscode.ExtensionContext) {
 export async function activate(context: vscode.ExtensionContext) {
   const workspaceFolders = vscode.workspace.workspaceFolders;
 
+  const buildToolsIsInstalled = isBuildToolsInstalled();
+
   vscode.commands.executeCommand(
     "setContext",
     "electron-build-tools:ready",
@@ -389,7 +391,7 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.commands.executeCommand(
     "setContext",
     "electron-build-tools:build-tools-installed",
-    isBuildToolsInstalled()
+    buildToolsIsInstalled
   );
   vscode.commands.executeCommand(
     "setContext",
@@ -397,7 +399,15 @@ export async function activate(context: vscode.ExtensionContext) {
     false
   );
 
-  if (workspaceFolders) {
+  // Always show the help view
+  context.subscriptions.push(
+    vscode.window.registerTreeDataProvider(
+      "electron-build-tools:help",
+      new HelpTreeDataProvider()
+    )
+  );
+
+  if (buildToolsIsInstalled && workspaceFolders) {
     const isElectronWorkspace = await electronIsInWorkspace(
       workspaceFolders[0]
     );
@@ -422,10 +432,6 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:configs",
           configsProvider
-        ),
-        vscode.window.registerTreeDataProvider(
-          "electron-build-tools:help",
-          new HelpTreeDataProvider()
         )
       );
     }
