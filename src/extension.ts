@@ -1,11 +1,17 @@
 import * as vscode from "vscode";
 import * as childProcess from "child_process";
 import * as fs from "fs";
+import * as net from "net";
 import * as path from "path";
 import * as readline from "readline";
 
 import { ElectronBuildToolsConfigsProvider } from "./configsView";
-import { getConfigs, getConfigsFilePath, killThemAll } from "./utils";
+import {
+  generateSocketName,
+  getConfigs,
+  getConfigsFilePath,
+  killThemAll,
+} from "./utils";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];
@@ -38,49 +44,47 @@ function registerElectronBuildToolsCommands(
       const command = "electron-build-tools build";
       const operationName = "Electron Build Tools - Building";
 
+      const socketName = generateSocketName();
+
+      const buildEnv = {
+        ...process.env,
+        NINJA_STATUS: "%p %f/%t ",
+      };
+
+      const task = new vscode.Task(
+        { type: "electron-build-tools", task: "build" },
+        vscode.workspace.workspaceFolders![0],
+        "build",
+        "electron-build-tools",
+        new vscode.ShellExecution(
+          `${command} | node tee-to-socket.js ${socketName}`,
+          { cwd: __dirname, env: buildEnv }
+        ),
+        "$electron"
+      );
+
+      // TODO - How to stop the terminal from being closed on task cancel?
+      task.presentationOptions = {
+        reveal: vscode.TaskRevealKind.Silent,
+        echo: false,
+        clear: true,
+      };
+
+      const socketServer = net.createServer().listen(socketName);
+
       vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
           title: operationName.split("-")[1].trim(),
           cancellable: true,
         },
-        (progress, token) => {
-          return new Promise((resolve) => {
-            const env = {
-              ...process.env,
-              NINJA_STATUS: "%p %f/%t ",
-            };
-            const buildOperation = childProcess.exec(command, { env });
-            let killed = false;
+        async (progress, token) => {
+          let lastBuildProgress = 0;
 
-            buildOperation.on("error", (error) => {
-              vscode.window.showErrorMessage(
-                `'${operationName}' had an error occur: ${error.message}`
-              );
-              resolve();
-            });
-
-            buildOperation.on("exit", (exitCode) => {
-              if (exitCode && !killed && exitCode !== 0) {
-                vscode.window.showErrorMessage(
-                  `'${operationName}' failed with exit code ${exitCode}`
-                );
-              }
-              resolve();
-            });
-
-            token.onCancellationRequested(() => {
-              killed = true;
-              killThemAll(buildOperation);
-              console.warn(`User canceled '${command}'`);
-              resolve();
-            });
-
+          socketServer.on("connection", (socket) => {
             const rl = readline.createInterface({
-              input: buildOperation.stdout!,
+              input: socket,
             });
-
-            let lastBuildProgress = 0;
 
             rl.on("line", (line) => {
               if (/Regenerating ninja files/.test(line)) {
@@ -109,6 +113,32 @@ function registerElectronBuildToolsCommands(
               }
             });
           });
+
+          const taskExecution = await vscode.tasks.executeTask(task);
+
+          return new Promise(async (resolve, reject) => {
+            socketServer.on("error", () => reject("Socket server error"));
+
+            vscode.tasks.onDidEndTask(({ execution }) => {
+              if (execution === taskExecution) {
+                resolve();
+              }
+            });
+
+            vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
+              if (execution === taskExecution && exitCode && exitCode !== 0) {
+                vscode.window.showErrorMessage(
+                  `'${operationName}' failed with exit code ${exitCode}`
+                );
+              }
+            });
+
+            token.onCancellationRequested(() => {
+              resolve();
+              taskExecution.terminate();
+              console.warn(`User canceled '${command}'`);
+            });
+          }).finally(() => taskExecution.terminate());
         }
       );
     }),
@@ -165,6 +195,11 @@ function registerElectronBuildToolsCommands(
     }),
     vscode.commands.registerCommand("electron-build-tools.show.goma", () => {
       childProcess.execSync("electron-build-tools show goma");
+    }),
+    vscode.commands.registerCommand("electron-build-tools.show.outdir", () => {
+      return childProcess
+        .execSync("electron-build-tools show outdir", { encoding: "utf8" })
+        .trim();
     }),
     vscode.commands.registerCommand("electron-build-tools.show.root", () => {
       return childProcess
