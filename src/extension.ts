@@ -5,7 +5,7 @@ import * as path from "path";
 
 import { ElectronBuildToolsConfigsProvider } from "./configsView";
 import { runAsTask } from "./tasks";
-import { getConfigs, getConfigsFilePath } from "./utils";
+import { getConfigs, getConfigsFilePath, isBuildToolsInstalled } from "./utils";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];
@@ -286,6 +286,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (workspaceFolders) {
     if (electronIsInWorkspace(workspaceFolders[0])) {
+      vscode.commands.executeCommand(
+        "setContext",
+        "electron-build-tools:build-tools-installed",
+        isBuildToolsInstalled()
+      );
       const configsProvider = new ElectronBuildToolsConfigsProvider();
       registerElectronBuildToolsCommands(context, configsProvider);
       registerHelperCommands(context);

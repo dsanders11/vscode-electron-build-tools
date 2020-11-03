@@ -128,15 +128,22 @@
     "views": {
       "electron-build-tools": [
         {
+          "id": "electron-build-tools:welcome",
+          "name": "Welcome",
+          "contextualTitle": "Electron Build Tools",
+          "when": "electron-build-tools:build-tools-installed == false"
+        },
+        {
           "id": "electron-build-tools:configs",
           "name": "Configs",
-          "contextualTitle": "Electron Build Tools"
+          "contextualTitle": "Electron Build Tools",
+          "when": "electron-build-tools:build-tools-installed == true"
         }
       ]
     },
     "viewsWelcome": [
       {
-        "view": "electron-build-tools:configs",
+        "view": "electron-build-tools:welcome",
         "contents": "In order to use the Electron Build Tools extension, you need build-tools installed.\nFind out more at the [build-tools repository](https://githbu.com/electron/build-tools)."
       }
     ],
