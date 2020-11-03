@@ -24,6 +24,14 @@
     "onView:electron-build-tools"
   ],
   "contributes": {
+    "languages": [
+      {
+        "id": "python",
+        "filenames": [
+          "DEPS"
+        ]
+      }
+    ],
     "problemMatchers": [
       {
         "name": "electron",
