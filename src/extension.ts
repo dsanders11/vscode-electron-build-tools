@@ -4,7 +4,8 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { ElectronBuildToolsConfigsProvider } from "./configsView";
-import { getConfigs, getConfigsFilePath, runAsTask } from "./utils";
+import { runAsTask } from "./tasks";
+import { getConfigs, getConfigsFilePath } from "./utils";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];
@@ -45,38 +46,36 @@ function registerElectronBuildToolsCommands(
 
       let lastBuildProgress = 0;
 
-      runAsTask(
-        operationName,
-        "build",
-        command,
-        { env: buildEnv },
-        (progress, line) => {
-          if (/Regenerating ninja files/.test(line)) {
-            progress.report({
-              message: "Regenerating Ninja Files",
-              increment: 0,
-            });
-          } else {
-            const buildProgress = parseInt(line.split("%")[0].trim());
+      const task = runAsTask(operationName, "build", command, {
+        env: buildEnv,
+      });
 
-            if (!isNaN(buildProgress)) {
-              if (buildProgress > lastBuildProgress) {
-                progress.report({
-                  message: "Compiling",
-                  increment: buildProgress - lastBuildProgress,
-                });
-                lastBuildProgress = buildProgress;
-              }
-            } else {
-              if (/Running.*goma/.test(line)) {
-                progress.report({ message: "Starting Goma" });
-              } else if (/Running.*ninja/.test(line)) {
-                progress.report({ message: "Starting Ninja" });
-              }
+      task.onDidWriteLine(({ progress, line }) => {
+        if (/Regenerating ninja files/.test(line)) {
+          progress.report({
+            message: "Regenerating Ninja Files",
+            increment: 0,
+          });
+        } else {
+          const buildProgress = parseInt(line.split("%")[0].trim());
+
+          if (!isNaN(buildProgress)) {
+            if (buildProgress > lastBuildProgress) {
+              progress.report({
+                message: "Compiling",
+                increment: buildProgress - lastBuildProgress,
+              });
+              lastBuildProgress = buildProgress;
+            }
+          } else {
+            if (/Running.*goma/.test(line)) {
+              progress.report({ message: "Starting Goma" });
+            } else if (/Running.*ninja/.test(line)) {
+              progress.report({ message: "Starting Ninja" });
             }
           }
         }
-      );
+      });
     }),
     vscode.commands.registerCommand(
       "electron-build-tools.remove-config",
@@ -153,22 +152,18 @@ function registerElectronBuildToolsCommands(
 
       let initialProgress = false;
 
-      runAsTask(
-        operationName,
-        "sync",
-        command,
-        { env: syncEnv },
-        (progress, line) => {
-          if (/running.*apply_all_patches\.py/.test(line)) {
-            progress.report({ message: "Applying Patches" });
-          } else if (/Hook.*apply_all_patches\.py.*took/.test(line)) {
-            progress.report({ message: "Finishing Up" });
-          } else if (!initialProgress) {
-            initialProgress = true;
-            progress.report({ message: "Dependencies" });
-          }
+      const task = runAsTask(operationName, "sync", command, { env: syncEnv });
+
+      task.onDidWriteLine(({ progress, line }) => {
+        if (/running.*apply_all_patches\.py/.test(line)) {
+          progress.report({ message: "Applying Patches" });
+        } else if (/Hook.*apply_all_patches\.py.*took/.test(line)) {
+          progress.report({ message: "Finishing Up" });
+        } else if (!initialProgress) {
+          initialProgress = true;
+          progress.report({ message: "Dependencies" });
         }
-      );
+      });
     }),
     vscode.commands.registerCommand(
       "electron-build-tools.use-config",
