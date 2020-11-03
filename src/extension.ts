@@ -287,13 +287,39 @@ function registerHelperCommands(context: vscode.ExtensionContext) {
 export async function activate(context: vscode.ExtensionContext) {
   const workspaceFolders = vscode.workspace.workspaceFolders;
 
+  vscode.commands.executeCommand(
+    "setContext",
+    "electron-build-tools:ready",
+    false
+  );
+  vscode.commands.executeCommand(
+    "setContext",
+    "electron-build-tools:build-tools-installed",
+    isBuildToolsInstalled()
+  );
+  vscode.commands.executeCommand(
+    "setContext",
+    "electron-build-tools:is-electron-workspace",
+    false
+  );
+
   if (workspaceFolders) {
-    if (electronIsInWorkspace(workspaceFolders[0])) {
+    const isElectronWorkspace = await electronIsInWorkspace(
+      workspaceFolders[0]
+    );
+    vscode.commands.executeCommand(
+      "setContext",
+      "electron-build-tools:is-electron-workspace",
+      isElectronWorkspace
+    );
+
+    if (isElectronWorkspace) {
       vscode.commands.executeCommand(
         "setContext",
-        "electron-build-tools:build-tools-installed",
-        isBuildToolsInstalled()
+        "electron-build-tools:active",
+        true
       );
+
       const configsProvider = new ElectronBuildToolsConfigsProvider();
       registerElectronBuildToolsCommands(context, configsProvider);
       registerHelperCommands(context);
@@ -311,4 +337,10 @@ export async function activate(context: vscode.ExtensionContext) {
       );
     }
   }
+
+  vscode.commands.executeCommand(
+    "setContext",
+    "electron-build-tools:ready",
+    true
+  );
 }
