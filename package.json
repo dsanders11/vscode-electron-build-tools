@@ -166,7 +166,8 @@
       },
       {
         "command": "electron-build-tools.remove-config",
-        "title": "Remove Config"
+        "title": "Remove Config",
+        "icon": "$(trash)"
       },
       {
         "command": "electron-build-tools.sanitize-config",
@@ -267,7 +268,7 @@
       "view/item/context": [
         {
           "command": "electron-build-tools.remove-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
+          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/"
         },
         {
           "command": "electron-build-tools.sanitize-config",
@@ -275,11 +276,16 @@
         },
         {
           "command": "electron-build-tools.use-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
+          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/"
+        },
+        {
+          "command": "electron-build-tools.remove-config",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/",
+          "group": "inline"
         },
         {
           "command": "electron-build-tools.use-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/",
           "group": "inline"
         }
       ]

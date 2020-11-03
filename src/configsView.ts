@@ -87,6 +87,7 @@ class Config extends vscode.TreeItem {
 
     this.setActiveLabel(isActive);
 
+    this.iconPath = new vscode.ThemeIcon("file-code");
     this.command = {
       command: "electron-build-tools.openConfig",
       arguments: [label],
