@@ -3,6 +3,18 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
+    "defaultTarget": {
+      "description": "Default build target",
+      "type": "string",
+      "enum": [
+        "breakpad",
+        "chromedriver",
+        "electron",
+        "electron:dist",
+        "mksnapshot",
+        "node:headers"
+      ]
+    },
     "goma": {
       "description": "Goma mode to use",
       "type": "string",
