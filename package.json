@@ -156,6 +156,12 @@
           "name": "Configs",
           "contextualTitle": "Electron Build Tools",
           "when": "!electron-build-tools:ready || electron-build-tools:active"
+        },
+        {
+          "id": "electron-build-tools:help",
+          "name": "Help and Feedback",
+          "contextualTitle": "Electron Build Tools",
+          "visibility": "collapsed"
         }
       ]
     },

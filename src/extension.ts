@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { ElectronBuildToolsConfigsProvider } from "./configsView";
+import { HelpTreeDataProvider } from "./helpView";
 import { runAsTask } from "./tasks";
 import { getConfigs, getConfigsFilePath, isBuildToolsInstalled } from "./utils";
 
@@ -328,6 +329,10 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:configs",
           configsProvider
+        ),
+        vscode.window.registerTreeDataProvider(
+          "electron-build-tools:help",
+          new HelpTreeDataProvider()
         )
       );
     }
