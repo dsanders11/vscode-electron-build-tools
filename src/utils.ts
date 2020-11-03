@@ -70,7 +70,7 @@ export function runAsTask(
     taskName,
     "electron-build-tools",
     new vscode.ShellExecution(
-      `${command} | node tee-to-socket.js ${socketName}`,
+      `node echo-to-socket.js "${command}" ${socketName}`,
       { cwd: __dirname, ...shellOptions }
     ),
     "$electron"
