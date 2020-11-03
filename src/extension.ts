@@ -86,8 +86,20 @@ function registerElectronBuildToolsCommands(
               input: socket,
             });
 
-            rl.on("line", (line) => {
-              if (/Regenerating ninja files/.test(line)) {
+            rl.on("line", async (line) => {
+              const regex = /^(.*)\((\d+),(\d+)\):\s+(warning|error):\s+(.*)$/;
+              if (regex.test(line)) {
+                // const match = regex.exec(line)!;
+                // const diagnostics: vscode.Diagnostic[] = [];
+                // const range = new vscode.Range(parseInt(match[2]) - 1, parseInt(match[3]) - 1, parseInt(match[2]) - 1, parseInt(match[3]) + 2);
+                // const severity = match[4] === 'error' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning;
+                // const diagnostic = new vscode.Diagnostic(range, match[5], severity);
+                // diagnostic.source = 'electron-build-tools';
+                // diagnostics.push(diagnostic);
+                // const outdir = await vscode.commands.executeCommand("electron-build-tools.show.outdir") as string;
+                // const uri = vscode.Uri.file(path.resolve(outdir, match[1]));
+                // diagnosticsCollection.set(uri, diagnostics);
+              } else if (/Regenerating ninja files/.test(line)) {
                 progress.report({
                   message: "Regenerating Ninja Files",
                   increment: 0,
