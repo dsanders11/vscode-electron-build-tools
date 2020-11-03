@@ -114,6 +114,10 @@
       {
         "command": "electron-build-tools.sync",
         "title": "Electron Build Tools: Sync"
+      },
+      {
+        "command": "electron-build-tools.sync.force",
+        "title": "Electron Build Tools: Force Sync"
       }
     ],
     "viewsContainers": {
@@ -168,6 +172,10 @@
         },
         {
           "command": "electron-build-tools.sync",
+          "group": "Electron Build Tools"
+        },
+        {
+          "command": "electron-build-tools.sync.force",
           "group": "Electron Build Tools"
         }
       ],

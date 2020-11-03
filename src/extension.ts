@@ -193,6 +193,9 @@ function registerElectronBuildToolsCommands(
         });
       }
     ),
+    vscode.commands.registerCommand("electron-build-tools.sync.force", () => {
+      return vscode.commands.executeCommand("electron-build-tools.sync", true);
+    }),
     vscode.commands.registerCommand(
       "electron-build-tools.use-config",
       (config) => {
