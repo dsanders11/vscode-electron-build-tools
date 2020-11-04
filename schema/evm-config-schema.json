@@ -27,7 +27,8 @@
     },
     "root": {
       "description": "Path of the top directory. Home of the .gclient file",
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "remotes": {
       "description": "Remotes for Git checkouts",
@@ -39,13 +40,20 @@
           "properties": {
             "fork": {
               "description": "Fork remote",
-              "type": "string"
+              "type": "string",
+              "format": "uri",
+              "minLength": 1
             },
             "origin": {
               "description": "Origin remote",
-              "type": "string"
+              "type": "string",
+              "format": "uri",
+              "minLength": 1
             }
-          }
+          },
+          "required": [
+            "origin"
+          ]
         },
         "node": {
           "description": "Remotes for the Node repo",
@@ -53,11 +61,17 @@
           "properties": {
             "origin": {
               "description": "Origin remote",
-              "type": "string"
+              "type": "string",
+              "format": "uri",
+              "minLength": 1
             }
           }
         }
-      }
+      },
+      "required": [
+        "electron",
+        "node"
+      ]
     },
     "gen": {
       "description": "Configuration for GN",
@@ -67,14 +81,20 @@
           "description": "Extra arguments for GN",
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1
           }
         },
         "out": {
           "description": "Output directory",
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
-      }
+      },
+      "required": [
+        "args",
+        "out"
+      ]
     },
     "env": {
       "description": "Environment variables set when building Electron",
@@ -82,13 +102,25 @@
       "properties": {
         "GIT_CACHE_PATH": {
           "description": "Path to use as git cache for gclient",
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "CHROMIUM_BUILDTOOLS_PATH": {
           "description": "Path of Chromium buildtools in the checkout",
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
-      }
+      },
+      "required": [
+        "CHROMIUM_BUILDTOOLS_PATH"
+      ]
     }
-  }
+  },
+  "required": [
+    "goma",
+    "root",
+    "remotes",
+    "gen",
+    "env"
+  ]
 }
