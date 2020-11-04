@@ -8,14 +8,21 @@ import {
   blankConfigEnumValue,
   buildTargets,
   buildToolsExecutable,
+  patchVirtualDocumentScheme,
 } from "./constants";
+import { ElectronPatchesProvider } from "./patchesView";
+import { PatchOverviewPanel } from "./patchOverview";
+import { PatchVirtualTextDocumentContentProvider } from "./patchVirtualDocument";
 import { HelpTreeDataProvider } from "./helpView";
 import { runAsTask } from "./tasks";
 import {
+  findCommitForPatch,
   getConfigDefaultTarget,
   getConfigs,
   getConfigsFilePath,
+  getPatchesConfigFile,
   isBuildToolsInstalled,
+  patchOverviewMarkdown,
 } from "./utils";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
@@ -192,6 +199,46 @@ function registerElectronBuildToolsCommands(
             }
           }
         );
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.showCommitDiff",
+      async (
+        checkoutDirectory: vscode.Uri,
+        patchName: string,
+        filename: vscode.Uri,
+        patchedFilename: string
+      ) => {
+        const commitSha = await findCommitForPatch(
+          checkoutDirectory,
+          patchName
+        );
+
+        if (commitSha) {
+          const originalFile = filename.with({
+            scheme: patchVirtualDocumentScheme,
+            query: `gitObject=${commitSha}~1&checkoutPath=${checkoutDirectory.fsPath}`,
+          });
+          const patchedFile = filename.with({
+            scheme: patchVirtualDocumentScheme,
+            query: `gitObject=${commitSha}&checkoutPath=${checkoutDirectory.fsPath}`,
+          });
+
+          vscode.commands.executeCommand(
+            "vscode.diff",
+            originalFile,
+            patchedFile,
+            `${patchName} - ${patchedFilename}`
+          );
+        } else {
+          vscode.window.showErrorMessage("Couldn't open commit diff for file");
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.showPatchOverview",
+      async (patch: vscode.Uri) => {
+        PatchOverviewPanel.createOrShow(await patchOverviewMarkdown(patch));
       }
     ),
     vscode.commands.registerCommand(
@@ -415,9 +462,9 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   if (buildToolsIsInstalled && workspaceFolders) {
-    const isElectronWorkspace = await electronIsInWorkspace(
-      workspaceFolders[0]
-    );
+    const workspaceFolder = workspaceFolders[0];
+
+    const isElectronWorkspace = await electronIsInWorkspace(workspaceFolder);
     vscode.commands.executeCommand(
       "setContext",
       "electron-build-tools:is-electron-workspace",
@@ -439,6 +486,17 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:configs",
           configsProvider
+        ),
+        vscode.window.registerTreeDataProvider(
+          "electron-build-tools:patches",
+          new ElectronPatchesProvider(
+            workspaceFolder,
+            getPatchesConfigFile(workspaceFolder)
+          )
+        ),
+        vscode.workspace.registerTextDocumentContentProvider(
+          patchVirtualDocumentScheme,
+          new PatchVirtualTextDocumentContentProvider()
         )
       );
     }

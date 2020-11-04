@@ -12,3 +12,15 @@ export const buildTargets: string[] = [
 ];
 
 export const buildToolsExecutable: string = "electron-build-tools";
+
+export const patchDirectoryPretyNames: Record<string, string> = Object.freeze({
+  "src/electron/patches/chromium": "Chromium",
+  "src/electron/patches/boringssl": "BoringSSL",
+  "src/electron/patches/v8": "V8",
+  "src/electron/patches/node": "Node",
+  "src/electron/patches/squirrel.mac": "squirrel.mac",
+  "src/electron/patches/ReactiveObjC": "ReactiveObjC",
+  "src/electron/patches/depot_tools": "depot_tools",
+});
+
+export const patchVirtualDocumentScheme: string = "electron-build-tools-patch";
