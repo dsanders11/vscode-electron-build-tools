@@ -33,9 +33,9 @@
           "title": "Show Targets",
           "description": "When building, show a list of build targets to choose from."
         },
-        "electronBuildTools.build.target": {
+        "electronBuildTools.build.defaultTarget": {
           "type": "string",
-          "description": "Target to build. Leave blank to use the config default.",
+          "description": "Default target to build. Leave blank to use the config default.",
           "enum": [
             "----",
             "breakpad",

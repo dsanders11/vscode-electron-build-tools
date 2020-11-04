@@ -60,7 +60,7 @@ function registerElectronBuildToolsCommands(
         return opts;
       }, [] as string[]);
 
-      let settingsDefaultTarget = buildConfig.get("target");
+      let settingsDefaultTarget = buildConfig.get("defaultTarget");
       settingsDefaultTarget =
         settingsDefaultTarget === blankConfigEnumValue
           ? ""
