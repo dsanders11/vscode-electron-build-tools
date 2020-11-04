@@ -27,13 +27,13 @@
     "configuration": {
       "title": "Electron Build Tools",
       "properties": {
-        "vscode-electron-build-tools.config.electronBuildTools.build.showTargets": {
+        "electronBuildTools.build.showTargets": {
           "type": "boolean",
           "default": false,
           "title": "Show Targets",
           "description": "When building, show a list of build targets to choose from."
         },
-        "vscode-electron-build-tools.config.electronBuildTools.build.target": {
+        "electronBuildTools.build.target": {
           "type": "string",
           "description": "Target to build. Leave blank to use the config default.",
           "enum": [
@@ -47,7 +47,7 @@
           ],
           "default": "----"
         },
-        "vscode-electron-build-tools.config.electronBuildTools.build.ninjaArgs": {
+        "electronBuildTools.build.ninjaArgs": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -56,7 +56,7 @@
           "title": "Ninja Args",
           "description": "Args to pass to Ninja when building."
         },
-        "vscode-electron-build-tools.config.electronBuildTools.build.buildOptions": {
+        "electronBuildTools.build.buildOptions": {
           "type": "object",
           "properties": {
             "--no-goma": {

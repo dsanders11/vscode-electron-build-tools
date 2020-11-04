@@ -45,7 +45,7 @@ function registerElectronBuildToolsCommands(
       const operationName = "Electron Build Tools - Building";
 
       const buildConfig = vscode.workspace.getConfiguration(
-        "vscode-electron-build-tools.config.electronBuildTools.build"
+        "electronBuildTools.build"
       );
       const options = Object.entries(
         buildConfig.get("buildOptions") as object
