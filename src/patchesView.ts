@@ -2,10 +2,7 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import {
-  patchDirectoryPretyNames,
-  patchVirtualDocumentScheme,
-} from "./constants";
+import { patchDirectoryPretyNames } from "./constants";
 import { ElectronPatchesConfig } from "./types";
 import {
   getCheckoutDirectoryForPatchDirectory,
