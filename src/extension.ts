@@ -4,7 +4,11 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { ElectronBuildToolsConfigsProvider } from "./configsView";
-import { blankConfigEnumValue, buildTargets } from "./constants";
+import {
+  blankConfigEnumValue,
+  buildTargets,
+  buildToolsExecutable,
+} from "./constants";
 import { HelpTreeDataProvider } from "./helpView";
 import { runAsTask } from "./tasks";
 import {
@@ -120,7 +124,7 @@ function registerElectronBuildToolsCommands(
       }
 
       const command = [
-        "electron-build-tools",
+        buildToolsExecutable,
         "build",
         ...options,
         target,
@@ -172,7 +176,7 @@ function registerElectronBuildToolsCommands(
       "electron-build-tools.remove-config",
       (config) => {
         childProcess.exec(
-          `electron-build-tools remove ${config.label}`,
+          `${buildToolsExecutable} remove ${config.label}`,
           {
             encoding: "utf8",
           },
@@ -194,7 +198,7 @@ function registerElectronBuildToolsCommands(
       "electron-build-tools.sanitize-config",
       (config) => {
         childProcess.exec(
-          `electron-build-tools sanitize-config ${config.label}`,
+          `${buildToolsExecutable} sanitize-config ${config.label}`,
           {
             encoding: "utf8",
           },
@@ -216,26 +220,28 @@ function registerElectronBuildToolsCommands(
     ),
     vscode.commands.registerCommand("electron-build-tools.show.exe", () => {
       return childProcess
-        .execSync("electron-build-tools show exe", { encoding: "utf8" })
+        .execSync(`${buildToolsExecutable} show exe`, { encoding: "utf8" })
         .trim();
     }),
     vscode.commands.registerCommand("electron-build-tools.show.goma", () => {
-      childProcess.execSync("electron-build-tools show goma");
+      childProcess.execSync(`${buildToolsExecutable} show goma`);
     }),
     vscode.commands.registerCommand("electron-build-tools.show.outdir", () => {
       return childProcess
-        .execSync("electron-build-tools show outdir", { encoding: "utf8" })
+        .execSync(`${buildToolsExecutable} show outdir`, { encoding: "utf8" })
         .trim();
     }),
     vscode.commands.registerCommand("electron-build-tools.show.root", () => {
       return childProcess
-        .execSync("electron-build-tools show root", { encoding: "utf8" })
+        .execSync(`${buildToolsExecutable} show root`, { encoding: "utf8" })
         .trim();
     }),
     vscode.commands.registerCommand(
       "electron-build-tools.sync",
       (force?: boolean) => {
-        const command = `electron-build-tools sync${force ? " --force" : ""}`;
+        const command = `${buildToolsExecutable} sync${
+          force ? " --force" : ""
+        }`;
         const operationName = `Electron Build Tools - ${
           force ? "Force " : ""
         }Syncing`;
@@ -298,7 +304,7 @@ function registerElectronBuildToolsCommands(
         configsProvider.setActive(config.label);
 
         childProcess.exec(
-          `electron-build-tools use ${config.label}`,
+          `${buildToolsExecutable} use ${config.label}`,
           {
             encoding: "utf8",
           },
@@ -325,7 +331,7 @@ function registerElectronBuildToolsCommands(
           configsProvider.setActive(selected);
 
           childProcess.exec(
-            `electron-build-tools use ${selected}`,
+            `${buildToolsExecutable} use ${selected}`,
             {
               encoding: "utf8",
             },

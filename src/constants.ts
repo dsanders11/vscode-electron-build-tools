@@ -10,3 +10,5 @@ export const buildTargets: string[] = [
   "mksnapshot",
   "node:headers",
 ];
+
+export const buildToolsExecutable: string = "electron-build-tools";

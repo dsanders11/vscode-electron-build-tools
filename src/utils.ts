@@ -5,10 +5,12 @@ import * as path from "path";
 
 import { v4 as uuidv4 } from "uuid";
 
+import { buildToolsExecutable } from "./constants";
+
 export function isBuildToolsInstalled() {
   const result = childProcess.spawnSync(
     os.platform() === "win32" ? "where" : "which",
-    ["electron-build-tools"]
+    [buildToolsExecutable]
   );
 
   return result.status === 0;
@@ -27,7 +29,7 @@ export function getConfigs() {
   let activeConfig = null;
 
   const configsOutput = childProcess
-    .execSync("electron-build-tools show configs", { encoding: "utf8" })
+    .execSync(`${buildToolsExecutable} show configs`, { encoding: "utf8" })
     .trim();
 
   for (const rawConfig of configsOutput.split("\n")) {
@@ -48,7 +50,7 @@ export function getConfigsFilePath() {
 
 export function getConfigDefaultTarget() {
   const configFilename = childProcess
-    .execSync("electron-build-tools show current --filename --no-name", {
+    .execSync(`${buildToolsExecutable} show current --filename --no-name`, {
       encoding: "utf8",
     })
     .trim();
