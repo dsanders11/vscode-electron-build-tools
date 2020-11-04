@@ -5,7 +5,7 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface JSONSchemaForEVMConfigurationFiles {
+export interface EVMConfig {
   /**
    * Default build target
    */
@@ -85,7 +85,7 @@ export interface JSONSchemaForEVMConfigurationFiles {
   [k: string]: unknown;
 }
 
-export interface JSONSchemaForElectronPatchesConfigJson {
+export interface ElectronPatchesConfig {
   /**
    * Maps patch directory to source tree directory
    *

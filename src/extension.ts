@@ -3,7 +3,10 @@ import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
-import { ElectronBuildToolsConfigsProvider } from "./configsView";
+import {
+  ConfigTreeItem,
+  ElectronBuildToolsConfigsProvider,
+} from "./configsView";
 import {
   blankConfigEnumValue,
   buildTargets,
@@ -15,6 +18,7 @@ import { PatchOverviewPanel } from "./patchOverview";
 import { PatchVirtualTextDocumentContentProvider } from "./patchVirtualDocument";
 import { HelpTreeDataProvider } from "./helpView";
 import { runAsTask } from "./tasks";
+import { ExtensionConfig } from "./types";
 import {
   findCommitForPatch,
   getConfigDefaultTarget,
@@ -41,7 +45,10 @@ async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
       vscode.Uri.file(rootPackageFilename)
     );
 
-    const { name } = JSON.parse(rootPackageFile.toString());
+    const { name } = JSON.parse(rootPackageFile.toString()) as Record<
+      string,
+      string
+    >;
 
     return name === "electron";
   }
@@ -59,19 +66,21 @@ function registerElectronBuildToolsCommands(
         "electronBuildTools.build"
       );
       const options = Object.entries(
-        buildConfig.get("buildOptions") as object
+        buildConfig.get("buildOptions") as ExtensionConfig.BuildOptions
       ).reduce((opts, [key, value]) => {
         opts.push(`${key} ${value}`.trim());
         return opts;
       }, [] as string[]);
       const ninjaArgs = Object.entries(
-        buildConfig.get("ninjaArgs") as object
+        buildConfig.get("ninjaArgs") as ExtensionConfig.NinjaArgs
       ).reduce((opts, [key, value]) => {
         opts.push(`${key} ${value}`.trim());
         return opts;
       }, [] as string[]);
 
-      let settingsDefaultTarget = buildConfig.get("defaultTarget");
+      let settingsDefaultTarget: string | undefined = buildConfig.get(
+        "defaultTarget"
+      );
       settingsDefaultTarget =
         settingsDefaultTarget === blankConfigEnumValue
           ? ""
@@ -181,7 +190,7 @@ function registerElectronBuildToolsCommands(
     }),
     vscode.commands.registerCommand(
       "electron-build-tools.remove-config",
-      (config) => {
+      (config: ConfigTreeItem) => {
         childProcess.exec(
           `${buildToolsExecutable} remove ${config.label}`,
           {
@@ -243,7 +252,7 @@ function registerElectronBuildToolsCommands(
     ),
     vscode.commands.registerCommand(
       "electron-build-tools.sanitize-config",
-      (config) => {
+      (config: ConfigTreeItem) => {
         childProcess.exec(
           `${buildToolsExecutable} sanitize-config ${config.label}`,
           {
@@ -346,7 +355,7 @@ function registerElectronBuildToolsCommands(
     }),
     vscode.commands.registerCommand(
       "electron-build-tools.use-config",
-      (config) => {
+      (config: ConfigTreeItem) => {
         // Do an optimistic update for snappier UI
         configsProvider.setActive(config.label);
 
@@ -397,7 +406,7 @@ function registerElectronBuildToolsCommands(
     ),
     vscode.commands.registerCommand(
       "electron-build-tools.openConfig",
-      async (configName) => {
+      async (configName: string) => {
         const configFilePath = path.join(
           getConfigsFilePath(),
           `evm.${configName}.json`
@@ -421,7 +430,7 @@ function registerHelperCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "vscode.window.showOpenDialog",
-      async (options) => {
+      async (options: vscode.OpenDialogOptions | undefined) => {
         const results = await vscode.window.showOpenDialog(options);
 
         if (results) {

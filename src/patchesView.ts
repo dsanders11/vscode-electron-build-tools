@@ -6,6 +6,7 @@ import {
   patchDirectoryPretyNames,
   patchVirtualDocumentScheme,
 } from "./constants";
+import { ElectronPatchesConfig } from "./types";
 import {
   getCheckoutDirectoryForPatchDirectory,
   getFilesInPatch,
@@ -22,7 +23,7 @@ export class ElectronPatchesProvider
   private _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  private readonly patchesConfig: Promise<Object>;
+  private readonly patchesConfig: Promise<ElectronPatchesConfig>;
   private readonly rootDirectory: vscode.Uri;
 
   constructor(

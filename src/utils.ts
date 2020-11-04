@@ -8,6 +8,7 @@ import * as vscode from "vscode";
 import { v4 as uuidv4 } from "uuid";
 
 import { buildToolsExecutable } from "./constants";
+import { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const patchedFilenameRegex = /^\+\+\+ b\/(.*)$/gm;
 
@@ -43,7 +44,7 @@ export function generateSocketName() {
 
 export function getConfigs() {
   const configs: string[] = [];
-  let activeConfig = null;
+  let activeConfig: string | null = null;
 
   const configsOutput = childProcess
     .execSync(`${buildToolsExecutable} show configs`, { encoding: "utf8" })
@@ -65,15 +66,18 @@ export function getConfigsFilePath() {
   return path.join(os.homedir(), ".electron_build_tools", "configs");
 }
 
-export function getConfigDefaultTarget() {
+export function getConfigDefaultTarget(): string | undefined {
   const configFilename = childProcess
     .execSync(`${buildToolsExecutable} show current --filename --no-name`, {
       encoding: "utf8",
     })
     .trim();
 
-  return JSON.parse(fs.readFileSync(configFilename, { encoding: "utf8" }))
-    .defaultTarget;
+  const config: EVMConfig = JSON.parse(
+    fs.readFileSync(configFilename, { encoding: "utf8" })
+  );
+
+  return config.defaultTarget;
 }
 
 export function getPatchesConfigFile(workspaceFolder: vscode.WorkspaceFolder) {
@@ -110,7 +114,9 @@ export async function getFilesInPatch(
   );
 }
 
-export async function parsePatchConfig(config: vscode.Uri): Promise<Object> {
+export async function parsePatchConfig(
+  config: vscode.Uri
+): Promise<ElectronPatchesConfig> {
   return JSON.parse((await vscode.workspace.fs.readFile(config)).toString());
 }
 
@@ -123,7 +129,7 @@ export function getRootDirectoryFromWorkspaceFolder(
 
 export function getCheckoutDirectoryForPatchDirectory(
   rootDirectory: vscode.Uri,
-  config: Object,
+  config: ElectronPatchesConfig,
   patchDirectory: vscode.Uri
 ) {
   for (const [patchDirectoryTail, checkoutDirectory] of Object.entries(

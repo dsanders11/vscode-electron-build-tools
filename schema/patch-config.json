@@ -1,5 +1,5 @@
 {
-  "title": "JSON schema for EVM configuration files",
+  "title": "JSON schema for Electron patches/config.json",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "patternProperties": {

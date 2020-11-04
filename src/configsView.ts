@@ -9,7 +9,7 @@ export class ElectronBuildToolsConfigsProvider
     vscode.TreeItem | undefined | void
   >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
-  private _cachedConfigs: Config[] = [];
+  private _cachedConfigs: ConfigTreeItem[] = [];
 
   constructor() {
     const watcher = chokidar.watch(getConfigsFilePath(), {
@@ -20,9 +20,9 @@ export class ElectronBuildToolsConfigsProvider
     });
   }
 
-  setActive(configName: string | null): Config {
-    let oldActiveConfig: Config;
-    let newActiveConfig: Config;
+  setActive(configName: string | null): ConfigTreeItem {
+    let oldActiveConfig: ConfigTreeItem;
+    let newActiveConfig: ConfigTreeItem;
 
     for (const config of this._cachedConfigs) {
       const isActive = config.label === configName;
@@ -58,7 +58,7 @@ export class ElectronBuildToolsConfigsProvider
 
       for (const configName of configNames) {
         configs.push(
-          new Config(
+          new ConfigTreeItem(
             configName,
             configName === activeConfig,
             vscode.TreeItemCollapsibleState.None
@@ -69,7 +69,7 @@ export class ElectronBuildToolsConfigsProvider
       if (configs.length === 0) {
         configs.push(new vscode.TreeItem("There are no configs"));
       } else {
-        this._cachedConfigs = configs as Config[];
+        this._cachedConfigs = configs as ConfigTreeItem[];
       }
     }
 
@@ -77,7 +77,7 @@ export class ElectronBuildToolsConfigsProvider
   }
 }
 
-class Config extends vscode.TreeItem {
+export class ConfigTreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
     isActive: boolean,

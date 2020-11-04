@@ -1,19 +1,21 @@
-export const extensionId: string = "dsanders11.vscode-electron-build-tools";
+import { ElectronPatchesConfig } from "./types";
 
-export const blankConfigEnumValue: string = "----";
+export const extensionId = "dsanders11.vscode-electron-build-tools";
 
-export const buildTargets: string[] = [
+export const blankConfigEnumValue = "----";
+
+export const buildTargets = Object.freeze([
   "breakpad",
   "chromedriver",
   "electron",
   "electron:dist",
   "mksnapshot",
   "node:headers",
-];
+]);
 
-export const buildToolsExecutable: string = "electron-build-tools";
+export const buildToolsExecutable = "electron-build-tools";
 
-export const patchDirectoryPretyNames: Record<string, string> = Object.freeze({
+export const patchDirectoryPretyNames: ElectronPatchesConfig = Object.freeze({
   "src/electron/patches/chromium": "Chromium",
   "src/electron/patches/boringssl": "BoringSSL",
   "src/electron/patches/v8": "V8",
@@ -23,10 +25,9 @@ export const patchDirectoryPretyNames: Record<string, string> = Object.freeze({
   "src/electron/patches/depot_tools": "depot_tools",
 });
 
-export const patchVirtualDocumentScheme: string = "electron-build-tools-patch";
+export const patchVirtualDocumentScheme = "electron-build-tools-patch";
 
-export const buildToolsRepository: string =
-  "https://github.com/electron/build-tools";
+export const buildToolsRepository = "https://github.com/electron/build-tools";
 
-export const repositoryUrl: string =
+export const repositoryUrl =
   "https://github.com/dsanders11/vscode-electron-build-tools";
