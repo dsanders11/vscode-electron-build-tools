@@ -105,6 +105,7 @@ function registerElectronBuildToolsCommands(
         const userQuit = await new Promise((resolve) => {
           quickPick!.onDidAccept(() => {
             target = quickPick!.selectedItems[0].label || target;
+            quickPick!.hide();
             resolve();
           });
           quickPick!.onDidHide(() => {
