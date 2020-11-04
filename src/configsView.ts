@@ -1,7 +1,7 @@
 import * as chokidar from "chokidar";
 import * as vscode from "vscode";
 
-import { getConfigs, getConfigsFilePath, isBuildToolsInstalled } from "./utils";
+import { getConfigs, getConfigsFilePath } from "./utils";
 
 export class ElectronBuildToolsConfigsProvider
   implements vscode.TreeDataProvider<vscode.TreeItem> {
@@ -53,7 +53,7 @@ export class ElectronBuildToolsConfigsProvider
   getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
     const configs: vscode.TreeItem[] = [];
 
-    if (!element && isBuildToolsInstalled()) {
+    if (!element) {
       const { configs: configNames, activeConfig } = getConfigs();
 
       for (const configName of configNames) {
