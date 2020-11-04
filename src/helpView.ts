@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { extensionId } from "./constants";
+import { buildToolsRepository, extensionId, repositoryUrl } from "./constants";
 
 export class HelpTreeDataProvider
   implements vscode.TreeDataProvider<vscode.TreeItem> {
@@ -27,21 +27,17 @@ export class HelpTreeDataProvider
         new LinkHelpTreeItem(
           "Extension Documentation",
           new vscode.ThemeIcon("remote-explorer-documentation"),
-          vscode.Uri.parse(
-            "https://github.com/dsanders11/vscode-electron-build-tools/wiki"
-          )
+          vscode.Uri.parse(`${repositoryUrl}/wiki`)
         ),
         new LinkHelpTreeItem(
           "Electron Build Tools Documentation",
           new vscode.ThemeIcon("remote-explorer-documentation"),
-          vscode.Uri.parse("https://github.com/electron/build-tools")
+          vscode.Uri.parse(buildToolsRepository)
         ),
         new LinkHelpTreeItem(
           "Review Issues",
           new vscode.ThemeIcon("remote-explorer-review-issues"),
-          vscode.Uri.parse(
-            "https://github.com/dsanders11/vscode-electron-build-tools/issues"
-          )
+          vscode.Uri.parse(`${repositoryUrl}/issues`)
         ),
         reportIssueTreeItem,
       ]);

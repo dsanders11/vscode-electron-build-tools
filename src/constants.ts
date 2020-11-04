@@ -24,3 +24,9 @@ export const patchDirectoryPretyNames: Record<string, string> = Object.freeze({
 });
 
 export const patchVirtualDocumentScheme: string = "electron-build-tools-patch";
+
+export const buildToolsRepository: string =
+  "https://github.com/electron/build-tools";
+
+export const repositoryUrl: string =
+  "https://github.com/dsanders11/vscode-electron-build-tools";
