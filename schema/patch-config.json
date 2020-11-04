@@ -1,0 +1,14 @@
+{
+  "title": "JSON schema for EVM configuration files",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "patternProperties": {
+    "^src\/electron\/": {
+      "type": "string",
+      "description": "Maps patch directory to source tree directory",
+      "minLength": 1,
+      "pattern": "^(?:src|src\/.+[^\/])$"
+    }
+  },
+  "additionalProperties": false
+}

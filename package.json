@@ -117,6 +117,10 @@
       {
         "fileMatch": "evm.*.json",
         "url": "./schema/evm-config-schema.json"
+      },
+      {
+        "fileMatch": "patches/config.json",
+        "url": "./schema/patch-config.json"
       }
     ],
     "debuggers": [
