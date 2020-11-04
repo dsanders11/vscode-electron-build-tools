@@ -178,6 +178,11 @@
         "title": "Show Commit Diff"
       },
       {
+        "command": "electron-build-tools.showPatchesDocs",
+        "title": "Show Patches Documentation",
+        "icon": "$(remote-explorer-documentation)"
+      },
+      {
         "command": "electron-build-tools.showPatchOverview",
         "title": "Show Patch Overview"
       },
@@ -285,6 +290,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.showPatchesDocs",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.showPatchOverview",
           "when": "false"
         },
@@ -315,6 +324,13 @@
           "command": "electron-build-tools.use-config",
           "when": "view == electron-build-tools:configs && viewItem =~ /^config$/",
           "group": "inline"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "electron-build-tools.showPatchesDocs",
+          "when": "view == electron-build-tools:patches",
+          "group": "navigation"
         }
       ]
     }

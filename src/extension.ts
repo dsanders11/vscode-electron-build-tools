@@ -245,6 +245,22 @@ function registerElectronBuildToolsCommands(
       }
     ),
     vscode.commands.registerCommand(
+      "electron-build-tools.showPatchesDocs",
+      () => {
+        vscode.commands.executeCommand(
+          "markdown.showPreview",
+          vscode.Uri.file(
+            path.join(
+              vscode.workspace.workspaceFolders![0].uri.fsPath,
+              "docs",
+              "development",
+              "patches.md"
+            )
+          )
+        );
+      }
+    ),
+    vscode.commands.registerCommand(
       "electron-build-tools.showPatchOverview",
       async (patch: vscode.Uri) => {
         PatchOverviewPanel.createOrShow(await patchOverviewMarkdown(patch));
