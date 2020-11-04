@@ -35,11 +35,9 @@ export function isBuildToolsInstalled() {
 }
 
 export function generateSocketName() {
-  if (os.platform() === "win32") {
-    return `\\\\.\\pipe\\${uuidv4()}`;
-  } else {
-    throw new Error("Not implemented");
-  }
+  return os.platform() === "win32"
+    ? `\\\\.\\pipe\\${uuidv4()}`
+    : path.join(os.tmpdir(), `socket-${uuidv4()}`);
 }
 
 export function getConfigs() {
