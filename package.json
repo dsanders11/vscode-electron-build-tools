@@ -324,7 +324,7 @@
         {
           "id": "electron-build-tools",
           "title": "Electron Build Tools",
-          "icon": "images/icon.svg"
+          "icon": "resources/icons/electron.svg"
         }
       ]
     },
