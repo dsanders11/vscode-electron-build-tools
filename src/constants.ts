@@ -26,7 +26,7 @@ export const patchDirectoryPretyNames: ElectronPatchesConfig = Object.freeze({
   "src/electron/patches/depot_tools": "depot_tools",
 });
 
-export const patchVirtualDocumentScheme = "electron-build-tools-patch";
+export const virtualDocumentScheme = "electron-build-tools";
 
 export const buildToolsRepository = "https://github.com/electron/build-tools";
 

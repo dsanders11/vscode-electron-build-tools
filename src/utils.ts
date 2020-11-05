@@ -206,12 +206,11 @@ export async function patchOverviewMarkdown(patch: vscode.Uri) {
   );
   markdown.appendMarkdown(`## ${patchMetadata.subject}\n\n`);
   markdown.appendMarkdown(`${patchMetadata.description}\n\n`);
-  markdown.appendMarkdown(
-    `**Filename**: \`${path.basename(patch.fsPath)}\`\n\n`
-  );
-  markdown.appendMarkdown(`**Files**:\n\n`);
+  markdown.appendMarkdown(`## Patch Filename\n\n`);
+  markdown.appendMarkdown(`\`${path.basename(patch.fsPath)}\`\n\n`);
+  markdown.appendMarkdown(`## Files\n\n`);
 
-  for (const filename in patchMetadata.filenames) {
+  for (const filename of patchMetadata.filenames) {
     markdown.appendMarkdown(`* ${filename}\n`);
   }
 

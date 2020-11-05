@@ -11,12 +11,12 @@ import {
   blankConfigEnumValue,
   buildTargets,
   buildToolsExecutable,
-  patchVirtualDocumentScheme,
+  virtualDocumentScheme,
 } from "./constants";
 import { ElectronViewProvider } from "./views/electron";
 import { ElectronPatchesProvider } from "./views/patches";
 import { PatchOverviewPanel } from "./patchOverview";
-import { PatchVirtualTextDocumentContentProvider } from "./patchVirtualDocument";
+import { TextDocumentContentProvider } from "./documentContentProvider";
 import { HelpTreeDataProvider } from "./views/help";
 import { runAsTask } from "./tasks";
 import { ExtensionConfig } from "./types";
@@ -226,12 +226,12 @@ function registerElectronBuildToolsCommands(
 
         if (commitSha) {
           const originalFile = filename.with({
-            scheme: patchVirtualDocumentScheme,
-            query: `gitObject=${commitSha}~1&checkoutPath=${checkoutDirectory.fsPath}`,
+            scheme: virtualDocumentScheme,
+            query: `view=contents&gitObject=${commitSha}~1&checkoutPath=${checkoutDirectory.fsPath}`,
           });
           const patchedFile = filename.with({
-            scheme: patchVirtualDocumentScheme,
-            query: `gitObject=${commitSha}&checkoutPath=${checkoutDirectory.fsPath}`,
+            scheme: virtualDocumentScheme,
+            query: `view=contents&gitObject=${commitSha}&checkoutPath=${checkoutDirectory.fsPath}`,
           });
 
           vscode.commands.executeCommand(
@@ -263,8 +263,14 @@ function registerElectronBuildToolsCommands(
     ),
     vscode.commands.registerCommand(
       "electron-build-tools.showPatchOverview",
-      async (patch: vscode.Uri) => {
-        PatchOverviewPanel.createOrShow(await patchOverviewMarkdown(patch));
+      (patch: vscode.Uri) => {
+        return vscode.commands.executeCommand(
+          "markdown.showPreview",
+          patch.with({
+            scheme: virtualDocumentScheme,
+            query: "view=patch-overview",
+          })
+        );
       }
     ),
     vscode.commands.registerCommand(
@@ -525,8 +531,8 @@ export async function activate(context: vscode.ExtensionContext) {
           new ElectronViewProvider(workspaceFolder)
         ),
         vscode.workspace.registerTextDocumentContentProvider(
-          patchVirtualDocumentScheme,
-          new PatchVirtualTextDocumentContentProvider()
+          virtualDocumentScheme,
+          new TextDocumentContentProvider()
         )
       );
     }
