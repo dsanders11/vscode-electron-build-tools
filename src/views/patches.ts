@@ -94,11 +94,7 @@ export class ElectronPatchesProvider
         children.push(
           ...patchedFilenames.map(
             (filename) =>
-              new FileInPatch(
-                path.basename(element.uri.path),
-                checkoutDirectory,
-                filename
-              )
+              new FileInPatch(element.uri, checkoutDirectory, filename)
           )
         );
       }
@@ -144,7 +140,7 @@ class PatchOverview extends vscode.TreeItem {
 
 class FileInPatch extends vscode.TreeItem {
   constructor(
-    patchName: string,
+    patch: vscode.Uri,
     checkoutDirectory: vscode.Uri,
     uri: vscode.Uri
   ) {
@@ -158,7 +154,7 @@ class FileInPatch extends vscode.TreeItem {
 
     this.command = {
       command: "electron-build-tools.showCommitDiff",
-      arguments: [checkoutDirectory, patchName, uri, this.label],
+      arguments: [checkoutDirectory, patch, uri, this.label],
       title: "Show Commit Diff",
     };
   }

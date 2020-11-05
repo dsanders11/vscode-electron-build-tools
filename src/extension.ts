@@ -242,14 +242,11 @@ function registerElectronBuildToolsCommands(
       "electron-build-tools.showCommitDiff",
       async (
         checkoutDirectory: vscode.Uri,
-        patchName: string,
+        patch: vscode.Uri,
         filename: vscode.Uri,
         patchedFilename: string
       ) => {
-        const commitSha = await findCommitForPatch(
-          checkoutDirectory,
-          patchName
-        );
+        const commitSha = await findCommitForPatch(checkoutDirectory, patch);
 
         if (commitSha) {
           const originalFile = filename.with({
@@ -265,7 +262,7 @@ function registerElectronBuildToolsCommands(
             "vscode.diff",
             originalFile,
             patchedFile,
-            `${patchName} - ${patchedFilename}`
+            `${path.basename(patch.path)} - ${patchedFilename}`
           );
         } else {
           vscode.window.showErrorMessage("Couldn't open commit diff for file");

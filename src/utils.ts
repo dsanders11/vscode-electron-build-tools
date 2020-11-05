@@ -219,14 +219,33 @@ export async function patchOverviewMarkdown(patch: vscode.Uri) {
 
 export async function findCommitForPatch(
   checkoutDirectory: vscode.Uri,
-  patchName: string
+  patch: vscode.Uri
 ) {
-  const gitCommand = `git log refs/patches/upstream-head..HEAD --grep "Patch-Filename: ${patchName}" --pretty=format:"%h"`;
+  const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
+  const patchMetadata = parsePatchMetadata(patchContents);
+  const patchName = path.basename(patch.path);
 
-  return childProcess
-    .execSync(gitCommand, {
+  // A local patch that hasn't been re-applied won't have the Patch-Filename
+  // line, so include other details to try to ensure we get a single commit
+  const gitCommand = [
+    "git log refs/patches/upstream-head..HEAD",
+    `--author "${patchMetadata.from}"`,
+    `--since "${patchMetadata.date}"`,
+    `--grep "Patch-Filename: ${patchName}"`,
+    `--grep "${patchMetadata.subject}"`,
+    `--pretty=format:"%h"`,
+  ];
+
+  const result = childProcess
+    .execSync(gitCommand.join(" "), {
       encoding: "utf8",
       cwd: checkoutDirectory.fsPath,
     })
     .trim();
+
+  if (!result || result.split("\n").length !== 1) {
+    throw new Error("Couldn't find commit");
+  }
+
+  return result;
 }
