@@ -395,7 +395,7 @@
   "dependencies": {
     "@electron/docs-parser": "^0.10.1",
     "chokidar": "^3.4.3",
-    "markdown-it": "^12.0.2",
+    "markdown-it": "^10.0.0",
     "uuid": "^8.3.1"
   },
   "lint-staged": {
