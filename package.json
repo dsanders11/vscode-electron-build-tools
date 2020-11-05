@@ -239,6 +239,10 @@
           "when": "!electron-build-tools:ready || electron-build-tools:active"
         },
         {
+          "id": "electron-build-tools:electron",
+          "name": "Electron"
+        },
+        {
           "id": "electron-build-tools:help",
           "name": "Help and Feedback",
           "visibility": "collapsed"
