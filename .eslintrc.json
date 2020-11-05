@@ -9,7 +9,18 @@
     "@typescript-eslint"
   ],
   "rules": {
-    "@typescript-eslint/naming-convention": "warn",
+    "@typescript-eslint/naming-convention": [
+      "warn",
+      {
+        "selector": "property",
+        "format": ["strictCamelCase"],
+        "leadingUnderscore": "allow",
+        "filter": {
+          "regex": "^(FORCE_COLOR|NINJA_STATUS)$",
+          "match": false
+        }
+      }
+    ],
     "@typescript-eslint/semi": "warn",
     "curly": "warn",
     "eqeqeq": "warn",

@@ -22,6 +22,7 @@ export const patchDirectoryPretyNames: ElectronPatchesConfig = Object.freeze({
   "src/electron/patches/node": "Node",
   "src/electron/patches/squirrel.mac": "squirrel.mac",
   "src/electron/patches/ReactiveObjC": "ReactiveObjC",
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   "src/electron/patches/depot_tools": "depot_tools",
 });
 
