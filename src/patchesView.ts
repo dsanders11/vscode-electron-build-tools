@@ -76,6 +76,8 @@ export class ElectronPatchesProvider
           children.push(new Patch(truncateToLength(label, 50), filename));
         }
       } else if (element instanceof Patch) {
+        children.push(new PatchOverview(element.uri));
+
         const patchDirectory = vscode.Uri.file(
           path.dirname(element.uri.fsPath)
         );
@@ -121,6 +123,14 @@ class Patch extends vscode.TreeItem {
 
     this.uri = uri; // BUG - resourceUri doesn't play nice with advanced hover
     this.iconPath = new vscode.ThemeIcon("file-text");
+  }
+}
+
+class PatchOverview extends vscode.TreeItem {
+  constructor(uri: vscode.Uri) {
+    super("Overview", vscode.TreeItemCollapsibleState.None);
+
+    this.iconPath = new vscode.ThemeIcon("preview");
 
     this.command = {
       command: "electron-build-tools.showPatchOverview",
@@ -143,7 +153,6 @@ class FileInPatch extends vscode.TreeItem {
       .relative(checkoutDirectory.path, uri.path)
       .split(path.sep)
       .join(path.posix.sep);
-    this.iconPath = new vscode.ThemeIcon("code-file");
 
     this.command = {
       command: "electron-build-tools.showCommitDiff",
