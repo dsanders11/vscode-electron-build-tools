@@ -5,12 +5,32 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
+import {
+  headingsAndContent,
+  HeadingContent,
+} from "@electron/docs-parser/dist/markdown-helpers";
+import MarkdownIt from "markdown-it";
+import MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
 
 import { buildToolsExecutable } from "./constants";
 import { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const patchedFilenameRegex = /^\+\+\+ b\/(.*)$/gm;
+
+export type DocLink = {
+  description: string;
+  destination: vscode.Uri;
+  level: number;
+};
+
+export type DocSection = {
+  heading: string;
+  level: number;
+  parent?: DocSection;
+  sections: DocSection[];
+  links: DocLink[];
+};
 
 function matchAll(pattern: RegExp, text: string): RegExpMatchArray[] {
   const matches = [];
@@ -248,4 +268,99 @@ export async function findCommitForPatch(
   }
 
   return result;
+}
+
+export async function parseDocsSections(
+  workspaceFolder: vscode.WorkspaceFolder
+) {
+  const docsRoot = vscode.Uri.file(
+    path.resolve(workspaceFolder.uri.fsPath, "docs")
+  );
+  const readmeContent = await vscode.workspace.fs.readFile(
+    vscode.Uri.file(path.resolve(docsRoot.fsPath, "README.md"))
+  );
+
+  const md = new MarkdownIt();
+  const parsedHeadings = headingsAndContent(
+    md.parse(readmeContent.toString(), {}) as any
+  );
+  const rootHeading = parsedHeadings[0];
+
+  const parseLinks = (content: MarkdownToken[]) => {
+    const links = [];
+
+    for (const { children, level, type } of content) {
+      if (type === "inline" && children) {
+        let href: string | undefined;
+
+        for (const child of children) {
+          if (child.type === "link_open") {
+            href = child.attrs![0][1];
+          } else if (href && child.type === "text") {
+            // Mixed separators will mess with things, so make sure it's
+            // POSIX since that's what links in the docs will be using
+            const filePath = path
+              .resolve(docsRoot.fsPath, href)
+              .split(path.sep)
+              .join(path.posix.sep);
+
+            // These links have fragments in them, so don't
+            // use vscode.Uri.file to parse them
+            links.push({
+              description: child.content,
+              destination: vscode.Uri.parse(`file:///${filePath}`),
+              level,
+            });
+          }
+        }
+      } else if (type === "heading_open") {
+        break; // Don't bleed into other sections
+      }
+    }
+
+    return links;
+  };
+
+  const rootSection: DocSection = {
+    heading: rootHeading.heading,
+    level: rootHeading.level,
+    sections: [],
+    links: [],
+  };
+
+  const walkSections = (
+    parent: DocSection | undefined,
+    headings: HeadingContent[]
+  ) => {
+    if (headings.length === 0) {
+      return;
+    }
+
+    const [{ heading, level, content }, ...remainingHeadings] = headings;
+
+    while (parent && level <= parent.level) {
+      parent = parent.parent;
+    }
+
+    if (parent) {
+      parent.sections.push({
+        heading,
+        level,
+        parent,
+        sections: [],
+        links: parseLinks(content as any),
+      });
+    } else {
+      throw new Error("Malformed document layout");
+    }
+
+    walkSections(
+      parent.sections[parent.sections.length - 1],
+      remainingHeadings
+    );
+  };
+
+  walkSections(rootSection, parsedHeadings.slice(1));
+
+  return rootSection;
 }
