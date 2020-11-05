@@ -2,8 +2,8 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import { patchDirectoryPretyNames } from "./constants";
-import { ElectronPatchesConfig } from "./types";
+import { patchDirectoryPretyNames } from "../constants";
+import { ElectronPatchesConfig } from "../types";
 import {
   getCheckoutDirectoryForPatchDirectory,
   getFilesInPatch,
@@ -13,7 +13,7 @@ import {
   parsePatchConfig,
   patchTooltipMarkdown,
   truncateToLength,
-} from "./utils";
+} from "../utils";
 
 export class ElectronPatchesProvider
   implements vscode.TreeDataProvider<vscode.TreeItem> {

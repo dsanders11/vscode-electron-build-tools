@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { buildToolsRepository, extensionId, repositoryUrl } from "./constants";
+import { buildToolsRepository, extensionId, repositoryUrl } from "../constants";
 
 export class HelpTreeDataProvider
   implements vscode.TreeDataProvider<vscode.TreeItem> {

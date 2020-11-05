@@ -1,7 +1,7 @@
 import * as chokidar from "chokidar";
 import * as vscode from "vscode";
 
-import { getConfigs, getConfigsFilePath } from "./utils";
+import { getConfigs, getConfigsFilePath } from "../utils";
 
 export class ElectronBuildToolsConfigsProvider
   implements vscode.TreeDataProvider<vscode.TreeItem> {

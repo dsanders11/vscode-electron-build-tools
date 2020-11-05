@@ -6,18 +6,18 @@ import * as path from "path";
 import {
   ConfigTreeItem,
   ElectronBuildToolsConfigsProvider,
-} from "./configsView";
+} from "./views/configs";
 import {
   blankConfigEnumValue,
   buildTargets,
   buildToolsExecutable,
   patchVirtualDocumentScheme,
 } from "./constants";
-import { ElectronViewProvider } from "./electronView";
-import { ElectronPatchesProvider } from "./patchesView";
+import { ElectronViewProvider } from "./views/electron";
+import { ElectronPatchesProvider } from "./views/patches";
 import { PatchOverviewPanel } from "./patchOverview";
 import { PatchVirtualTextDocumentContentProvider } from "./patchVirtualDocument";
-import { HelpTreeDataProvider } from "./helpView";
+import { HelpTreeDataProvider } from "./views/help";
 import { runAsTask } from "./tasks";
 import { ExtensionConfig } from "./types";
 import {
