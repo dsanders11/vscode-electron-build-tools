@@ -12,10 +12,6 @@
   "engines": {
     "vscode": "^1.50.0"
   },
-  "categories": [
-    "Linters",
-    "Other"
-  ],
   "activationEvents": [
     "workspaceContains:ELECTRON_VERSION",
     "workspaceContains:electron/ELECTRON_VERSION",
@@ -23,39 +19,63 @@
     "onDebugInitialConfigurations",
     "onView:electron-build-tools"
   ],
+  "categories": [
+    "Linters",
+    "Other"
+  ],
   "contributes": {
+    "commands": [
+      {
+        "command": "electron-build-tools.build",
+        "title": "Electron Build Tools: Build"
+      },
+      {
+        "command": "electron-build-tools.remove-config",
+        "title": "Remove Config",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "electron-build-tools.sanitize-config",
+        "title": "Sanitize Config"
+      },
+      {
+        "command": "electron-build-tools.showCommitDiff",
+        "title": "Show Commit Diff"
+      },
+      {
+        "command": "electron-build-tools.show.goma",
+        "title": "Electron Build Tools: Show Goma"
+      },
+      {
+        "command": "electron-build-tools.showPatchesDocs",
+        "title": "Show Patches Documentation",
+        "icon": "$(remote-explorer-documentation)"
+      },
+      {
+        "command": "electron-build-tools.showPatchOverview",
+        "title": "Show Patch Overview"
+      },
+      {
+        "command": "electron-build-tools.sync",
+        "title": "Electron Build Tools: Sync"
+      },
+      {
+        "command": "electron-build-tools.sync.force",
+        "title": "Electron Build Tools: Force Sync"
+      },
+      {
+        "command": "electron-build-tools.use-config",
+        "title": "Use Config",
+        "icon": "$(check)"
+      },
+      {
+        "command": "electron-build-tools.use-config.quick-pick",
+        "title": "Electron Build Tools: Use Config"
+      }
+    ],
     "configuration": {
       "title": "Electron Build Tools",
       "properties": {
-        "electronBuildTools.build.showTargets": {
-          "type": "boolean",
-          "default": false,
-          "title": "Show Targets",
-          "description": "When building, show a list of build targets to choose from."
-        },
-        "electronBuildTools.build.defaultTarget": {
-          "type": "string",
-          "description": "Default target to build. Leave blank to use the config default.",
-          "enum": [
-            "----",
-            "breakpad",
-            "chromedriver",
-            "electron",
-            "electron:dist",
-            "mksnapshot",
-            "node:headers"
-          ],
-          "default": "----"
-        },
-        "electronBuildTools.build.ninjaArgs": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "default": {},
-          "title": "Ninja Args",
-          "description": "Args to pass to Ninja when building."
-        },
         "electronBuildTools.build.buildOptions": {
           "type": "object",
           "properties": {
@@ -82,47 +102,38 @@
           "default": {},
           "title": "Build Options",
           "description": "Options to use when building."
+        },
+        "electronBuildTools.build.defaultTarget": {
+          "type": "string",
+          "description": "Default target to build. Leave blank to use the config default.",
+          "enum": [
+            "----",
+            "breakpad",
+            "chromedriver",
+            "electron",
+            "electron:dist",
+            "mksnapshot",
+            "node:headers"
+          ],
+          "default": "----"
+        },
+        "electronBuildTools.build.ninjaArgs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Ninja Args",
+          "description": "Args to pass to Ninja when building."
+        },
+        "electronBuildTools.build.showTargets": {
+          "type": "boolean",
+          "default": false,
+          "title": "Show Targets",
+          "description": "When building, show a list of build targets to choose from."
         }
       }
     },
-    "languages": [
-      {
-        "id": "python",
-        "filenames": [
-          "DEPS"
-        ]
-      }
-    ],
-    "problemMatchers": [
-      {
-        "name": "electron",
-        "source": "electron-build-tools",
-        "label": "Electron Build Tools",
-        "fileLocation": [
-          "relative",
-          "${command:electron-build-tools.show.outdir}"
-        ],
-        "applyTo": "allDocuments",
-        "pattern": {
-          "regexp": "^(.*)\\((\\d+),(\\d+)\\):\\s+(warning|error):\\s+(.*)$",
-          "file": 1,
-          "line": 2,
-          "column": 3,
-          "severity": 4,
-          "message": 5
-        }
-      }
-    ],
-    "jsonValidation": [
-      {
-        "fileMatch": "evm.*.json",
-        "url": "./schemas/evm-config.schema.json"
-      },
-      {
-        "fileMatch": "patches/config.json",
-        "url": "./schemas/patches-config.schema.json"
-      }
-    ],
     "debuggers": [
       {
         "type": "electron.cpp.windows",
@@ -158,105 +169,22 @@
         ]
       }
     ],
-    "commands": [
+    "jsonValidation": [
       {
-        "command": "electron-build-tools.build",
-        "title": "Electron Build Tools: Build"
+        "fileMatch": "evm.*.json",
+        "url": "./schemas/evm-config.schema.json"
       },
       {
-        "command": "electron-build-tools.use-config",
-        "title": "Use Config",
-        "icon": "$(check)"
-      },
-      {
-        "command": "electron-build-tools.remove-config",
-        "title": "Remove Config",
-        "icon": "$(trash)"
-      },
-      {
-        "command": "electron-build-tools.showCommitDiff",
-        "title": "Show Commit Diff"
-      },
-      {
-        "command": "electron-build-tools.showPatchesDocs",
-        "title": "Show Patches Documentation",
-        "icon": "$(remote-explorer-documentation)"
-      },
-      {
-        "command": "electron-build-tools.showPatchOverview",
-        "title": "Show Patch Overview"
-      },
-      {
-        "command": "electron-build-tools.sanitize-config",
-        "title": "Sanitize Config"
-      },
-      {
-        "command": "electron-build-tools.use-config.quick-pick",
-        "title": "Electron Build Tools: Use Config"
-      },
-      {
-        "command": "electron-build-tools.show.goma",
-        "title": "Electron Build Tools: Show Goma"
-      },
-      {
-        "command": "electron-build-tools.sync",
-        "title": "Electron Build Tools: Sync"
-      },
-      {
-        "command": "electron-build-tools.sync.force",
-        "title": "Electron Build Tools: Force Sync"
+        "fileMatch": "patches/config.json",
+        "url": "./schemas/patches-config.schema.json"
       }
     ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "electron-build-tools",
-          "title": "Electron Build Tools",
-          "icon": "images/icon.svg"
-        }
-      ]
-    },
-    "views": {
-      "electron-build-tools": [
-        {
-          "id": "electron-build-tools:welcome",
-          "name": "Welcome",
-          "when": "electron-build-tools:ready && !electron-build-tools:build-tools-installed"
-        },
-        {
-          "id": "electron-build-tools:workspace",
-          "name": "Workspace",
-          "when": "electron-build-tools:ready && electron-build-tools:build-tools-installed && !electron-build-tools:is-electron-workspace "
-        },
-        {
-          "id": "electron-build-tools:configs",
-          "name": "Configs",
-          "when": "!electron-build-tools:ready || electron-build-tools:active"
-        },
-        {
-          "id": "electron-build-tools:patches",
-          "name": "Patches",
-          "when": "!electron-build-tools:ready || electron-build-tools:active"
-        },
-        {
-          "id": "electron-build-tools:electron",
-          "name": "Electron"
-        },
-        {
-          "id": "electron-build-tools:help",
-          "name": "Help and Feedback",
-          "visibility": "collapsed"
-        }
-      ]
-    },
-    "viewsWelcome": [
+    "languages": [
       {
-        "view": "electron-build-tools:welcome",
-        "contents": "In order to use the Electron Build Tools extension, you need build-tools installed.\nFind out more at the [build-tools repository](https://githbu.com/electron/build-tools)."
-      },
-      {
-        "view": "electron-build-tools:workspace",
-        "contents": "An Electron checkout wasn't found in this workspace.\n[Open Folder](command:vscode.openFolder)"
+        "id": "python",
+        "filenames": [
+          "DEPS"
+        ]
       }
     ],
     "menus": {
@@ -266,28 +194,16 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
-          "command": "electron-build-tools.use-config",
+          "command": "electron-build-tools.remove-config",
           "when": "false"
         },
         {
-          "command": "electron-build-tools.use-config.quick-pick",
-          "when": "electron-build-tools:build-tools-installed"
+          "command": "electron-build-tools.sanitize-config",
+          "when": "false"
         },
         {
           "command": "electron-build-tools.show.goma",
           "when": "electron-build-tools:build-tools-installed"
-        },
-        {
-          "command": "electron-build-tools.sync",
-          "when": "electron-build-tools:build-tools-installed"
-        },
-        {
-          "command": "electron-build-tools.sync.force",
-          "when": "electron-build-tools:build-tools-installed"
-        },
-        {
-          "command": "electron-build-tools.remove-config",
-          "when": "false"
         },
         {
           "command": "electron-build-tools.showCommitDiff",
@@ -302,8 +218,20 @@
           "when": "false"
         },
         {
-          "command": "electron-build-tools.sanitize-config",
+          "command": "electron-build-tools.sync",
+          "when": "electron-build-tools:build-tools-installed"
+        },
+        {
+          "command": "electron-build-tools.sync.force",
+          "when": "electron-build-tools:build-tools-installed"
+        },
+        {
+          "command": "electron-build-tools.use-config",
           "when": "false"
+        },
+        {
+          "command": "electron-build-tools.use-config.quick-pick",
+          "when": "electron-build-tools:build-tools-installed"
         }
       ],
       "view/item/context": [
@@ -312,17 +240,17 @@
           "when": "view == electron-build-tools:configs && viewItem =~ /^config$/"
         },
         {
+          "command": "electron-build-tools.remove-config",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/",
+          "group": "inline"
+        },
+        {
           "command": "electron-build-tools.sanitize-config",
           "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
           "command": "electron-build-tools.use-config",
           "when": "view == electron-build-tools:configs && viewItem =~ /^config$/"
-        },
-        {
-          "command": "electron-build-tools.remove-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/",
-          "group": "inline"
         },
         {
           "command": "electron-build-tools.use-config",
@@ -337,7 +265,79 @@
           "group": "navigation"
         }
       ]
-    }
+    },
+    "problemMatchers": [
+      {
+        "name": "electron",
+        "source": "electron-build-tools",
+        "label": "Electron Build Tools",
+        "fileLocation": [
+          "relative",
+          "${command:electron-build-tools.show.outdir}"
+        ],
+        "applyTo": "allDocuments",
+        "pattern": {
+          "regexp": "^(.*)\\((\\d+),(\\d+)\\):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    ],
+    "views": {
+      "electron-build-tools": [
+        {
+          "id": "electron-build-tools:configs",
+          "name": "Configs",
+          "when": "!electron-build-tools:ready || electron-build-tools:active"
+        },
+        {
+          "id": "electron-build-tools:electron",
+          "name": "Electron"
+        },
+        {
+          "id": "electron-build-tools:help",
+          "name": "Help and Feedback",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "electron-build-tools:patches",
+          "name": "Patches",
+          "when": "!electron-build-tools:ready || electron-build-tools:active"
+        },
+        {
+          "id": "electron-build-tools:welcome",
+          "name": "Welcome",
+          "when": "electron-build-tools:ready && !electron-build-tools:build-tools-installed"
+        },
+        {
+          "id": "electron-build-tools:workspace",
+          "name": "Workspace",
+          "when": "electron-build-tools:ready && electron-build-tools:build-tools-installed && !electron-build-tools:is-electron-workspace "
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "electron-build-tools",
+          "title": "Electron Build Tools",
+          "icon": "images/icon.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "electron-build-tools:welcome",
+        "contents": "In order to use the Electron Build Tools extension, you need build-tools installed.\nFind out more at the [build-tools repository](https://githbu.com/electron/build-tools)."
+      },
+      {
+        "view": "electron-build-tools:workspace",
+        "contents": "An Electron checkout wasn't found in this workspace.\n[Open Folder](command:vscode.openFolder)"
+      }
+    ]
   },
   "main": "./out/extension.js",
   "scripts": {
