@@ -3,6 +3,7 @@
   "displayName": "Electron Build Tools",
   "publisher": "dsanders11",
   "description": "A collection of VS Code helpers related to developing the Electron project.",
+  "icon": "resources/icons/electron_logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/dsanders11/vscode-electron-build-tools.git"
