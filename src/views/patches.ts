@@ -53,14 +53,14 @@ export class ElectronPatchesProvider
     if (!element) {
       // Root element, read the config file for all patch directories
       for (const patchDirectory of Object.keys(await this.patchesConfig)) {
+        const patchDirectoryBasename = path.basename(patchDirectory);
         const uri = vscode.Uri.file(
           path.resolve(this.rootDirectory.fsPath, patchDirectory)
         );
         const label =
-          patchDirectoryPretyNames[patchDirectory] ||
-          path.basename(patchDirectory);
+          patchDirectoryPretyNames[patchDirectory] || patchDirectoryBasename;
 
-        children.push(new PatchDirectory(label, uri));
+        children.push(new PatchDirectory(label, uri, patchDirectoryBasename));
       }
     } else if (
       element.collapsibleState !== vscode.TreeItemCollapsibleState.None
@@ -108,12 +108,14 @@ export class ElectronPatchesProvider
   }
 }
 
-class PatchDirectory extends vscode.TreeItem {
-  constructor(label: string, public uri: vscode.Uri) {
+export class PatchDirectory extends vscode.TreeItem {
+  constructor(label: string, public uri: vscode.Uri, public name: string) {
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
+    this.name = name;
     this.uri = uri; // BUG - resourceUri doesn't play nice with advanced hover
     this.iconPath = new vscode.ThemeIcon("repo");
+    this.contextValue = "repo";
   }
 }
 

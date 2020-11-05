@@ -36,6 +36,11 @@
         "icon": "$(trash)"
       },
       {
+        "command": "electron-build-tools.refreshPatches",
+        "title": "Refresh Patches",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "electron-build-tools.sanitize-config",
         "title": "Sanitize Config"
       },
@@ -199,6 +204,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.refreshPatches",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.sanitize-config",
           "when": "false"
         },
@@ -257,9 +266,19 @@
           "command": "electron-build-tools.use-config",
           "when": "view == electron-build-tools:configs && viewItem =~ /^config$/",
           "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.refreshPatches",
+          "when": "view == electron-build-tools:patches && viewItem =~ /^repo$/",
+          "group": "inline"
         }
       ],
       "view/title": [
+        {
+          "command": "electron-build-tools.refreshPatches",
+          "when": "view == electron-build-tools:patches",
+          "group": "navigation"
+        },
         {
           "command": "electron-build-tools.showPatchesDocs",
           "when": "view == electron-build-tools:patches",

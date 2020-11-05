@@ -14,7 +14,7 @@ import {
   virtualDocumentScheme,
 } from "./constants";
 import { ElectronViewProvider } from "./views/electron";
-import { ElectronPatchesProvider } from "./views/patches";
+import { ElectronPatchesProvider, PatchDirectory } from "./views/patches";
 import { PatchOverviewPanel } from "./patchOverview";
 import { TextDocumentContentProvider } from "./documentContentProvider";
 import { HelpTreeDataProvider } from "./views/help";
@@ -57,7 +57,8 @@ async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
 
 function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
-  configsProvider: ElectronBuildToolsConfigsProvider
+  configsProvider: ElectronBuildToolsConfigsProvider,
+  patchesProvider: ElectronPatchesProvider
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand("electron-build-tools.build", async () => {
@@ -189,6 +190,32 @@ function registerElectronBuildToolsCommands(
         }
       });
     }),
+    vscode.commands.registerCommand(
+      "electron-build-tools.refreshPatches",
+      (arg: PatchDirectory | string) => {
+        // TODO - Need to prevent user from continually mashing the button
+        // and having this run multiple times simultaneously
+        const target = arg instanceof PatchDirectory ? arg.name : arg;
+
+        return new Promise((resolve, reject) => {
+          const cp = childProcess.exec(
+            `${buildToolsExecutable} patches ${target || "all"}`
+          );
+
+          cp.on("error", (err) => reject(err));
+          cp.on("exit", (code) => {
+            if (code !== 0) {
+              vscode.window.showErrorMessage("Failed to refresh patches");
+            } else {
+              // TBD - This isn't very noticeable
+              vscode.window.setStatusBarMessage("Refreshed patches");
+              patchesProvider.refresh();
+              resolve();
+            }
+          });
+        });
+      }
+    ),
     vscode.commands.registerCommand(
       "electron-build-tools.remove-config",
       (config: ConfigTreeItem) => {
@@ -511,7 +538,15 @@ export async function activate(context: vscode.ExtensionContext) {
       );
 
       const configsProvider = new ElectronBuildToolsConfigsProvider();
-      registerElectronBuildToolsCommands(context, configsProvider);
+      const patchesProvider = new ElectronPatchesProvider(
+        workspaceFolder,
+        getPatchesConfigFile(workspaceFolder)
+      );
+      registerElectronBuildToolsCommands(
+        context,
+        configsProvider,
+        patchesProvider
+      );
       registerHelperCommands(context);
       context.subscriptions.push(
         vscode.languages.createDiagnosticCollection("electron-build-tools"),
@@ -521,10 +556,7 @@ export async function activate(context: vscode.ExtensionContext) {
         ),
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:patches",
-          new ElectronPatchesProvider(
-            workspaceFolder,
-            getPatchesConfigFile(workspaceFolder)
-          )
+          patchesProvider
         ),
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:electron",
