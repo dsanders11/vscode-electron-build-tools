@@ -290,25 +290,6 @@
     "views": {
       "electron-build-tools": [
         {
-          "id": "electron-build-tools:configs",
-          "name": "Configs",
-          "when": "!electron-build-tools:ready || electron-build-tools:active"
-        },
-        {
-          "id": "electron-build-tools:electron",
-          "name": "Electron"
-        },
-        {
-          "id": "electron-build-tools:help",
-          "name": "Help and Feedback",
-          "visibility": "collapsed"
-        },
-        {
-          "id": "electron-build-tools:patches",
-          "name": "Patches",
-          "when": "!electron-build-tools:ready || electron-build-tools:active"
-        },
-        {
           "id": "electron-build-tools:welcome",
           "name": "Welcome",
           "when": "electron-build-tools:ready && !electron-build-tools:build-tools-installed"
@@ -317,6 +298,26 @@
           "id": "electron-build-tools:workspace",
           "name": "Workspace",
           "when": "electron-build-tools:ready && electron-build-tools:build-tools-installed && !electron-build-tools:is-electron-workspace "
+        },
+        {
+          "id": "electron-build-tools:configs",
+          "name": "Configs",
+          "when": "!electron-build-tools:ready || electron-build-tools:active"
+        },
+        {
+          "id": "electron-build-tools:patches",
+          "name": "Patches",
+          "when": "!electron-build-tools:ready || electron-build-tools:active"
+        },
+        {
+          "id": "electron-build-tools:electron",
+          "name": "Electron",
+          "when": "!electron-build-tools:ready || electron-build-tools:active"
+        },
+        {
+          "id": "electron-build-tools:help",
+          "name": "Help and Feedback",
+          "visibility": "collapsed"
         }
       ]
     },
