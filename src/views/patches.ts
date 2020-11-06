@@ -58,7 +58,7 @@ export class ElectronPatchesProvider
           path.resolve(this.rootDirectory.fsPath, patchDirectory)
         );
         const label =
-          patchDirectoryPretyNames[patchDirectory] || patchDirectoryBasename;
+          patchDirectoryPretyNames[patchDirectory] ?? patchDirectoryBasename;
 
         children.push(new PatchDirectory(label, uri, patchDirectoryBasename));
       }

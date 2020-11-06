@@ -23,7 +23,7 @@ export class PatchOverviewPanel {
     const panel = vscode.window.createWebviewPanel(
       PatchOverviewPanel.viewType,
       "Patch Overview",
-      column || vscode.ViewColumn.One,
+      column ?? vscode.ViewColumn.One,
       {
         enableScripts: true,
       }

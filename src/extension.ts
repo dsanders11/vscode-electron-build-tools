@@ -93,7 +93,7 @@ function registerElectronBuildToolsCommands(
 
       if (buildConfig.get("showTargets")) {
         // Settings default target takes precedence
-        const defaultTarget = settingsDefaultTarget || getConfigDefaultTarget();
+        const defaultTarget = settingsDefaultTarget ?? getConfigDefaultTarget();
         const quickPickItems: vscode.QuickPickItem[] = [];
 
         if (defaultTarget) {
@@ -126,7 +126,7 @@ function registerElectronBuildToolsCommands(
       if (quickPick) {
         const userQuit = await new Promise((resolve) => {
           quickPick!.onDidAccept(() => {
-            target = quickPick!.selectedItems[0].label || target;
+            target = quickPick!.selectedItems[0].label ?? target;
             quickPick!.hide();
             resolve();
           });
@@ -225,7 +225,7 @@ function registerElectronBuildToolsCommands(
             encoding: "utf8",
           },
           (error, stdout, stderr) => {
-            if (error || stdout.trim() !== `Removed config ${config.label}`) {
+            if (error ?? stdout.trim() !== `Removed config ${config.label}`) {
               vscode.window.showErrorMessage(
                 `Failed to remove config: ${stderr.trim()}`
               );
@@ -412,7 +412,7 @@ function registerElectronBuildToolsCommands(
             encoding: "utf8",
           },
           (error, stdout) => {
-            if (error || stdout.trim() !== `Now using config ${config.label}`) {
+            if (error ?? stdout.trim() !== `Now using config ${config.label}`) {
               vscode.window.showErrorMessage(
                 "Failed to set active Electron build-tools config"
               );
@@ -439,7 +439,7 @@ function registerElectronBuildToolsCommands(
               encoding: "utf8",
             },
             (error, stdout) => {
-              if (error || stdout.trim() !== `Now using config ${selected}`) {
+              if (error ?? stdout.trim() !== `Now using config ${selected}`) {
                 vscode.window.showErrorMessage(
                   "Failed to set active Electron build-tools config"
                 );
