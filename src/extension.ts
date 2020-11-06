@@ -15,7 +15,6 @@ import {
 } from "./constants";
 import { ElectronViewProvider } from "./views/electron";
 import { ElectronPatchesProvider, PatchDirectory } from "./views/patches";
-import { PatchOverviewPanel } from "./patchOverview";
 import { TextDocumentContentProvider } from "./documentContentProvider";
 import { HelpTreeDataProvider } from "./views/help";
 import { runAsTask } from "./tasks";
@@ -27,7 +26,6 @@ import {
   getConfigsFilePath,
   getPatchesConfigFile,
   isBuildToolsInstalled,
-  patchOverviewMarkdown,
 } from "./utils";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
