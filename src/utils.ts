@@ -32,19 +32,6 @@ export type DocSection = {
   links: DocLink[];
 };
 
-function matchAll(pattern: RegExp, text: string): RegExpMatchArray[] {
-  const matches = [];
-  pattern.lastIndex = 0;
-
-  let match: RegExpMatchArray | null;
-
-  while ((match = pattern.exec(text))) {
-    matches.push(match);
-  }
-
-  return matches;
-}
-
 export function isBuildToolsInstalled() {
   const result = childProcess.spawnSync(
     os.platform() === "win32" ? "where" : "which",
@@ -123,9 +110,9 @@ export async function getFilesInPatch(
   patch: vscode.Uri
 ): Promise<vscode.Uri[]> {
   const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
-  const filenames = matchAll(patchedFilenameRegex, patchContents)!.map(
-    (match) => match[1]
-  );
+  const filenames = Array.from(
+    patchContents.matchAll(patchedFilenameRegex)
+  ).map((match) => match[1]);
 
   return filenames.map((filename) =>
     vscode.Uri.file(path.resolve(baseDirectory.fsPath, filename))
@@ -185,7 +172,7 @@ export function parsePatchMetadata(patchContents: string) {
     date: /^Date: (.*)$/m.exec(patchContents)![1],
     subject: /^Subject: (.*)$/m.exec(patchContents)![1],
     description: /Subject.*\s+([\s\S]*?)\s+diff/.exec(patchContents)![1],
-    filenames: matchAll(patchedFilenameRegex, patchContents)!.map(
+    filenames: Array.from(patchContents.matchAll(patchedFilenameRegex)).map(
       (match) => match[1]
     ),
   };
