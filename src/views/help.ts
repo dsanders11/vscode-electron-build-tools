@@ -8,7 +8,7 @@ export class HelpTreeDataProvider
     return element;
   }
 
-  getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
+  async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
     if (!element) {
       const reportIssueTreeItem = new vscode.TreeItem(
         "Report Issue",
@@ -23,7 +23,7 @@ export class HelpTreeDataProvider
         title: "Report Issue",
       };
 
-      return Promise.resolve([
+      return [
         new LinkHelpTreeItem(
           "Extension Documentation",
           new vscode.ThemeIcon("remote-explorer-documentation"),
@@ -40,10 +40,10 @@ export class HelpTreeDataProvider
           vscode.Uri.parse(`${repositoryUrl}/issues`)
         ),
         reportIssueTreeItem,
-      ]);
+      ];
     }
 
-    return Promise.resolve([]);
+    return [];
   }
 }
 

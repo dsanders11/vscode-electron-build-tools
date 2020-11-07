@@ -50,7 +50,7 @@ export class ElectronBuildToolsConfigsProvider
     return element;
   }
 
-  getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
+  async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
     const configs: vscode.TreeItem[] = [];
 
     if (!element) {
@@ -73,7 +73,7 @@ export class ElectronBuildToolsConfigsProvider
       }
     }
 
-    return Promise.resolve(configs);
+    return configs;
   }
 }
 
