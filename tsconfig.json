@@ -8,7 +8,10 @@
       "es2020.string"
     ],
     "sourceMap": true,
-    "rootDir": "src",
+    "rootDirs": [
+      "src",
+      "scripts"
+    ],
     "strict": true,
     "esModuleInterop": true
   },

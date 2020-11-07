@@ -18,6 +18,7 @@ type OnDidWriteLine = {
 };
 
 export function runAsTask(
+  context: vscode.ExtensionContext,
   operationName: string,
   taskName: string,
   command: string,
@@ -32,8 +33,8 @@ export function runAsTask(
     taskName,
     "electron-build-tools",
     new vscode.ShellExecution(
-      `node echo-to-socket.js "${command}" ${socketName}`,
-      { cwd: __dirname, ...shellOptions }
+      `node out/scripts/echo-to-socket.js "${command}" ${socketName}`,
+      { cwd: context.extensionPath, ...shellOptions }
     ),
     "$electron"
   );

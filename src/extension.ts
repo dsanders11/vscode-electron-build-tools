@@ -353,6 +353,7 @@ function registerElectronBuildToolsCommands(
         let initialProgress = false;
 
         const task = runAsTask(
+          context,
           operationName,
           "sync",
           command,

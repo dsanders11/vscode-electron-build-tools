@@ -360,7 +360,7 @@
       }
     ]
   },
-  "main": "./out/extension.js",
+  "main": "./out/src/extension.js",
   "scripts": {
     "vscode:prepublish": "yarn run compile",
     "compile": "tsc -p ./",
