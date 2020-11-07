@@ -7,5 +7,7 @@ src/**
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
+**/.commitlintrc.json
 **/*.map
 **/*.ts
+.github
