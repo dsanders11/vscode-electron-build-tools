@@ -86,22 +86,18 @@ export function getConfigDefaultTarget(): string | undefined {
 }
 
 export function getPatchesConfigFile(workspaceFolder: vscode.WorkspaceFolder) {
-  return vscode.Uri.file(
-    path.resolve(workspaceFolder.uri.fsPath, "patches", "config.json")
-  );
+  return vscode.Uri.joinPath(workspaceFolder.uri, "patches", "config.json");
 }
 
 export async function getPatches(directory: vscode.Uri): Promise<vscode.Uri[]> {
-  const patchListFile = vscode.Uri.file(
-    path.resolve(directory.fsPath, ".patches")
-  );
+  const patchListFile = vscode.Uri.joinPath(directory, ".patches");
   const patchFilenames = (await vscode.workspace.fs.readFile(patchListFile))
     .toString()
     .trim()
     .split("\n");
 
   return patchFilenames.map((patchFilename) =>
-    vscode.Uri.file(path.resolve(directory.fsPath, patchFilename.trim()))
+    vscode.Uri.joinPath(directory, patchFilename.trim())
   );
 }
 
@@ -115,7 +111,7 @@ export async function getFilesInPatch(
   ).map((match) => match[1]);
 
   return filenames.map((filename) =>
-    vscode.Uri.file(path.resolve(baseDirectory.fsPath, filename))
+    vscode.Uri.joinPath(baseDirectory, filename)
   );
 }
 
@@ -129,7 +125,7 @@ export function getRootDirectoryFromWorkspaceFolder(
   workspaceFolder: vscode.WorkspaceFolder
 ) {
   // TODO - Handle the case where either src or src/electron is workspaceFolder
-  return vscode.Uri.file(path.resolve(workspaceFolder.uri.fsPath, "..", ".."));
+  return vscode.Uri.joinPath(workspaceFolder.uri, "..", "..");
 }
 
 export function getCheckoutDirectoryForPatchDirectory(
@@ -141,9 +137,7 @@ export function getCheckoutDirectoryForPatchDirectory(
     config
   )) {
     if (patchDirectory.path.endsWith(patchDirectoryTail)) {
-      return vscode.Uri.file(
-        path.resolve(rootDirectory.fsPath, checkoutDirectory)
-      );
+      return vscode.Uri.joinPath(rootDirectory, checkoutDirectory);
     }
   }
 
@@ -260,11 +254,9 @@ export async function findCommitForPatch(
 export async function parseDocsSections(
   workspaceFolder: vscode.WorkspaceFolder
 ) {
-  const docsRoot = vscode.Uri.file(
-    path.resolve(workspaceFolder.uri.fsPath, "docs")
-  );
+  const docsRoot = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
   const readmeContent = await vscode.workspace.fs.readFile(
-    vscode.Uri.file(path.resolve(docsRoot.fsPath, "README.md"))
+    vscode.Uri.joinPath(docsRoot, "README.md")
   );
 
   const md = new MarkdownIt();

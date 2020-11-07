@@ -54,9 +54,7 @@ export class ElectronPatchesProvider
       // Root element, read the config file for all patch directories
       for (const patchDirectory of Object.keys(await this.patchesConfig)) {
         const patchDirectoryBasename = path.basename(patchDirectory);
-        const uri = vscode.Uri.file(
-          path.resolve(this.rootDirectory.fsPath, patchDirectory)
-        );
+        const uri = vscode.Uri.joinPath(this.rootDirectory, patchDirectory);
         const label =
           patchDirectoryPretyNames[patchDirectory] ?? patchDirectoryBasename;
 

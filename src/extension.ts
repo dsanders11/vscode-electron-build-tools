@@ -31,17 +31,17 @@ import {
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];
   for (const possibleRoot of possiblePackageRoots) {
-    const rootPackageFilename = path.join(
-      workspaceFolder.uri.fsPath,
+    const rootPackageFilename = vscode.Uri.joinPath(
+      workspaceFolder.uri,
       possibleRoot,
       "package.json"
     );
-    if (!fs.existsSync(rootPackageFilename)) {
+    if (!fs.existsSync(rootPackageFilename.fsPath)) {
       continue;
     }
 
     const rootPackageFile = await vscode.workspace.fs.readFile(
-      vscode.Uri.file(rootPackageFilename)
+      rootPackageFilename
     );
 
     const { name } = JSON.parse(rootPackageFile.toString()) as Record<
@@ -272,13 +272,11 @@ function registerElectronBuildToolsCommands(
       () => {
         vscode.commands.executeCommand(
           "markdown.showPreview",
-          vscode.Uri.file(
-            path.join(
-              vscode.workspace.workspaceFolders![0].uri.fsPath,
-              "docs",
-              "development",
-              "patches.md"
-            )
+          vscode.Uri.joinPath(
+            vscode.workspace.workspaceFolders![0].uri,
+            "docs",
+            "development",
+            "patches.md"
           )
         );
       }

@@ -27,31 +27,23 @@ export class ElectronViewProvider
         new ElectronTreeItem(
           "Getting Started",
           new vscode.ThemeIcon("rocket"),
-          vscode.Uri.file(
-            path.join(this.workspaceFolder.uri.fsPath, "README.md")
-          )
+          vscode.Uri.joinPath(this.workspaceFolder.uri, "README.md")
         ),
         new ElectronTreeItem(
           "Code of Conduct",
           new vscode.ThemeIcon("smiley"),
-          vscode.Uri.file(
-            path.join(this.workspaceFolder.uri.fsPath, "CODE_OF_CONDUCT.md")
-          )
+          vscode.Uri.joinPath(this.workspaceFolder.uri, "CODE_OF_CONDUCT.md")
         ),
         this.documentationRoot,
         new ElectronTreeItem(
           "Contributing To Electron",
           new vscode.ThemeIcon("git-pull-request"),
-          vscode.Uri.file(
-            path.join(this.workspaceFolder.uri.fsPath, "CONTRIBUTING.md")
-          )
+          vscode.Uri.joinPath(this.workspaceFolder.uri, "CONTRIBUTING.md")
         ),
         new ElectronTreeItem(
           "Reporting Security Issues",
           new vscode.ThemeIcon("shield"),
-          vscode.Uri.file(
-            path.join(this.workspaceFolder.uri.fsPath, "SECURITY.md")
-          )
+          vscode.Uri.joinPath(this.workspaceFolder.uri, "SECURITY.md")
         ),
       ];
     } else if (element instanceof ElectronDocsTreeItem) {
