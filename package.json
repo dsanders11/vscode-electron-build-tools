@@ -71,7 +71,8 @@
       {
         "command": "electron-build-tools.remove-config",
         "title": "Remove Config",
-        "icon": "$(trash)"
+        "icon": "$(trash)",
+        "enablement": "viewItem =~ /^config$/"
       },
       {
         "command": "electron-build-tools.refreshPatches",
@@ -135,7 +136,8 @@
       {
         "command": "electron-build-tools.use-config",
         "title": "Use Config",
-        "icon": "$(check)"
+        "icon": "$(check)",
+        "enablement": "viewItem =~ /^config$/"
       },
       {
         "command": "electron-build-tools.use-config.quick-pick",
@@ -330,11 +332,11 @@
       "view/item/context": [
         {
           "command": "electron-build-tools.remove-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/"
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
           "command": "electron-build-tools.remove-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
           "group": "inline"
         },
         {
@@ -343,11 +345,11 @@
         },
         {
           "command": "electron-build-tools.use-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/"
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
           "command": "electron-build-tools.use-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^config$/",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
           "group": "inline"
         },
         {
