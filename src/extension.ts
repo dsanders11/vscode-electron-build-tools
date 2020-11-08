@@ -17,9 +17,17 @@ import { ElectronViewProvider } from "./views/electron";
 import { ElectronPatchesProvider, PatchDirectory } from "./views/patches";
 import { TextDocumentContentProvider } from "./documentContentProvider";
 import { HelpTreeDataProvider } from "./views/help";
+import {
+  Test,
+  TestBaseTreeItem,
+  TestRunnerTreeItem,
+  TestState,
+  TestsTreeDataProvider,
+} from "./views/tests";
 import { runAsTask } from "./tasks";
 import { ExtensionConfig } from "./types";
 import {
+  escapeStringForRegex,
   findCommitForPatch,
   getConfigDefaultTarget,
   getConfigs,
@@ -27,6 +35,7 @@ import {
   getPatchesConfigFile,
   isBuildToolsInstalled,
 } from "./utils";
+import { TestCodeLensProvider } from "./testCodeLens";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];
@@ -56,7 +65,8 @@ async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
 function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
   configsProvider: ElectronBuildToolsConfigsProvider,
-  patchesProvider: ElectronPatchesProvider
+  patchesProvider: ElectronPatchesProvider,
+  testsProvider: TestsTreeDataProvider
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand("electron-build-tools.build", async () => {
@@ -157,9 +167,16 @@ function registerElectronBuildToolsCommands(
 
       let lastBuildProgress = 0;
 
-      const task = runAsTask(operationName, "build", command, {
-        env: buildEnv,
-      });
+      const task = runAsTask(
+        context,
+        operationName,
+        "build",
+        command,
+        {
+          env: buildEnv,
+        },
+        "$electron"
+      );
 
       task.onDidWriteLine(({ progress, line }) => {
         if (/Regenerating ninja files/.test(line)) {
@@ -237,6 +254,103 @@ function registerElectronBuildToolsCommands(
       }
     ),
     vscode.commands.registerCommand(
+      "electron-build-tools.runTest",
+      async (test: TestBaseTreeItem | Test) => {
+        const operationName = "Electron Build Tools - Running Test";
+        let command = `${buildToolsExecutable} test`;
+
+        // TODO - Need to sanity check output to make sure tests ran
+        // and there wasn't a regex problem causing 0 tests to be run
+
+        // TODO - Fix this up
+        if (test instanceof TestBaseTreeItem) {
+          const testRegex = escapeStringForRegex(
+            test.getFullyQualifiedTestName()
+          );
+
+          runAsTask(
+            context,
+            operationName,
+            "test",
+            `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
+            {},
+            "$mocha",
+            (exitCode) => {
+              test.setState(
+                exitCode === 0 ? TestState.SUCCESS : TestState.FAILURE
+              );
+              testsProvider.refresh(test);
+
+              return false;
+            }
+          );
+
+          test.setState(TestState.RUNNING);
+          testsProvider.refresh(test);
+        } else {
+          const testRegex = escapeStringForRegex(test.test);
+
+          runAsTask(
+            context,
+            operationName,
+            "test",
+            `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
+            {},
+            "$mocha"
+          );
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.runTestRunner",
+      async (testRunner: TestRunnerTreeItem) => {
+        const operationName = "Electron Build Tools - Running Tests";
+        let command = `${buildToolsExecutable} test`;
+
+        // TODO - Fix this up
+        runAsTask(
+          context,
+          operationName,
+          "test",
+          `${command} --runner=${testRunner.runner.toString()}"`,
+          {},
+          "$mocha"
+        );
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.runTestSuite",
+      async (testSuite: TestBaseTreeItem) => {
+        const operationName = "Electron Build Tools - Running Tests";
+        let command = `${buildToolsExecutable} test`;
+
+        const testRegex = escapeStringForRegex(
+          testSuite.getFullyQualifiedTestName()
+        );
+
+        // TODO - Fix this up
+        runAsTask(
+          context,
+          operationName,
+          "test",
+          `${command} --runners=${testSuite.runner.toString()} -g "${testRegex}"`,
+          {},
+          "$mocha",
+          (exitCode) => {
+            testSuite.setState(
+              exitCode === 0 ? TestState.SUCCESS : TestState.FAILURE
+            );
+            testsProvider.refresh(testSuite);
+
+            return false;
+          }
+        );
+
+        testSuite.setState(TestState.RUNNING);
+        testsProvider.refresh(testSuite);
+      }
+    ),
+    vscode.commands.registerCommand(
       "electron-build-tools.showCommitDiff",
       async (
         checkoutDirectory: vscode.Uri,
@@ -277,6 +391,20 @@ function registerElectronBuildToolsCommands(
             "docs",
             "development",
             "patches.md"
+          )
+        );
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.showTestsDocs",
+      () => {
+        vscode.commands.executeCommand(
+          "markdown.showPreview",
+          vscode.Uri.joinPath(
+            vscode.workspace.workspaceFolders![0].uri,
+            "docs",
+            "development",
+            "testing.md"
           )
         );
       }
@@ -335,6 +463,11 @@ function registerElectronBuildToolsCommands(
         .execSync(`${buildToolsExecutable} show root`, { encoding: "utf8" })
         .trim();
     }),
+    vscode.commands.registerCommand("electron-build-tools.show.src", () => {
+      return childProcess
+        .execSync(`${buildToolsExecutable} show src`, { encoding: "utf8" })
+        .trim();
+    }),
     vscode.commands.registerCommand(
       "electron-build-tools.sync",
       (force?: boolean) => {
@@ -358,6 +491,7 @@ function registerElectronBuildToolsCommands(
           "sync",
           command,
           { env: syncEnv },
+          undefined,
           (exitCode) => {
             if (exitCode === 1 && !force) {
               const confirm = "Force";
@@ -396,6 +530,50 @@ function registerElectronBuildToolsCommands(
     ),
     vscode.commands.registerCommand("electron-build-tools.sync.force", () => {
       return vscode.commands.executeCommand("electron-build-tools.sync", true);
+    }),
+    vscode.commands.registerCommand("electron-build-tools.test", async () => {
+      const operationName = "Electron Build Tools - Running Tests";
+      let command = `${buildToolsExecutable} test`;
+
+      const runnerOptions: vscode.QuickPickItem[] = [
+        {
+          label: "main",
+          picked: true,
+        },
+        {
+          label: "native",
+          picked: true,
+        },
+        {
+          label: "remote",
+          picked: true,
+        },
+      ];
+
+      const runners = await vscode.window.showQuickPick(runnerOptions, {
+        placeHolder: "Choose runners to use",
+        canPickMany: true,
+      });
+      const extraArgs = await vscode.window.showInputBox({
+        placeHolder: "Extra args to pass to the test runner",
+      });
+
+      if (runners && extraArgs) {
+        if (runners.length > 0) {
+          command = `${command} --runners=${runners
+            .map((runner) => runner.label)
+            .join(",")}`;
+        }
+
+        runAsTask(
+          context,
+          operationName,
+          "test",
+          `${command} ${extraArgs}`,
+          {},
+          "$mocha"
+        );
+      }
     }),
     vscode.commands.registerCommand(
       "electron-build-tools.use-config",
@@ -536,13 +714,19 @@ export async function activate(context: vscode.ExtensionContext) {
         workspaceFolder,
         getPatchesConfigFile(workspaceFolder)
       );
+      const testsProvider = new TestsTreeDataProvider(context, workspaceFolder);
       registerElectronBuildToolsCommands(
         context,
         configsProvider,
-        patchesProvider
+        patchesProvider,
+        testsProvider
       );
       registerHelperCommands(context);
       context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider(
+          "typescript",
+          new TestCodeLensProvider(testsProvider)
+        ),
         vscode.languages.createDiagnosticCollection("electron-build-tools"),
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:configs",
@@ -555,6 +739,10 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:electron",
           new ElectronViewProvider(workspaceFolder)
+        ),
+        vscode.window.registerTreeDataProvider(
+          "electron-build-tools:tests",
+          testsProvider
         ),
         vscode.workspace.registerTextDocumentContentProvider(
           virtualDocumentScheme,

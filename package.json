@@ -79,6 +79,21 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "electron-build-tools.runTest",
+        "title": "Run Test",
+        "icon": "$(run)"
+      },
+      {
+        "command": "electron-build-tools.runTestRunner",
+        "title": "Run Test Runner",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "electron-build-tools.runTestSuite",
+        "title": "Run Test Suite",
+        "icon": "$(run-all)"
+      },
+      {
         "command": "electron-build-tools.sanitize-config",
         "title": "Sanitize Config"
       },
@@ -100,12 +115,22 @@
         "title": "Show Patch Overview"
       },
       {
+        "command": "electron-build-tools.showTestsDocs",
+        "title": "Show Tests Documentation",
+        "icon": "$(remote-explorer-documentation)"
+      },
+      {
         "command": "electron-build-tools.sync",
         "title": "Electron Build Tools: Sync"
       },
       {
         "command": "electron-build-tools.sync.force",
         "title": "Electron Build Tools: Force Sync"
+      },
+      {
+        "command": "electron-build-tools.test",
+        "title": "Electron Build Tools: Run Tests",
+        "icon": "$(run-all)"
       },
       {
         "command": "electron-build-tools.use-config",
@@ -246,6 +271,18 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.runTest",
+          "when": "false"
+        },
+        {
+          "command": "electron-build-tools.runTestRunner",
+          "when": "false"
+        },
+        {
+          "command": "electron-build-tools.runTestSuite",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.sanitize-config",
           "when": "false"
         },
@@ -266,11 +303,19 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.showTestsDocs",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.sync",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
           "command": "electron-build-tools.sync.force",
+          "when": "electron-build-tools:build-tools-installed"
+        },
+        {
+          "command": "electron-build-tools.test",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
@@ -309,6 +354,21 @@
           "command": "electron-build-tools.refreshPatches",
           "when": "view == electron-build-tools:patches && viewItem =~ /^repo$/",
           "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.runTest",
+          "when": "view == electron-build-tools:tests && viewItem =~ /^^test$/",
+          "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.runTestRunner",
+          "when": "view == electron-build-tools:tests && viewItem =~ /^runner$/",
+          "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.runTestSuite",
+          "when": "view == electron-build-tools:tests && viewItem =~ /^suite$/",
+          "group": "inline"
         }
       ],
       "view/title": [
@@ -320,6 +380,16 @@
         {
           "command": "electron-build-tools.showPatchesDocs",
           "when": "view == electron-build-tools:patches",
+          "group": "navigation"
+        },
+        {
+          "command": "electron-build-tools.test",
+          "when": "view == electron-build-tools:tests",
+          "group": "navigation"
+        },
+        {
+          "command": "electron-build-tools.showTestsDocs",
+          "when": "view == electron-build-tools:tests",
           "group": "navigation"
         }
       ]
@@ -342,6 +412,28 @@
           "severity": 4,
           "message": 5
         }
+      },
+      {
+        "name": "mocha",
+        "source": "electron-build-tools",
+        "label": "Electron Build Tools: Mocha Specs",
+        "fileLocation": [
+          "relative",
+          "${command:electron-build-tools.show.root}/src/"
+        ],
+        "applyTo": "allDocuments",
+        "pattern": [
+          {
+            "regexp": "^\\s+(AssertionError: .*)$",
+            "message": 1
+          },
+          {
+            "regexp": "^.*\\((.*):(\\d+):(\\d+)\\)\\s+$",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ]
       }
     ],
     "views": {
@@ -364,6 +456,11 @@
         {
           "id": "electron-build-tools:patches",
           "name": "Patches",
+          "when": "!electron-build-tools:ready || electron-build-tools:active"
+        },
+        {
+          "id": "electron-build-tools:tests",
+          "name": "Tests",
           "when": "!electron-build-tools:ready || electron-build-tools:active"
         },
         {
@@ -401,7 +498,7 @@
   "main": "./out/src/extension.js",
   "scripts": {
     "vscode:prepublish": "yarn run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && copyfiles electron/*.js out",
     "lint": "eslint src --ext ts && yarn prettier:check",
     "watch": "tsc -watch -p ./",
     "pretest": "yarn run compile && yarn run lint",
@@ -413,18 +510,18 @@
     "@commitlint/config-conventional": "^11.0.0",
     "@types/glob": "^7.1.3",
     "@types/markdown-it": "^10.0.2",
-    "@types/mocha": "^8.0.0",
+    "@types/mocha": "^8.0.3",
     "@types/node": "^12.11.7",
     "@types/uuid": "^8.3.0",
     "@types/vscode": "^1.51.0",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
     "@typescript-eslint/parser": "^4.1.1",
+    "copyfiles": "^2.4.0",
     "eslint": "^7.9.0",
     "glob": "^7.1.6",
     "husky": "^4.3.0",
     "json-schema-to-typescript": "^9.1.1",
     "lint-staged": "^10.5.1",
-    "mocha": "^8.1.3",
     "prettier": "^2.1.2",
     "type-coverage": "^2.14.2",
     "typescript": "^4.0.2",
@@ -434,6 +531,9 @@
     "@electron/docs-parser": "^0.10.1",
     "chokidar": "^3.4.3",
     "markdown-it": "^10.0.0",
+    "mocha": "^8.2.1",
+    "ts-node": "^9.0.0",
+    "typescript-cached-transpile": "^0.0.6",
     "uuid": "^8.3.1"
   },
   "lint-staged": {

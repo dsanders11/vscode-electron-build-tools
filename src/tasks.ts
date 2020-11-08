@@ -23,6 +23,7 @@ export function runAsTask(
   taskName: string,
   command: string,
   shellOptions?: vscode.ShellExecutionOptions,
+  problemMatchers?: string | string[],
   exitCodeHandler?: (exitCode: number) => boolean | undefined
 ): ElectronBuildToolsTask {
   const socketName = generateSocketName();
@@ -39,7 +40,7 @@ export function runAsTask(
       `node out/scripts/echo-to-socket.js "${b64command}" ${socketName}`,
       { cwd: context.extensionPath, ...shellOptions }
     ),
-    "$electron"
+    problemMatchers
   );
 
   // TODO - How to stop the terminal from being closed on task cancel?
@@ -84,10 +85,10 @@ export function runAsTask(
         });
 
         vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
-          if (execution === taskExecution && exitCode && exitCode !== 0) {
+          if (execution === taskExecution) {
             const handled = exitCodeHandler ? exitCodeHandler(exitCode) : false;
 
-            if (!handled) {
+            if (exitCode !== 0 && !handled) {
               vscode.window.showErrorMessage(
                 `'${operationName}' failed with exit code ${exitCode}`
               );

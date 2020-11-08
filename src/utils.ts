@@ -1,5 +1,6 @@
 import * as childProcess from "child_process";
 import * as fs from "fs";
+import * as net from "net";
 import * as os from "os";
 import * as path from "path";
 
@@ -31,6 +32,11 @@ export type DocSection = {
   sections: DocSection[];
   links: DocLink[];
 };
+
+export enum TestRunner {
+  MAIN = "main",
+  REMOTE = "remote",
+}
 
 export function isBuildToolsInstalled() {
   const result = childProcess.spawnSync(
@@ -333,13 +339,107 @@ export async function parseDocsSections(
       throw new Error("Malformed document layout");
     }
 
-    walkSections(
-      parent.sections[parent.sections.length - 1],
-      remainingHeadings
-    );
+    walkSections(parent.sections.slice(-1)[0], remainingHeadings);
   };
 
   walkSections(rootSection, parsedHeadings.slice(1));
 
   return rootSection;
+}
+
+export async function getElectronTests(
+  context: vscode.ExtensionContext,
+  workspaceFolder: vscode.WorkspaceFolder,
+  runner: TestRunner
+) {
+  let debug = false; // Toggle this in debugger to debug child process
+  const debuggerOption = debug ? "--inspect-brk" : "";
+
+  const findFilesResult = await vscode.workspace.findFiles(
+    new vscode.RelativePattern(
+      workspaceFolder,
+      `spec${runner === TestRunner.MAIN ? "-main" : ""}/**/*-spec.{js,ts}`
+    )
+  );
+
+  // VS Code doesn't support negation in blobs and they don't seem to
+  // want to according to issues about it, so we have to filter out
+  // node_modules ourselves here or end up with files we don't want
+  const testFiles = findFilesResult.filter(
+    (filename) => !filename.path.includes("node_modules")
+  );
+
+  const electronExe = await vscode.commands.executeCommand(
+    "electron-build-tools.show.exe"
+  );
+  const scriptName = context.asAbsolutePath("out/electron/listMochaTests.js");
+  const socketName = generateSocketName();
+
+  return new Promise((resolve, reject) => {
+    let result = "";
+
+    const socketServer = net.createServer().listen(socketName);
+    socketServer.on("connection", (socket) => {
+      socket.on("data", (data) => {
+        result += data.toString();
+      });
+
+      socket.on("error", reject);
+
+      // Send filenames of the tests
+      for (const uri of testFiles) {
+        socket.write(`${uri.fsPath}\n`);
+      }
+      socket.write("DONE\n");
+    });
+    socketServer.on("error", reject);
+
+    const cp = childProcess.exec(
+      `${electronExe} ${debuggerOption} ${scriptName} ${socketName}`,
+      {
+        encoding: "utf8",
+        cwd: workspaceFolder.uri.fsPath,
+        env: {
+          // *DO NOT* inherit process.env, it includes stuff vscode has set like ELECTRON_RUN_AS_NODE
+          TS_NODE_PROJECT: vscode.Uri.joinPath(
+            workspaceFolder.uri,
+            "tsconfig.spec.json"
+          ).fsPath,
+          TS_NODE_FILES: "true", // Without this compilation fails
+          TS_NODE_TRANSPILE_ONLY: "true", // Faster
+          TS_NODE_COMPILER: "typescript-cached-transpile",
+          ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
+        },
+      }
+    );
+
+    cp.on("error", reject);
+    cp.on("exit", (exitCode) => {
+      if (exitCode !== 0) {
+        reject("Non-zero exit code");
+      } else {
+        try {
+          resolve(JSON.parse(result));
+        } catch (err) {
+          reject(err);
+        }
+      }
+    });
+  });
+}
+
+export function alphabetizeByLabel(treeItems: vscode.TreeItem[]) {
+  return treeItems.sort((a, b) => {
+    if (a.label!.toLowerCase() < b.label!.toLowerCase()) {
+      return -1;
+    }
+    if (a.label!.toLowerCase() > b.label!.toLowerCase()) {
+      return 1;
+    }
+    return 0;
+  });
+}
+
+export function escapeStringForRegex(str: string) {
+  return str.replace("(", "\\(").replace(")", "\\)").replace(".", "\\.");
 }
