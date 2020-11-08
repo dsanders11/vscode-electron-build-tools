@@ -231,28 +231,33 @@ function registerElectronBuildToolsCommands(
         });
       }
     ),
-    vscode.commands.registerCommand(
+    registerCommandNoBusy(
       "electron-build-tools.refreshPatches",
+      () => {
+        vscode.window.showErrorMessage(
+          "Can't refresh patches, other work in-progress"
+        );
+      },
       (arg: PatchDirectory | string) => {
-        // TODO - Need to prevent user from continually mashing the button
-        // and having this run multiple times simultaneously
-        const target = arg instanceof PatchDirectory ? arg.name : arg;
+        return withBusyState(() => {
+          const target = arg instanceof PatchDirectory ? arg.name : arg;
 
-        return new Promise((resolve, reject) => {
-          const cp = childProcess.exec(
-            `${buildToolsExecutable} patches ${target || "all"}`
-          );
+          return new Promise((resolve, reject) => {
+            const cp = childProcess.exec(
+              `${buildToolsExecutable} patches ${target || "all"}`
+            );
 
-          cp.on("error", (err) => reject(err));
-          cp.on("exit", (code) => {
-            if (code !== 0) {
-              vscode.window.showErrorMessage("Failed to refresh patches");
-            } else {
-              // TBD - This isn't very noticeable
-              vscode.window.setStatusBarMessage("Refreshed patches");
-              patchesProvider.refresh();
-              resolve();
-            }
+            cp.on("error", (err) => reject(err));
+            cp.on("exit", (code) => {
+              if (code !== 0) {
+                vscode.window.showErrorMessage("Failed to refresh patches");
+              } else {
+                // TBD - This isn't very noticeable
+                vscode.window.setStatusBarMessage("Refreshed patches");
+                patchesProvider.refresh();
+                resolve();
+              }
+            });
           });
         });
       }
