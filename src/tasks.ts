@@ -34,7 +34,7 @@ export function runAsTask(
 
   const task = new vscode.Task(
     { type: "electron-build-tools", task: taskName },
-    vscode.workspace.workspaceFolders![0],
+    vscode.TaskScope.Workspace,
     taskName,
     "electron-build-tools",
     new vscode.ShellExecution(
