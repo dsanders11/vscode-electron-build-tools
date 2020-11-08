@@ -85,7 +85,7 @@ export function runAsTask(
         });
 
         vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
-          if (execution === taskExecution) {
+          if (execution === taskExecution && exitCode !== undefined) {
             const handled = exitCodeHandler ? exitCodeHandler(exitCode) : false;
 
             if (exitCode !== 0 && !handled) {
