@@ -7,6 +7,7 @@ import { generateSocketName } from "./utils";
 
 type ElectronBuildToolsTask = {
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
+  finished: Promise<void>;
 };
 
 type OnDidWriteLine = {
@@ -54,11 +55,7 @@ export function runAsTask(
 
   const onDidWriteLineEmitter = new vscode.EventEmitter<OnDidWriteLine>();
 
-  const wrappedTask: ElectronBuildToolsTask = {
-    onDidWriteLine: onDidWriteLineEmitter.event,
-  };
-
-  vscode.window.withProgress(
+  const taskPromise = vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
       title: operationName.split("-")[1].trim(),
@@ -105,5 +102,14 @@ export function runAsTask(
     }
   );
 
-  return wrappedTask;
+  return {
+    onDidWriteLine: onDidWriteLineEmitter.event,
+    finished: new Promise(async (resolve) => {
+      try {
+        await taskPromise;
+      } finally {
+        resolve();
+      }
+    }),
+  };
 }

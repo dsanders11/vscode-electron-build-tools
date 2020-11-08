@@ -22,6 +22,8 @@ import {
   getConfigsFilePath,
   getPatchesConfigFile,
   isBuildToolsInstalled,
+  registerCommandNoBusy,
+  withBusyState,
 } from "./utils";
 import {
   ConfigTreeItem,
@@ -71,142 +73,153 @@ function registerElectronBuildToolsCommands(
   testsProvider: TestsTreeDataProvider
 ) {
   context.subscriptions.push(
-    vscode.commands.registerCommand("electron-build-tools.build", async () => {
-      const operationName = "Electron Build Tools - Building";
+    registerCommandNoBusy(
+      "electron-build-tools.build",
+      () => {
+        vscode.window.showErrorMessage("Can't build, other work in-progress");
+      },
+      () => {
+        return withBusyState(async () => {
+          const operationName = "Electron Build Tools - Building";
 
-      const buildConfig = vscode.workspace.getConfiguration(
-        "electronBuildTools.build"
-      );
-      const options = Object.entries(
-        buildConfig.get("buildOptions") as ExtensionConfig.BuildOptions
-      ).reduce((opts, [key, value]) => {
-        opts.push(`${key} ${value}`.trim());
-        return opts;
-      }, [] as string[]);
-      const ninjaArgs = Object.entries(
-        buildConfig.get("ninjaArgs") as ExtensionConfig.NinjaArgs
-      ).reduce((opts, [key, value]) => {
-        opts.push(`${key} ${value}`.trim());
-        return opts;
-      }, [] as string[]);
+          const buildConfig = vscode.workspace.getConfiguration(
+            "electronBuildTools.build"
+          );
+          const options = Object.entries(
+            buildConfig.get("buildOptions") as ExtensionConfig.BuildOptions
+          ).reduce((opts, [key, value]) => {
+            opts.push(`${key} ${value}`.trim());
+            return opts;
+          }, [] as string[]);
+          const ninjaArgs = Object.entries(
+            buildConfig.get("ninjaArgs") as ExtensionConfig.NinjaArgs
+          ).reduce((opts, [key, value]) => {
+            opts.push(`${key} ${value}`.trim());
+            return opts;
+          }, [] as string[]);
 
-      let settingsDefaultTarget: string | undefined = buildConfig.get(
-        "defaultTarget"
-      );
-      settingsDefaultTarget =
-        settingsDefaultTarget === blankConfigEnumValue
-          ? ""
-          : settingsDefaultTarget;
-      let target = settingsDefaultTarget;
+          let settingsDefaultTarget: string | undefined = buildConfig.get(
+            "defaultTarget"
+          );
+          settingsDefaultTarget =
+            settingsDefaultTarget === blankConfigEnumValue
+              ? ""
+              : settingsDefaultTarget;
+          let target = settingsDefaultTarget;
 
-      let quickPick: vscode.QuickPick<vscode.QuickPickItem> | undefined;
+          let quickPick: vscode.QuickPick<vscode.QuickPickItem> | undefined;
 
-      if (buildConfig.get("showTargets")) {
-        // Settings default target takes precedence
-        const defaultTarget = settingsDefaultTarget ?? getConfigDefaultTarget();
-        const quickPickItems: vscode.QuickPickItem[] = [];
+          if (buildConfig.get("showTargets")) {
+            // Settings default target takes precedence
+            const defaultTarget =
+              settingsDefaultTarget ?? getConfigDefaultTarget();
+            const quickPickItems: vscode.QuickPickItem[] = [];
 
-        if (defaultTarget) {
-          quickPickItems.push({
-            label: defaultTarget,
-            description: `Default from ${
-              settingsDefaultTarget ? "Settings" : "Config"
-            }`,
-          });
-        } else {
-          quickPickItems.push({
-            label: "electron",
-            description: "Default",
-          });
-        }
-
-        for (const buildTarget of buildTargets) {
-          if (buildTarget !== quickPickItems[0].label) {
-            quickPickItems.push({
-              label: buildTarget,
-            });
-          }
-        }
-
-        quickPick = vscode.window.createQuickPick();
-        quickPick.items = quickPickItems;
-        quickPick.placeholder = "Target To Build";
-      }
-
-      if (quickPick) {
-        const userQuit = await new Promise((resolve) => {
-          quickPick!.onDidAccept(() => {
-            target = quickPick!.selectedItems[0].label ?? target;
-            quickPick!.hide();
-            resolve();
-          });
-          quickPick!.onDidHide(() => {
-            resolve(true);
-          });
-          quickPick!.show();
-        });
-
-        if (userQuit) {
-          return;
-        }
-      }
-
-      const command = [
-        buildToolsExecutable,
-        "build",
-        ...options,
-        target,
-        ...ninjaArgs,
-      ]
-        .join(" ")
-        .trim();
-
-      const buildEnv = {
-        ...process.env,
-        FORCE_COLOR: "true",
-        NINJA_STATUS: "%p %f/%t ",
-      };
-
-      let lastBuildProgress = 0;
-
-      const task = runAsTask(
-        context,
-        operationName,
-        "build",
-        command,
-        {
-          env: buildEnv,
-        },
-        "$electron"
-      );
-
-      task.onDidWriteLine(({ progress, line }) => {
-        if (/Regenerating ninja files/.test(line)) {
-          progress.report({
-            message: "Regenerating Ninja Files",
-            increment: 0,
-          });
-        } else {
-          const buildProgress = parseInt(line.split("%")[0].trim());
-
-          if (!isNaN(buildProgress)) {
-            if (buildProgress > lastBuildProgress) {
-              progress.report({
-                message: "Compiling",
-                increment: buildProgress - lastBuildProgress,
+            if (defaultTarget) {
+              quickPickItems.push({
+                label: defaultTarget,
+                description: `Default from ${
+                  settingsDefaultTarget ? "Settings" : "Config"
+                }`,
               });
-              lastBuildProgress = buildProgress;
+            } else {
+              quickPickItems.push({
+                label: "electron",
+                description: "Default",
+              });
             }
-          } else {
-            if (/Running.*goma/.test(line)) {
-              progress.report({ message: "Starting Goma" });
-            } else if (/Running.*ninja/.test(line)) {
-              progress.report({ message: "Starting Ninja" });
+
+            for (const buildTarget of buildTargets) {
+              if (buildTarget !== quickPickItems[0].label) {
+                quickPickItems.push({
+                  label: buildTarget,
+                });
+              }
+            }
+
+            quickPick = vscode.window.createQuickPick();
+            quickPick.items = quickPickItems;
+            quickPick.placeholder = "Target To Build";
+          }
+
+          if (quickPick) {
+            const userQuit = await new Promise((resolve) => {
+              quickPick!.onDidAccept(() => {
+                target = quickPick!.selectedItems[0].label ?? target;
+                quickPick!.hide();
+                resolve();
+              });
+              quickPick!.onDidHide(() => {
+                resolve(true);
+              });
+              quickPick!.show();
+            });
+
+            if (userQuit) {
+              return;
             }
           }
-        }
-      });
-    }),
+
+          const command = [
+            buildToolsExecutable,
+            "build",
+            ...options,
+            target,
+            ...ninjaArgs,
+          ]
+            .join(" ")
+            .trim();
+
+          const buildEnv = {
+            ...process.env,
+            FORCE_COLOR: "true",
+            NINJA_STATUS: "%p %f/%t ",
+          };
+
+          let lastBuildProgress = 0;
+
+          const task = runAsTask(
+            context,
+            operationName,
+            "build",
+            command,
+            {
+              env: buildEnv,
+            },
+            "$electron"
+          );
+
+          task.onDidWriteLine(({ progress, line }) => {
+            if (/Regenerating ninja files/.test(line)) {
+              progress.report({
+                message: "Regenerating Ninja Files",
+                increment: 0,
+              });
+            } else {
+              const buildProgress = parseInt(line.split("%")[0].trim());
+
+              if (!isNaN(buildProgress)) {
+                if (buildProgress > lastBuildProgress) {
+                  progress.report({
+                    message: "Compiling",
+                    increment: buildProgress - lastBuildProgress,
+                  });
+                  lastBuildProgress = buildProgress;
+                }
+              } else {
+                if (/Running.*goma/.test(line)) {
+                  progress.report({ message: "Starting Goma" });
+                } else if (/Running.*ninja/.test(line)) {
+                  progress.report({ message: "Starting Ninja" });
+                }
+              }
+            }
+          });
+
+          await task.finished;
+        });
+      }
+    ),
     vscode.commands.registerCommand(
       "electron-build-tools.refreshPatches",
       (arg: PatchDirectory | string) => {
@@ -255,56 +268,71 @@ function registerElectronBuildToolsCommands(
         );
       }
     ),
-    vscode.commands.registerCommand(
+    registerCommandNoBusy(
       "electron-build-tools.runTest",
+      () => {
+        vscode.window.showErrorMessage(
+          "Can't run test, other work in-progress"
+        );
+      },
       async (test: TestBaseTreeItem | Test) => {
-        const operationName = "Electron Build Tools - Running Test";
-        let command = `${buildToolsExecutable} test`;
+        return withBusyState(async () => {
+          const operationName = "Electron Build Tools - Running Test";
+          let command = `${buildToolsExecutable} test`;
+          let task;
 
-        // TODO - Need to sanity check output to make sure tests ran
-        // and there wasn't a regex problem causing 0 tests to be run
+          // TODO - Need to sanity check output to make sure tests ran
+          // and there wasn't a regex problem causing 0 tests to be run
 
-        // TODO - Fix this up
-        if (test instanceof TestBaseTreeItem) {
-          const testRegex = escapeStringForRegex(
-            test.getFullyQualifiedTestName()
-          );
+          // TODO - Fix this up
+          if (test instanceof TestBaseTreeItem) {
+            const testRegex = escapeStringForRegex(
+              test.getFullyQualifiedTestName()
+            );
 
-          runAsTask(
-            context,
-            operationName,
-            "test",
-            `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
-            {},
-            "$mocha",
-            (exitCode) => {
-              test.setState(
-                exitCode === 0 ? TestState.SUCCESS : TestState.FAILURE
-              );
-              testsProvider.refresh(test);
+            task = runAsTask(
+              context,
+              operationName,
+              "test",
+              `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
+              {},
+              "$mocha",
+              (exitCode) => {
+                test.setState(
+                  exitCode === 0 ? TestState.SUCCESS : TestState.FAILURE
+                );
+                testsProvider.refresh(test);
 
-              return false;
-            }
-          );
+                return false;
+              }
+            );
 
-          test.setState(TestState.RUNNING);
-          testsProvider.refresh(test);
-        } else {
-          const testRegex = escapeStringForRegex(test.test);
+            test.setState(TestState.RUNNING);
+            testsProvider.refresh(test);
+          } else {
+            const testRegex = escapeStringForRegex(test.test);
 
-          runAsTask(
-            context,
-            operationName,
-            "test",
-            `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
-            {},
-            "$mocha"
-          );
-        }
+            task = runAsTask(
+              context,
+              operationName,
+              "test",
+              `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
+              {},
+              "$mocha"
+            );
+          }
+
+          await task.finished;
+        });
       }
     ),
-    vscode.commands.registerCommand(
+    registerCommandNoBusy(
       "electron-build-tools.runTestRunner",
+      () => {
+        vscode.window.showErrorMessage(
+          "Can't run tests, other work in-progress"
+        );
+      },
       async (testRunner: TestRunnerTreeItem) => {
         const operationName = "Electron Build Tools - Running Tests";
         let command = `${buildToolsExecutable} test`;
@@ -320,8 +348,13 @@ function registerElectronBuildToolsCommands(
         );
       }
     ),
-    vscode.commands.registerCommand(
+    registerCommandNoBusy(
       "electron-build-tools.runTestSuite",
+      () => {
+        vscode.window.showErrorMessage(
+          "Can't run tests, other work in-progress"
+        );
+      },
       async (testSuite: TestBaseTreeItem) => {
         const operationName = "Electron Build Tools - Running Tests";
         let command = `${buildToolsExecutable} test`;
@@ -470,63 +503,70 @@ function registerElectronBuildToolsCommands(
         .execSync(`${buildToolsExecutable} show src`, { encoding: "utf8" })
         .trim();
     }),
-    vscode.commands.registerCommand(
+    registerCommandNoBusy(
       "electron-build-tools.sync",
-      (force?: boolean) => {
-        const command = `${buildToolsExecutable} sync${
-          force ? " --force" : ""
-        }`;
-        const operationName = `Electron Build Tools - ${
-          force ? "Force " : ""
-        }Syncing`;
+      () => {
+        vscode.window.showErrorMessage("Can't sync, other work in-progress");
+      },
+      async (force?: boolean) => {
+        return withBusyState(async () => {
+          const command = `${buildToolsExecutable} sync${
+            force ? " --force" : ""
+          }`;
+          const operationName = `Electron Build Tools - ${
+            force ? "Force " : ""
+          }Syncing`;
 
-        const syncEnv = {
-          ...process.env,
-          FORCE_COLOR: "true",
-        };
+          const syncEnv = {
+            ...process.env,
+            FORCE_COLOR: "true",
+          };
 
-        let initialProgress = false;
+          let initialProgress = false;
 
-        const task = runAsTask(
-          context,
-          operationName,
-          "sync",
-          command,
-          { env: syncEnv },
-          undefined,
-          (exitCode) => {
-            if (exitCode === 1 && !force) {
-              const confirm = "Force";
+          const task = runAsTask(
+            context,
+            operationName,
+            "sync",
+            command,
+            { env: syncEnv },
+            undefined,
+            (exitCode) => {
+              if (exitCode === 1 && !force) {
+                const confirm = "Force";
 
-              vscode.window
-                .showErrorMessage("Sync failed. Try force sync?", confirm)
-                .then((value) => {
-                  if (value && value === confirm) {
-                    vscode.commands.executeCommand(
-                      "electron-build-tools.sync",
-                      true
-                    );
-                  }
-                });
+                vscode.window
+                  .showErrorMessage("Sync failed. Try force sync?", confirm)
+                  .then((value) => {
+                    if (value && value === confirm) {
+                      vscode.commands.executeCommand(
+                        "electron-build-tools.sync",
+                        true
+                      );
+                    }
+                  });
 
-              return true;
+                return true;
+              }
             }
-          }
-        );
+          );
 
-        task.onDidWriteLine(({ progress, line }) => {
-          // TODO - Regex for syncing dependencies: /^(\S+)\s+\(Elapsed: ([:\d]+)\)$/
+          task.onDidWriteLine(({ progress, line }) => {
+            // TODO - Regex for syncing dependencies: /^(\S+)\s+\(Elapsed: ([:\d]+)\)$/
 
-          if (/^gclient.*verify_validity:/.test(line)) {
-            progress.report({ message: "Verifying Validity" });
-          } else if (/running.*apply_all_patches\.py/.test(line)) {
-            progress.report({ message: "Applying Patches" });
-          } else if (/Hook.*apply_all_patches\.py.*took/.test(line)) {
-            progress.report({ message: "Finishing Up" });
-          } else if (!initialProgress) {
-            initialProgress = true;
-            progress.report({ message: "Dependencies" });
-          }
+            if (/^gclient.*verify_validity:/.test(line)) {
+              progress.report({ message: "Verifying Validity" });
+            } else if (/running.*apply_all_patches\.py/.test(line)) {
+              progress.report({ message: "Applying Patches" });
+            } else if (/Hook.*apply_all_patches\.py.*took/.test(line)) {
+              progress.report({ message: "Finishing Up" });
+            } else if (!initialProgress) {
+              initialProgress = true;
+              progress.report({ message: "Dependencies" });
+            }
+          });
+
+          await task.finished;
         });
       }
     ),
@@ -577,8 +617,13 @@ function registerElectronBuildToolsCommands(
         );
       }
     }),
-    vscode.commands.registerCommand(
-      "electron-build-tools.use-config",
+    registerCommandNoBusy(
+      "electron-build-tools.use-cnfig",
+      () => {
+        vscode.window.showErrorMessage(
+          "Can't change configs, other work in-progress"
+        );
+      },
       (config: ConfigTreeItem) => {
         // Do an optimistic update for snappier UI
         configsProvider.setActive(config.label);
