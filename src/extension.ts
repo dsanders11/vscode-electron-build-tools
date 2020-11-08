@@ -41,33 +41,45 @@ import {
   TestsTreeDataProvider,
 } from "./views/tests";
 
-async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
+async function findElectronRoot(
+  workspaceFolder: vscode.WorkspaceFolder
+): Promise<vscode.Uri | undefined> {
+  // Support opening the src/electron folder, as well as src/
   const possiblePackageRoots = [".", "electron"];
+
   for (const possibleRoot of possiblePackageRoots) {
     const rootPackageFilename = vscode.Uri.joinPath(
       workspaceFolder.uri,
       possibleRoot,
       "package.json"
     );
+
     if (!fs.existsSync(rootPackageFilename.fsPath)) {
       continue;
     }
 
-    const rootPackageFile = await vscode.workspace.fs.readFile(
-      rootPackageFilename
-    );
+    try {
+      const rootPackageFile = await vscode.workspace.fs.readFile(
+        rootPackageFilename
+      );
 
-    const { name } = JSON.parse(rootPackageFile.toString()) as Record<
-      string,
-      string
-    >;
+      const { name } = JSON.parse(rootPackageFile.toString()) as Record<
+        string,
+        string
+      >;
 
-    return name === "electron";
+      if (name === "electron") {
+        return vscode.Uri.joinPath(workspaceFolder.uri, possibleRoot);
+      }
+    } catch {
+      continue;
+    }
   }
 }
 
 function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
+  electronRoot: vscode.Uri,
   configsProvider: ElectronBuildToolsConfigsProvider,
   patchesProvider: ElectronPatchesProvider,
   testsProvider: TestsTreeDataProvider
@@ -421,12 +433,7 @@ function registerElectronBuildToolsCommands(
       () => {
         vscode.commands.executeCommand(
           "markdown.showPreview",
-          vscode.Uri.joinPath(
-            vscode.workspace.workspaceFolders![0].uri,
-            "docs",
-            "development",
-            "patches.md"
-          )
+          vscode.Uri.joinPath(electronRoot, "docs", "development", "patches.md")
         );
       }
     ),
@@ -435,12 +442,7 @@ function registerElectronBuildToolsCommands(
       () => {
         vscode.commands.executeCommand(
           "markdown.showPreview",
-          vscode.Uri.joinPath(
-            vscode.workspace.workspaceFolders![0].uri,
-            "docs",
-            "development",
-            "testing.md"
-          )
+          vscode.Uri.joinPath(electronRoot, "docs", "development", "testing.md")
         );
       }
     ),
@@ -712,7 +714,6 @@ function registerHelperCommands(context: vscode.ExtensionContext) {
 
 export async function activate(context: vscode.ExtensionContext) {
   const workspaceFolders = vscode.workspace.workspaceFolders;
-
   const buildToolsIsInstalled = isBuildToolsInstalled();
 
   vscode.commands.executeCommand(
@@ -740,16 +741,15 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   if (buildToolsIsInstalled && workspaceFolders) {
-    const workspaceFolder = workspaceFolders[0];
+    const electronRoot = await findElectronRoot(workspaceFolders[0]);
 
-    const isElectronWorkspace = await electronIsInWorkspace(workspaceFolder);
     vscode.commands.executeCommand(
       "setContext",
       "electron-build-tools:is-electron-workspace",
-      isElectronWorkspace
+      electronRoot !== undefined
     );
 
-    if (isElectronWorkspace) {
+    if (electronRoot !== undefined) {
       vscode.commands.executeCommand(
         "setContext",
         "electron-build-tools:active",
@@ -758,12 +758,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
       const configsProvider = new ElectronBuildToolsConfigsProvider();
       const patchesProvider = new ElectronPatchesProvider(
-        workspaceFolder,
-        getPatchesConfigFile(workspaceFolder)
+        electronRoot,
+        getPatchesConfigFile(electronRoot)
       );
-      const testsProvider = new TestsTreeDataProvider(context, workspaceFolder);
+      const testsProvider = new TestsTreeDataProvider(context, electronRoot);
       registerElectronBuildToolsCommands(
         context,
+        electronRoot,
         configsProvider,
         patchesProvider,
         testsProvider
@@ -785,11 +786,11 @@ export async function activate(context: vscode.ExtensionContext) {
         ),
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:docs",
-          new DocsTreeDataProvider(workspaceFolder)
+          new DocsTreeDataProvider(electronRoot)
         ),
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:electron",
-          new ElectronViewProvider(workspaceFolder)
+          new ElectronViewProvider(electronRoot)
         ),
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:tests",

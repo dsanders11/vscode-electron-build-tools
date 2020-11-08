@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { ThemeColor, ThemeIcon, TreeItem, TreeDataProvider } from "vscode";
 
 export class ElectronViewProvider implements TreeDataProvider<TreeItem> {
-  constructor(private readonly workspaceFolder: vscode.WorkspaceFolder) {}
+  constructor(private readonly electronRoot: vscode.Uri) {}
 
   getTreeItem(element: TreeItem): TreeItem {
     return element;
@@ -17,7 +17,7 @@ export class ElectronViewProvider implements TreeDataProvider<TreeItem> {
             "rocket",
             new ThemeColor("electronBuildTools.gettingStartedIcon")
           ),
-          vscode.Uri.joinPath(this.workspaceFolder.uri, "README.md")
+          vscode.Uri.joinPath(this.electronRoot, "README.md")
         ),
         new ElectronTreeItem(
           "Code of Conduct",
@@ -25,7 +25,7 @@ export class ElectronViewProvider implements TreeDataProvider<TreeItem> {
             "smiley",
             new ThemeColor("electronBuildTools.codeOfConductIcon")
           ),
-          vscode.Uri.joinPath(this.workspaceFolder.uri, "CODE_OF_CONDUCT.md")
+          vscode.Uri.joinPath(this.electronRoot, "CODE_OF_CONDUCT.md")
         ),
         new ElectronTreeItem(
           "Contributing To Electron",
@@ -33,7 +33,7 @@ export class ElectronViewProvider implements TreeDataProvider<TreeItem> {
             "git-pull-request",
             new ThemeColor("electronBuildTools.contributingIcon")
           ),
-          vscode.Uri.joinPath(this.workspaceFolder.uri, "CONTRIBUTING.md")
+          vscode.Uri.joinPath(this.electronRoot, "CONTRIBUTING.md")
         ),
         new ElectronTreeItem(
           "Reporting Security Issues",
@@ -41,7 +41,7 @@ export class ElectronViewProvider implements TreeDataProvider<TreeItem> {
             "shield",
             new ThemeColor("electronBuildTools.securityIssuesIcon")
           ),
-          vscode.Uri.joinPath(this.workspaceFolder.uri, "SECURITY.md")
+          vscode.Uri.joinPath(this.electronRoot, "SECURITY.md")
         ),
       ];
     }

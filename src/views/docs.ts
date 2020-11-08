@@ -4,9 +4,7 @@ import { ThemeIcon, TreeItem, TreeDataProvider } from "vscode";
 import { parseDocsSections, DocSection, DocLink } from "../utils";
 
 export class DocsTreeDataProvider implements TreeDataProvider<TreeItem> {
-  constructor(private readonly workspaceFolder: vscode.WorkspaceFolder) {
-    this.workspaceFolder = workspaceFolder;
-  }
+  constructor(private readonly electronRoot: vscode.Uri) {}
 
   getTreeItem(element: TreeItem): TreeItem {
     return element;
@@ -15,7 +13,7 @@ export class DocsTreeDataProvider implements TreeDataProvider<TreeItem> {
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
     if (!element || element instanceof GroupingTreeItem) {
       const { links, sections } = !element
-        ? await parseDocsSections(this.workspaceFolder)
+        ? await parseDocsSections(this.electronRoot)
         : element.docSection;
 
       const children = sections.map((section) => {

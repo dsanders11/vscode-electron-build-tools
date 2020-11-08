@@ -65,7 +65,7 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
 
   constructor(
     private readonly context: vscode.ExtensionContext,
-    private readonly workspaceFolder: vscode.WorkspaceFolder
+    private readonly electronRoot: vscode.Uri
   ) {
     this.mainProcessRunner = new TestRunnerTreeItem(
       "Main Process",
@@ -144,7 +144,7 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
       try {
         const tests = (await getElectronTests(
           this.context,
-          this.workspaceFolder,
+          this.electronRoot,
           element.runner
         )) as ParsedTestSuite;
 

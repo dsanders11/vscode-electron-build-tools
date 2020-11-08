@@ -9,7 +9,6 @@ import {
   getFilesInPatch,
   getPatches,
   getPatchSubjectLine,
-  getRootDirectoryFromWorkspaceFolder,
   parsePatchConfig,
   patchTooltipMarkdown,
   truncateToLength,
@@ -23,11 +22,8 @@ export class ElectronPatchesProvider
   private readonly patchesConfig: Promise<ElectronPatchesConfig>;
   private readonly rootDirectory: vscode.Uri;
 
-  constructor(
-    workspaceFolder: vscode.WorkspaceFolder,
-    patchesConfig: vscode.Uri
-  ) {
-    this.rootDirectory = getRootDirectoryFromWorkspaceFolder(workspaceFolder);
+  constructor(electronRoot: vscode.Uri, patchesConfig: vscode.Uri) {
+    this.rootDirectory = vscode.Uri.joinPath(electronRoot, "..", "..");
     this.patchesConfig = parsePatchConfig(patchesConfig);
   }
 

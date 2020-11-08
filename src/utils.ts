@@ -91,8 +91,8 @@ export function getConfigDefaultTarget(): string | undefined {
   return config.defaultTarget;
 }
 
-export function getPatchesConfigFile(workspaceFolder: vscode.WorkspaceFolder) {
-  return vscode.Uri.joinPath(workspaceFolder.uri, "patches", "config.json");
+export function getPatchesConfigFile(electronRoot: vscode.Uri) {
+  return vscode.Uri.joinPath(electronRoot, "patches", "config.json");
 }
 
 export async function getPatches(directory: vscode.Uri): Promise<vscode.Uri[]> {
@@ -125,13 +125,6 @@ export async function parsePatchConfig(
   config: vscode.Uri
 ): Promise<ElectronPatchesConfig> {
   return JSON.parse((await vscode.workspace.fs.readFile(config)).toString());
-}
-
-export function getRootDirectoryFromWorkspaceFolder(
-  workspaceFolder: vscode.WorkspaceFolder
-) {
-  // TODO - Handle the case where either src or src/electron is workspaceFolder
-  return vscode.Uri.joinPath(workspaceFolder.uri, "..", "..");
 }
 
 export function getCheckoutDirectoryForPatchDirectory(
@@ -257,10 +250,8 @@ export async function findCommitForPatch(
   return result;
 }
 
-export async function parseDocsSections(
-  workspaceFolder: vscode.WorkspaceFolder
-) {
-  const docsRoot = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
+export async function parseDocsSections(electronRoot: vscode.Uri) {
+  const docsRoot = vscode.Uri.joinPath(electronRoot, "docs");
   const readmeContent = await vscode.workspace.fs.readFile(
     vscode.Uri.joinPath(docsRoot, "README.md")
   );
@@ -349,7 +340,7 @@ export async function parseDocsSections(
 
 export async function getElectronTests(
   context: vscode.ExtensionContext,
-  workspaceFolder: vscode.WorkspaceFolder,
+  electronRoot: vscode.Uri,
   runner: TestRunner
 ) {
   let debug = false; // Toggle this in debugger to debug child process
@@ -357,7 +348,7 @@ export async function getElectronTests(
 
   const findFilesResult = await vscode.workspace.findFiles(
     new vscode.RelativePattern(
-      workspaceFolder,
+      electronRoot.fsPath,
       `spec${runner === TestRunner.MAIN ? "-main" : ""}/**/*-spec.{js,ts}`
     )
   );
@@ -398,11 +389,11 @@ export async function getElectronTests(
       `${electronExe} ${debuggerOption} ${scriptName} ${socketName}`,
       {
         encoding: "utf8",
-        cwd: workspaceFolder.uri.fsPath,
+        cwd: electronRoot.fsPath,
         env: {
           // *DO NOT* inherit process.env, it includes stuff vscode has set like ELECTRON_RUN_AS_NODE
           TS_NODE_PROJECT: vscode.Uri.joinPath(
-            workspaceFolder.uri,
+            electronRoot,
             "tsconfig.spec.json"
           ).fsPath,
           TS_NODE_FILES: "true", // Without this compilation fails
