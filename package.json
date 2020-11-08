@@ -16,9 +16,11 @@
   "activationEvents": [
     "workspaceContains:ELECTRON_VERSION",
     "workspaceContains:electron/ELECTRON_VERSION",
-    "onDebug",
-    "onDebugInitialConfigurations",
-    "onView:electron-build-tools"
+    "onView:electron-build-tools:configs",
+    "onView:electron-build-tools:patches",
+    "onView:electron-build-tools:tests",
+    "onView:electron-build-tools:docs",
+    "onView:electron-build-tools:electron"
   ],
   "categories": [
     "Linters",
