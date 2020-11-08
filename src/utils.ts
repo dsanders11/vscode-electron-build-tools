@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as net from "net";
 import * as os from "os";
 import * as path from "path";
+import { promisify } from "util";
 
 import * as vscode from "vscode";
 
@@ -17,6 +18,8 @@ import { v4 as uuidv4 } from "uuid";
 import { buildToolsExecutable } from "./constants";
 import { ElectronPatchesConfig, EVMConfig } from "./types";
 
+const exec = promisify(childProcess.exec);
+const fsReadFile = promisify(fs.readFile);
 const patchedFilenameRegex = /^\+\+\+ b\/(.*)$/gm;
 
 export type DocLink = {
@@ -38,13 +41,15 @@ export enum TestRunner {
   REMOTE = "remote",
 }
 
-export function isBuildToolsInstalled() {
-  const result = childProcess.spawnSync(
-    os.platform() === "win32" ? "where" : "which",
-    [buildToolsExecutable]
-  );
-
-  return result.status === 0;
+export async function isBuildToolsInstalled() {
+  return new Promise((resolve, reject) => {
+    const cp = childProcess.spawn(
+      os.platform() === "win32" ? "where" : "which",
+      [buildToolsExecutable]
+    );
+    cp.on("error", reject);
+    cp.on("close", (exitCode) => resolve(exitCode === 0));
+  });
 }
 
 export function generateSocketName() {
@@ -53,13 +58,14 @@ export function generateSocketName() {
     : path.join(os.tmpdir(), `socket-${uuidv4()}`);
 }
 
-export function getConfigs() {
+export async function getConfigs() {
   const configs: string[] = [];
   let activeConfig: string | null = null;
 
-  const configsOutput = childProcess
-    .execSync(`${buildToolsExecutable} show configs`, { encoding: "utf8" })
-    .trim();
+  const { stdout } = await exec(`${buildToolsExecutable} show configs`, {
+    encoding: "utf8",
+  });
+  const configsOutput = stdout.trim();
 
   for (const rawConfig of configsOutput.split("\n")) {
     const config = rawConfig.replace("*", "").trim();
@@ -77,15 +83,17 @@ export function getConfigsFilePath() {
   return path.join(os.homedir(), ".electron_build_tools", "configs");
 }
 
-export function getConfigDefaultTarget(): string | undefined {
-  const configFilename = childProcess
-    .execSync(`${buildToolsExecutable} show current --filename --no-name`, {
+export async function getConfigDefaultTarget(): Promise<string | undefined> {
+  const { stdout } = await exec(
+    `${buildToolsExecutable} show current --filename --no-name`,
+    {
       encoding: "utf8",
-    })
-    .trim();
+    }
+  );
+  const configFilename = stdout.trim();
 
   const config: EVMConfig = JSON.parse(
-    fs.readFileSync(configFilename, { encoding: "utf8" })
+    await fsReadFile(configFilename, { encoding: "utf8" })
   );
 
   return config.defaultTarget;
@@ -236,12 +244,11 @@ export async function findCommitForPatch(
     `--pretty=format:"%h"`,
   ];
 
-  const result = childProcess
-    .execSync(gitCommand.join(" "), {
-      encoding: "utf8",
-      cwd: checkoutDirectory.fsPath,
-    })
-    .trim();
+  const { stdout } = await exec(gitCommand.join(" "), {
+    encoding: "utf8",
+    cwd: checkoutDirectory.fsPath,
+  });
+  const result = stdout.trim();
 
   if (!result || result.split("\n").length !== 1) {
     throw new Error("Couldn't find commit");

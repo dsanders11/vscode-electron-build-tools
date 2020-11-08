@@ -1,6 +1,7 @@
 import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import { promisify } from "util";
 
 import * as vscode from "vscode";
 
@@ -41,6 +42,8 @@ import {
   TestsTreeDataProvider,
 } from "./views/tests";
 
+const exec = promisify(childProcess.exec);
+
 async function findElectronRoot(
   workspaceFolder: vscode.WorkspaceFolder
 ): Promise<vscode.Uri | undefined> {
@@ -53,10 +56,6 @@ async function findElectronRoot(
       possibleRoot,
       "package.json"
     );
-
-    if (!fs.existsSync(rootPackageFilename.fsPath)) {
-      continue;
-    }
 
     try {
       const rootPackageFile = await vscode.workspace.fs.readFile(
@@ -124,7 +123,7 @@ function registerElectronBuildToolsCommands(
           if (buildConfig.get("showTargets")) {
             // Settings default target takes precedence
             const defaultTarget =
-              settingsDefaultTarget ?? getConfigDefaultTarget();
+              settingsDefaultTarget ?? (await getConfigDefaultTarget());
             const quickPickItems: vscode.QuickPickItem[] = [];
 
             if (defaultTarget) {
@@ -482,29 +481,48 @@ function registerElectronBuildToolsCommands(
         );
       }
     ),
-    vscode.commands.registerCommand("electron-build-tools.show.exe", () => {
-      return childProcess
-        .execSync(`${buildToolsExecutable} show exe`, { encoding: "utf8" })
-        .trim();
-    }),
-    vscode.commands.registerCommand("electron-build-tools.show.goma", () => {
-      childProcess.execSync(`${buildToolsExecutable} show goma`);
-    }),
-    vscode.commands.registerCommand("electron-build-tools.show.outdir", () => {
-      return childProcess
-        .execSync(`${buildToolsExecutable} show outdir`, { encoding: "utf8" })
-        .trim();
-    }),
-    vscode.commands.registerCommand("electron-build-tools.show.root", () => {
-      return childProcess
-        .execSync(`${buildToolsExecutable} show root`, { encoding: "utf8" })
-        .trim();
-    }),
-    vscode.commands.registerCommand("electron-build-tools.show.src", () => {
-      return childProcess
-        .execSync(`${buildToolsExecutable} show src`, { encoding: "utf8" })
-        .trim();
-    }),
+    vscode.commands.registerCommand(
+      "electron-build-tools.show.exe",
+      async () => {
+        const { stdout } = await exec(`${buildToolsExecutable} show exe`, {
+          encoding: "utf8",
+        });
+        return stdout.trim();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.show.goma",
+      async () => {
+        await exec(`${buildToolsExecutable} show goma`);
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.show.outdir",
+      async () => {
+        const { stdout } = await exec(`${buildToolsExecutable} show outdir`, {
+          encoding: "utf8",
+        });
+        return stdout.trim();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.show.root",
+      async () => {
+        const { stdout } = await exec(`${buildToolsExecutable} show root`, {
+          encoding: "utf8",
+        });
+        return stdout.trim();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.show.src",
+      async () => {
+        const { stdout } = await exec(`${buildToolsExecutable} show src`, {
+          encoding: "utf8",
+        });
+        return stdout.trim();
+      }
+    ),
     registerCommandNoBusy(
       "electron-build-tools.sync",
       () => {
@@ -650,7 +668,7 @@ function registerElectronBuildToolsCommands(
     vscode.commands.registerCommand(
       "electron-build-tools.use-config.quick-pick",
       async () => {
-        const { configs } = getConfigs();
+        const { configs } = await getConfigs();
         const selected = await vscode.window.showQuickPick(configs);
 
         if (selected) {
@@ -713,9 +731,6 @@ function registerHelperCommands(context: vscode.ExtensionContext) {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-  const workspaceFolders = vscode.workspace.workspaceFolders;
-  const buildToolsIsInstalled = isBuildToolsInstalled();
-
   // Always show the help view
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(
@@ -723,6 +738,9 @@ export async function activate(context: vscode.ExtensionContext) {
       new HelpTreeDataProvider()
     )
   );
+
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  const buildToolsIsInstalled = await isBuildToolsInstalled();
 
   await Promise.all([
     vscode.commands.executeCommand(
@@ -733,7 +751,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand(
       "setContext",
       "electron-build-tools:build-tools-installed",
-      buildToolsIsInstalled
+      await buildToolsIsInstalled
     ),
     vscode.commands.executeCommand(
       "setContext",

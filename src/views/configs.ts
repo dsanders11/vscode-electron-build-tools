@@ -55,7 +55,7 @@ export class ElectronBuildToolsConfigsProvider
     const configs: vscode.TreeItem[] = [];
 
     if (!element) {
-      const { configs: configNames, activeConfig } = getConfigs();
+      const { configs: configNames, activeConfig } = await getConfigs();
 
       for (const configName of configNames) {
         configs.push(

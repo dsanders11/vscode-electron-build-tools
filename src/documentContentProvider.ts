@@ -1,10 +1,13 @@
-import * as childProcess from "child_process";
+import { exec as callbackExec } from "child_process";
 import * as path from "path";
 import * as querystring from "querystring";
+import { promisify } from "util";
 
 import * as vscode from "vscode";
 
 import { patchOverviewMarkdown } from "./utils";
+
+const exec = promisify(callbackExec);
 
 export class TextDocumentContentProvider
   implements vscode.TextDocumentContentProvider {
@@ -20,12 +23,11 @@ export class TextDocumentContentProvider
 
       const gitCommand = `git show ${gitObject as string}:${relativeFilePath}`;
 
-      content = childProcess
-        .execSync(gitCommand, {
-          encoding: "utf8",
-          cwd: checkoutPath as string,
-        })
-        .trim();
+      const { stdout } = await exec(gitCommand, {
+        encoding: "utf8",
+        cwd: checkoutPath as string,
+      });
+      content = stdout.trim();
     } else if (view === "patch-overview") {
       content = (
         await patchOverviewMarkdown(uri.with({ scheme: "file", query: "" }))
