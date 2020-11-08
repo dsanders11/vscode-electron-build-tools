@@ -26,23 +26,35 @@ export class ElectronViewProvider
       return [
         new ElectronTreeItem(
           "Getting Started",
-          new vscode.ThemeIcon("rocket"),
+          new vscode.ThemeIcon(
+            "rocket",
+            new vscode.ThemeColor("electronBuildTools.gettingStartedIcon")
+          ),
           vscode.Uri.joinPath(this.workspaceFolder.uri, "README.md")
         ),
         new ElectronTreeItem(
           "Code of Conduct",
-          new vscode.ThemeIcon("smiley"),
+          new vscode.ThemeIcon(
+            "smiley",
+            new vscode.ThemeColor("electronBuildTools.codeOfConductIcon")
+          ),
           vscode.Uri.joinPath(this.workspaceFolder.uri, "CODE_OF_CONDUCT.md")
         ),
         this.documentationRoot,
         new ElectronTreeItem(
           "Contributing To Electron",
-          new vscode.ThemeIcon("git-pull-request"),
+          new vscode.ThemeIcon(
+            "git-pull-request",
+            new vscode.ThemeColor("electronBuildTools.contributingIcon")
+          ),
           vscode.Uri.joinPath(this.workspaceFolder.uri, "CONTRIBUTING.md")
         ),
         new ElectronTreeItem(
           "Reporting Security Issues",
-          new vscode.ThemeIcon("shield"),
+          new vscode.ThemeIcon(
+            "shield",
+            new vscode.ThemeColor("electronBuildTools.securityIssuesIcon")
+          ),
           vscode.Uri.joinPath(this.workspaceFolder.uri, "SECURITY.md")
         ),
       ];
