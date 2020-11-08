@@ -13,6 +13,7 @@ import {
   buildToolsExecutable,
   virtualDocumentScheme,
 } from "./constants";
+import { DocsTreeDataProvider } from "./views/docs";
 import { ElectronViewProvider } from "./views/electron";
 import { ElectronPatchesProvider, PatchDirectory } from "./views/patches";
 import { TextDocumentContentProvider } from "./documentContentProvider";
@@ -735,6 +736,10 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:patches",
           patchesProvider
+        ),
+        vscode.window.registerTreeDataProvider(
+          "electron-build-tools:docs",
+          new DocsTreeDataProvider(workspaceFolder)
         ),
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:electron",

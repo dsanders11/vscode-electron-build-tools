@@ -464,6 +464,12 @@
           "when": "!electron-build-tools:ready || electron-build-tools:active"
         },
         {
+          "id": "electron-build-tools:docs",
+          "name": "Electron Documentation",
+          "when": "!electron-build-tools:ready || electron-build-tools:active",
+          "visibility": "collapsed"
+        },
+        {
           "id": "electron-build-tools:electron",
           "name": "Electron",
           "when": "!electron-build-tools:ready || electron-build-tools:active"
