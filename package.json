@@ -449,6 +449,11 @@
           "when": "electron-build-tools:ready && electron-build-tools:build-tools-installed && !electron-build-tools:is-electron-workspace "
         },
         {
+          "id": "electron-build-tools:electron",
+          "name": "Electron",
+          "when": "!electron-build-tools:ready || electron-build-tools:active"
+        },
+        {
           "id": "electron-build-tools:configs",
           "name": "Configs",
           "when": "!electron-build-tools:ready || electron-build-tools:active"
@@ -468,11 +473,6 @@
           "name": "Electron Documentation",
           "when": "!electron-build-tools:ready || electron-build-tools:active",
           "visibility": "collapsed"
-        },
-        {
-          "id": "electron-build-tools:electron",
-          "name": "Electron",
-          "when": "!electron-build-tools:ready || electron-build-tools:active"
         },
         {
           "id": "electron-build-tools:help",
