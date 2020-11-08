@@ -29,6 +29,12 @@
         "${workspaceFolder}/out/test/**/*.js"
       ],
       "preLaunchTask": "${defaultBuildTask}"
+    },
+    {
+      "name": "Attach to Child Process",
+      "type": "node",
+      "request": "attach",
+      "port": 9229
     }
   ]
 }
