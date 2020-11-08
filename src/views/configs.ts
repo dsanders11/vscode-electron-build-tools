@@ -1,5 +1,6 @@
-import * as chokidar from "chokidar";
 import * as vscode from "vscode";
+
+import * as chokidar from "chokidar";
 
 import { getConfigs, getConfigsFilePath } from "../utils";
 

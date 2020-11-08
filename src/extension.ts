@@ -1,31 +1,18 @@
-import * as vscode from "vscode";
 import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 
-import {
-  ConfigTreeItem,
-  ElectronBuildToolsConfigsProvider,
-} from "./views/configs";
+import * as vscode from "vscode";
+
 import {
   blankConfigEnumValue,
   buildTargets,
   buildToolsExecutable,
   virtualDocumentScheme,
 } from "./constants";
-import { DocsTreeDataProvider } from "./views/docs";
-import { ElectronViewProvider } from "./views/electron";
-import { ElectronPatchesProvider, PatchDirectory } from "./views/patches";
 import { TextDocumentContentProvider } from "./documentContentProvider";
-import { HelpTreeDataProvider } from "./views/help";
-import {
-  Test,
-  TestBaseTreeItem,
-  TestRunnerTreeItem,
-  TestState,
-  TestsTreeDataProvider,
-} from "./views/tests";
 import { runAsTask } from "./tasks";
+import { TestCodeLensProvider } from "./testCodeLens";
 import { ExtensionConfig } from "./types";
 import {
   escapeStringForRegex,
@@ -36,7 +23,21 @@ import {
   getPatchesConfigFile,
   isBuildToolsInstalled,
 } from "./utils";
-import { TestCodeLensProvider } from "./testCodeLens";
+import {
+  ConfigTreeItem,
+  ElectronBuildToolsConfigsProvider,
+} from "./views/configs";
+import { DocsTreeDataProvider } from "./views/docs";
+import { ElectronViewProvider } from "./views/electron";
+import { ElectronPatchesProvider, PatchDirectory } from "./views/patches";
+import { HelpTreeDataProvider } from "./views/help";
+import {
+  Test,
+  TestBaseTreeItem,
+  TestRunnerTreeItem,
+  TestState,
+  TestsTreeDataProvider,
+} from "./views/tests";
 
 async function electronIsInWorkspace(workspaceFolder: vscode.WorkspaceFolder) {
   const possiblePackageRoots = [".", "electron"];

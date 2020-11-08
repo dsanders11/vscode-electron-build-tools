@@ -1,6 +1,6 @@
 import * as childProcess from "child_process";
-import * as querystring from "querystring";
 import * as path from "path";
+import * as querystring from "querystring";
 
 import * as vscode from "vscode";
 
