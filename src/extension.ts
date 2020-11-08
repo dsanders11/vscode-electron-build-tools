@@ -716,22 +716,6 @@ export async function activate(context: vscode.ExtensionContext) {
   const workspaceFolders = vscode.workspace.workspaceFolders;
   const buildToolsIsInstalled = isBuildToolsInstalled();
 
-  vscode.commands.executeCommand(
-    "setContext",
-    "electron-build-tools:ready",
-    false
-  );
-  vscode.commands.executeCommand(
-    "setContext",
-    "electron-build-tools:build-tools-installed",
-    buildToolsIsInstalled
-  );
-  vscode.commands.executeCommand(
-    "setContext",
-    "electron-build-tools:is-electron-workspace",
-    false
-  );
-
   // Always show the help view
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(
@@ -740,10 +724,28 @@ export async function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  await Promise.all([
+    vscode.commands.executeCommand(
+      "setContext",
+      "electron-build-tools:ready",
+      false
+    ),
+    vscode.commands.executeCommand(
+      "setContext",
+      "electron-build-tools:build-tools-installed",
+      buildToolsIsInstalled
+    ),
+    vscode.commands.executeCommand(
+      "setContext",
+      "electron-build-tools:is-electron-workspace",
+      false
+    ),
+  ]);
+
   if (buildToolsIsInstalled && workspaceFolders) {
     const electronRoot = await findElectronRoot(workspaceFolders[0]);
 
-    vscode.commands.executeCommand(
+    await vscode.commands.executeCommand(
       "setContext",
       "electron-build-tools:is-electron-workspace",
       electronRoot !== undefined
@@ -762,14 +764,6 @@ export async function activate(context: vscode.ExtensionContext) {
         getPatchesConfigFile(electronRoot)
       );
       const testsProvider = new TestsTreeDataProvider(context, electronRoot);
-      registerElectronBuildToolsCommands(
-        context,
-        electronRoot,
-        configsProvider,
-        patchesProvider,
-        testsProvider
-      );
-      registerHelperCommands(context);
       context.subscriptions.push(
         vscode.languages.registerCodeLensProvider(
           "typescript",
@@ -801,6 +795,14 @@ export async function activate(context: vscode.ExtensionContext) {
           new TextDocumentContentProvider()
         )
       );
+      registerElectronBuildToolsCommands(
+        context,
+        electronRoot,
+        configsProvider,
+        patchesProvider,
+        testsProvider
+      );
+      registerHelperCommands(context);
     }
   }
 
