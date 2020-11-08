@@ -27,13 +27,16 @@ export function runAsTask(
 ): ElectronBuildToolsTask {
   const socketName = generateSocketName();
 
+  // base64 encode the command to get around shell quoting issues
+  const b64command = Buffer.from(command).toString("base64");
+
   const task = new vscode.Task(
     { type: "electron-build-tools", task: taskName },
     vscode.workspace.workspaceFolders![0],
     taskName,
     "electron-build-tools",
     new vscode.ShellExecution(
-      `node out/scripts/echo-to-socket.js "${command}" ${socketName}`,
+      `node out/scripts/echo-to-socket.js "${b64command}" ${socketName}`,
       { cwd: context.extensionPath, ...shellOptions }
     ),
     "$electron"

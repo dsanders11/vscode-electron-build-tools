@@ -3,7 +3,11 @@ import * as net from "net";
 
 const [command, socketPath] = process.argv.slice(2, 4);
 
-const cp = childProcess.exec(command);
+// Command was base64-encoded to prevent quotes from being mucked with
+const cp = childProcess.spawn(Buffer.from(command, "base64").toString(), {
+  windowsVerbatimArguments: true,
+  shell: true,
+});
 
 // Pipe the child process's output out
 // our own since we're wrapping it
