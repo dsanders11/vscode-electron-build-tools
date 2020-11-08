@@ -63,7 +63,11 @@ export class ElectronViewProvider
           );
         }
 
-        return new ElectronDocsTreeItem(section.heading, undefined, section);
+        return new ElectronDocsTreeItem(
+          section.heading,
+          new vscode.ThemeIcon("library"),
+          section
+        );
       });
 
       for (let idx = 0; idx < links.length; idx++) {
