@@ -12,3 +12,4 @@ vsc-extension-quickstart.md
 **/*.ts
 .github
 node_modules/typescript-cached-transpile/.cache/
+docs
