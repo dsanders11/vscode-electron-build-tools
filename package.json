@@ -443,7 +443,7 @@
         "source": "electron-build-tools",
         "label": "Electron Build Tools: Mocha Output",
         "fileLocation": [
-          "relative",
+          "autodetect",
           "${command:electron-build-tools.show.root}/src/"
         ],
         "applyTo": "allDocuments",
