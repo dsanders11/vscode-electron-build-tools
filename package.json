@@ -71,6 +71,10 @@
         "title": "Electron Build Tools: Build"
       },
       {
+        "command": "electron-build-tools.openPatch",
+        "title": "Open Patch"
+      },
+      {
         "command": "markdown.prettifyTable",
         "title": "Prettify Table",
         "enablement": "editorHasSelection"
@@ -281,6 +285,10 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
+          "command": "electron-build-tools.openPatch",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.remove-config",
           "when": "false"
         },
@@ -398,6 +406,10 @@
           "command": "electron-build-tools.runTestSuite",
           "when": "view == electron-build-tools:tests && viewItem =~ /^suite$/",
           "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.openPatch",
+          "when": "view == electron-build-tools:patches && viewItem =~ /^patch$/"
         }
       ],
       "view/title": [

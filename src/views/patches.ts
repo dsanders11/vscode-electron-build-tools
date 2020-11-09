@@ -109,12 +109,13 @@ export class PatchDirectory extends vscode.TreeItem {
   }
 }
 
-class Patch extends vscode.TreeItem {
+export class Patch extends vscode.TreeItem {
   constructor(label: string, public uri: vscode.Uri) {
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
     this.uri = uri; // BUG - resourceUri doesn't play nice with advanced hover
     this.iconPath = new vscode.ThemeIcon("file-text");
+    this.contextValue = "patch";
   }
 }
 

@@ -33,7 +33,11 @@ import {
 } from "./views/configs";
 import { DocsTreeDataProvider } from "./views/docs";
 import { ElectronViewProvider } from "./views/electron";
-import { ElectronPatchesProvider, PatchDirectory } from "./views/patches";
+import {
+  ElectronPatchesProvider,
+  Patch,
+  PatchDirectory,
+} from "./views/patches";
 import { HelpTreeDataProvider } from "./views/help";
 import {
   Test,
@@ -720,6 +724,12 @@ function registerElectronBuildToolsCommands(
         }
 
         return configFilePath;
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.openPatch",
+      (patchTreeItem: Patch) => {
+        return vscode.commands.executeCommand("vscode.open", patchTreeItem.uri);
       }
     )
   );
