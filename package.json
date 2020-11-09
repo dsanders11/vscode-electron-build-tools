@@ -343,6 +343,10 @@
         {
           "command": "electron-build-tools.use-config.quick-pick",
           "when": "electron-build-tools:build-tools-installed"
+        },
+        {
+          "command": "markdown.prettifyTable",
+          "when": "false"
         }
       ],
       "editor/context": [
