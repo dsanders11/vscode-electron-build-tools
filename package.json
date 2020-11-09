@@ -71,6 +71,11 @@
         "title": "Electron Build Tools: Build"
       },
       {
+        "command": "markdown.prettifyTable",
+        "title": "Prettify Table",
+        "enablement": "editorHasSelection"
+      },
+      {
         "command": "electron-build-tools.remove-config",
         "title": "Remove Config",
         "icon": "$(trash)",
@@ -338,6 +343,13 @@
         {
           "command": "electron-build-tools.use-config.quick-pick",
           "when": "electron-build-tools:build-tools-installed"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "markdown.prettifyTable",
+          "when": "resourceLangId == markdown",
+          "group": "1_modification"
         }
       ],
       "view/item/context": [
