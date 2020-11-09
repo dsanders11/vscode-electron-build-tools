@@ -97,21 +97,19 @@ function registerElectronBuildToolsCommands(
             "electronBuildTools.build"
           );
           const options = Object.entries(
-            buildConfig.get("buildOptions") as ExtensionConfig.BuildOptions
+            buildConfig.get<ExtensionConfig.BuildOptions>("buildOptions")!
           ).reduce((opts, [key, value]) => {
             opts.push(`${key} ${value}`.trim());
             return opts;
           }, [] as string[]);
           const ninjaArgs = Object.entries(
-            buildConfig.get("ninjaArgs") as ExtensionConfig.NinjaArgs
+            buildConfig.get<ExtensionConfig.NinjaArgs>("ninjaArgs")!
           ).reduce((opts, [key, value]) => {
             opts.push(`${key} ${value}`.trim());
             return opts;
           }, [] as string[]);
 
-          let settingsDefaultTarget: string | undefined = buildConfig.get(
-            "defaultTarget"
-          );
+          let settingsDefaultTarget = buildConfig.get<string>("defaultTarget");
           settingsDefaultTarget =
             settingsDefaultTarget === blankConfigEnumValue
               ? ""
@@ -120,7 +118,7 @@ function registerElectronBuildToolsCommands(
 
           let quickPick: vscode.QuickPick<vscode.QuickPickItem> | undefined;
 
-          if (buildConfig.get("showTargets")) {
+          if (buildConfig.get<boolean>("showTargets")) {
             // Settings default target takes precedence
             const defaultTarget =
               settingsDefaultTarget ?? (await getConfigDefaultTarget());
