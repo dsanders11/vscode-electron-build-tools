@@ -19,7 +19,7 @@ export const buildToolsExecutable = vscode.workspace
   .getConfiguration("electronBuildTools.buildTools")
   .get<string>("executable")!;
 
-export const patchDirectoryPretyNames: ElectronPatchesConfig = Object.freeze({
+export const patchDirectoryPrettyNames: ElectronPatchesConfig = Object.freeze({
   "src/electron/patches/chromium": "Chromium",
   "src/electron/patches/boringssl": "BoringSSL",
   "src/electron/patches/v8": "V8",

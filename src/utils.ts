@@ -444,7 +444,7 @@ export function escapeStringForRegex(str: string) {
 
 let globalBusy = false;
 
-// This is an unfortuante work-around to the `enablement` key for
+// This is an unfortunate work-around to the `enablement` key for
 // commands in vscode being buggy, so it can't be relied on.
 export function registerCommandNoBusy(
   command: string,

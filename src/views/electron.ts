@@ -54,13 +54,13 @@ class ElectronTreeItem extends TreeItem {
   constructor(
     label: string,
     public readonly iconPath: ThemeIcon,
-    public readonly reasourceUri: vscode.Uri
+    uri: vscode.Uri
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
 
     this.command = {
       command: "markdown.showPreview",
-      arguments: [reasourceUri],
+      arguments: [uri],
       title: "Show",
     };
   }

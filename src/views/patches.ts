@@ -2,7 +2,7 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import { patchDirectoryPretyNames } from "../constants";
+import { patchDirectoryPrettyNames } from "../constants";
 import { ElectronPatchesConfig } from "../types";
 import {
   getCheckoutDirectoryForPatchDirectory,
@@ -52,7 +52,7 @@ export class ElectronPatchesProvider
         const patchDirectoryBasename = path.basename(patchDirectory);
         const uri = vscode.Uri.joinPath(this.rootDirectory, patchDirectory);
         const label =
-          patchDirectoryPretyNames[patchDirectory] ?? patchDirectoryBasename;
+          patchDirectoryPrettyNames[patchDirectory] ?? patchDirectoryBasename;
 
         children.push(new PatchDirectory(label, uri, patchDirectoryBasename));
       }
