@@ -423,7 +423,7 @@
       {
         "name": "electron",
         "source": "electron-build-tools",
-        "label": "Electron Build Tools",
+        "label": "Electron Build Tools: Build Output",
         "fileLocation": [
           "relative",
           "${command:electron-build-tools.show.outdir}"
@@ -441,7 +441,7 @@
       {
         "name": "mocha",
         "source": "electron-build-tools",
-        "label": "Electron Build Tools: Mocha Specs",
+        "label": "Electron Build Tools: Mocha Output",
         "fileLocation": [
           "relative",
           "${command:electron-build-tools.show.root}/src/"
