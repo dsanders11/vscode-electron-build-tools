@@ -77,7 +77,7 @@ class DocumentTreeItem extends TreeItem {
   constructor(
     label: string,
     public readonly iconPath: ThemeIcon,
-    public readonly reasourceUri: vscode.Uri,
+    public readonly resourceUri: vscode.Uri,
     public readonly nestedLinks: DocLink[] = []
   ) {
     super(
@@ -89,7 +89,7 @@ class DocumentTreeItem extends TreeItem {
 
     this.command = {
       command: "markdown.showPreview",
-      arguments: [reasourceUri],
+      arguments: [resourceUri],
       title: "Show",
     };
   }
