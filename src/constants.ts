@@ -1,3 +1,5 @@
+import * as vscode from "vscode";
+
 import { ElectronPatchesConfig } from "./types";
 
 export const extensionId = "dsanders11.vscode-electron-build-tools";
@@ -13,7 +15,9 @@ export const buildTargets = Object.freeze([
   "node:headers",
 ]);
 
-export const buildToolsExecutable = "electron-build-tools";
+export const buildToolsExecutable = vscode.workspace
+  .getConfiguration("electronBuildTools.buildTools")
+  .get<string>("executable")!;
 
 export const patchDirectoryPretyNames: ElectronPatchesConfig = Object.freeze({
   "src/electron/patches/chromium": "Chromium",
