@@ -367,9 +367,9 @@ export async function getElectronTests(
     (filename) => !filename.path.includes("node_modules")
   );
 
-  const electronExe = await vscode.commands.executeCommand(
+  const electronExe = await vscode.commands.executeCommand<string>(
     "electron-build-tools.show.exe"
-  );
+  )!;
   const scriptName = context.asAbsolutePath("out/electron/listMochaTests.js");
   const socketName = generateSocketName();
 
