@@ -100,7 +100,7 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
         };
       }
     }
-    if (!suite && this.rendererRunner.suite) {
+    if (this.rendererRunner.suite) {
       const testPaths = findFullPathForTest(
         this.rendererRunner.suite,
         filename,
