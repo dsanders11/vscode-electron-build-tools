@@ -641,7 +641,7 @@ function registerElectronBuildToolsCommands(
       }
     }),
     registerCommandNoBusy(
-      "electron-build-tools.use-cnfig",
+      "electron-build-tools.use-config",
       () => {
         vscode.window.showErrorMessage(
           "Can't change configs, other work in-progress"
