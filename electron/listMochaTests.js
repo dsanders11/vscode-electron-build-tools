@@ -3,6 +3,11 @@ const net = require("net");
 const path = require('path');
 const readline = require("readline");
 
+// We need the typescript module but it would be 60 MB to bundle it with the
+// extension, which doesn't seem like the right thing to do. It's already in
+// the Electron source tree, so give access to it by adding to the global path
+Module.globalPaths.push(path.resolve(process.cwd(), "node_modules"));
+
 // Needed or some imports at the start of test files will fail
 Module.globalPaths.push(path.resolve(process.cwd(), "spec", "node_modules"));
 
