@@ -497,7 +497,7 @@
     "viewsWelcome": [
       {
         "view": "electron-build-tools:welcome",
-        "contents": "In order to use the Electron Build Tools extension, you need build-tools installed.\nFind out more at the [build-tools repository](https://githbu.com/electron/build-tools)."
+        "contents": "In order to use the Electron Build Tools extension, you need build-tools installed.\nFind out more at the [build-tools repository](https://github.com/electron/build-tools)."
       },
       {
         "view": "electron-build-tools:workspace",
