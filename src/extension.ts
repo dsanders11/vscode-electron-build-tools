@@ -356,7 +356,7 @@ function registerElectronBuildToolsCommands(
           context,
           operationName,
           "test",
-          `${command} --runner=${testRunner.runner.toString()}"`,
+          `${command} --runners=${testRunner.runner.toString()}"`,
           {},
           "$mocha"
         );
