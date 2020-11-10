@@ -6,6 +6,7 @@ import {
   getElectronTests,
   truncateToLength,
   TestRunner,
+  withBusyState,
 } from "../utils";
 
 export enum TestState {
@@ -142,11 +143,13 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
       ];
     } else if (element instanceof TestRunnerTreeItem) {
       try {
-        const tests = (await getElectronTests(
-          this.context,
-          this.electronRoot,
-          element.runner
-        )) as ParsedTestSuite;
+        const tests = await withBusyState(() => {
+          return getElectronTests(
+            this.context,
+            this.electronRoot,
+            element.runner
+          ) as Promise<ParsedTestSuite>;
+        }, "loadingTests");
 
         element.suite = tests;
 

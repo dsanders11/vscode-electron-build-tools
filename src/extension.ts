@@ -274,6 +274,11 @@ function registerElectronBuildToolsCommands(
         });
       }
     ),
+    vscode.commands.registerCommand("electron-build-tools.refreshTests", () => {
+      withBusyState(() => {
+        testsProvider.refresh();
+      }, "loadingTests");
+    }),
     vscode.commands.registerCommand(
       "electron-build-tools.remove-config",
       (config: ConfigTreeItem) => {

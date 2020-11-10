@@ -460,10 +460,13 @@ export function registerCommandNoBusy(
   );
 }
 
-export async function withBusyState(workFn: Function) {
+export async function withBusyState<T>(
+  workFn: () => T,
+  contextName: string = "busy"
+): Promise<T> {
   await vscode.commands.executeCommand(
     "setContext",
-    "electron-build-tools:busy",
+    `electron-build-tools:${contextName}`,
     true
   );
   globalBusy = true;
@@ -473,7 +476,7 @@ export async function withBusyState(workFn: Function) {
   } finally {
     vscode.commands.executeCommand(
       "setContext",
-      "electron-build-tools:busy",
+      `electron-build-tools:${contextName}`,
       false
     );
     globalBusy = false;

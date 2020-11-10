@@ -99,6 +99,12 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "electron-build-tools.refreshTests",
+        "title": "Refresh Tests",
+        "icon": "$(refresh)",
+        "enablement": "!electron-build-tools:loadingTests"
+      },
+      {
         "command": "electron-build-tools.runTest",
         "title": "Run Test",
         "icon": "$(run)"
@@ -310,6 +316,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.refreshTests",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.runTest",
           "when": "false"
         },
@@ -433,6 +443,11 @@
         {
           "command": "electron-build-tools.refreshPatches",
           "when": "view == electron-build-tools:patches",
+          "group": "navigation"
+        },
+        {
+          "command": "electron-build-tools.refreshTests",
+          "when": "view == electron-build-tools:tests",
           "group": "navigation"
         },
         {
