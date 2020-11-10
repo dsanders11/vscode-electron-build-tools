@@ -368,7 +368,7 @@
       "editor/context": [
         {
           "command": "markdown.prettifyTable",
-          "when": "resourceLangId == markdown",
+          "when": "electron-build-tools:ready && resourceLangId == markdown",
           "group": "1_modification"
         }
       ],

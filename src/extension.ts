@@ -762,11 +762,11 @@ function registerHelperCommands(context: vscode.ExtensionContext) {
         ) {
           const selection = vscode.window.activeTextEditor.selection;
           const document = vscode.window.activeTextEditor.document;
-          const selectedText = document.getText(
-            new vscode.Range(selection.start, selection.end)
-          );
+          const selectedText = document
+            .getText(new vscode.Range(selection.start, selection.end))
+            .trim();
           const md = new MarkdownIt();
-          const tokens = md.parse(selectedText.trim(), {});
+          const tokens = md.parse(selectedText, {});
 
           // TODO - Would be more robust to prettify the table off the parsed tokens
           if (
