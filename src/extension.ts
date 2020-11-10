@@ -5,6 +5,7 @@ import { promisify } from "util";
 import * as vscode from "vscode";
 
 import MarkdownIt from "markdown-it";
+import MarkdownItEmoji from "markdown-it-emoji";
 
 import {
   blankConfigEnumValue,
@@ -875,6 +876,10 @@ function registerHelperCommands(context: vscode.ExtensionContext) {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
+  const result = {
+    extendMarkdownIt: undefined as undefined | ((md: MarkdownIt) => MarkdownIt),
+  };
+
   // Always show the help view
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(
@@ -965,6 +970,9 @@ export async function activate(context: vscode.ExtensionContext) {
         testsProvider
       );
       registerHelperCommands(context);
+
+      // Render emojis in Markdown
+      result.extendMarkdownIt = (md: MarkdownIt) => md.use(MarkdownItEmoji);
     }
   }
 
@@ -973,4 +981,6 @@ export async function activate(context: vscode.ExtensionContext) {
     "electron-build-tools:ready",
     true
   );
+
+  return result;
 }
