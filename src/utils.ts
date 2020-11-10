@@ -493,3 +493,7 @@ export const slugifyHeading = (heading: string): string => {
     .replace(/ /g, "-")
     .toLowerCase();
 };
+
+export async function sleep(timeMs: number) {
+  return new Promise((resolve) => setTimeout(resolve, timeMs));
+}

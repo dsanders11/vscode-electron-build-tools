@@ -184,7 +184,7 @@ function registerElectronBuildToolsCommands(
           }
 
           const command = [
-            buildToolsExecutable,
+            // buildToolsExecutable,
             "build",
             ...options,
             target,

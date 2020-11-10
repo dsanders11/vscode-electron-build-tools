@@ -36,3 +36,5 @@ export const buildToolsRepository = "https://github.com/electron/build-tools";
 
 export const repositoryUrl =
   "https://github.com/dsanders11/vscode-electron-build-tools";
+
+export const gracefulKillTimeoutMs = 3000000;
