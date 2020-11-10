@@ -47,8 +47,8 @@ export async function isBuildToolsInstalled() {
       os.platform() === "win32" ? "where" : "which",
       [buildToolsExecutable]
     );
-    cp.on("error", reject);
-    cp.on("close", (exitCode) => resolve(exitCode === 0));
+    cp.once("error", reject);
+    cp.once("close", (exitCode) => resolve(exitCode === 0));
   });
 }
 
@@ -376,12 +376,12 @@ export async function getElectronTests(
     let result = "";
 
     const socketServer = net.createServer().listen(socketName);
-    socketServer.on("connection", (socket) => {
+    socketServer.once("connection", (socket) => {
       socket.on("data", (data) => {
         result += data.toString();
       });
 
-      socket.on("error", reject);
+      socket.once("error", reject);
 
       // Send filenames of the tests
       for (const uri of testFiles) {
@@ -389,7 +389,7 @@ export async function getElectronTests(
       }
       socket.write("DONE\n");
     });
-    socketServer.on("error", reject);
+    socketServer.once("error", reject);
 
     const cp = childProcess.exec(
       `${electronExe} ${debuggerOption} ${scriptName} ${socketName}`,
@@ -410,8 +410,8 @@ export async function getElectronTests(
       }
     );
 
-    cp.on("error", reject);
-    cp.on("exit", (exitCode) => {
+    cp.once("error", reject);
+    cp.once("exit", (exitCode) => {
       if (exitCode !== 0) {
         reject("Non-zero exit code");
       } else {

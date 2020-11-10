@@ -12,7 +12,7 @@ Module.globalPaths.push(path.resolve(process.cwd(), "node_modules"));
 Module.globalPaths.push(path.resolve(process.cwd(), "spec", "node_modules"));
 
 // We want to terminate on errors, not show a dialog
-process.on('uncaughtException', (err) => {
+process.once('uncaughtException', (err) => {
   process.exit(1);
 });
 
@@ -73,7 +73,7 @@ app.whenReady().then(async () => {
       }
     });
 
-    rl.on("close", () => {
+    rl.once("close", () => {
       process.exit(1);
     });
   });

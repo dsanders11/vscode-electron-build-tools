@@ -62,7 +62,7 @@ export function runAsTask(
       cancellable: true,
     },
     async (progress, token) => {
-      socketServer.on("connection", (socket) => {
+      socketServer.once("connection", (socket) => {
         const rl = readline.createInterface({
           input: socket,
         });
@@ -73,7 +73,7 @@ export function runAsTask(
       const taskExecution = await vscode.tasks.executeTask(task);
 
       return new Promise(async (resolve, reject) => {
-        socketServer.on("error", () => reject("Socket server error"));
+        socketServer.once("error", () => reject("Socket server error"));
 
         vscode.tasks.onDidEndTask(({ execution }) => {
           if (execution === taskExecution) {

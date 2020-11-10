@@ -259,8 +259,8 @@ function registerElectronBuildToolsCommands(
               `${buildToolsExecutable} patches ${target || "all"}`
             );
 
-            cp.on("error", (err) => reject(err));
-            cp.on("exit", (code) => {
+            cp.once("error", (err) => reject(err));
+            cp.once("exit", (code) => {
               if (code !== 0) {
                 vscode.window.showErrorMessage("Failed to refresh patches");
               } else {
