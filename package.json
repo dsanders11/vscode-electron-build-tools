@@ -75,6 +75,10 @@
         "title": "Open Patch"
       },
       {
+        "command": "electron-build-tools.openTestFile",
+        "title": "Open Test File"
+      },
+      {
         "command": "markdown.prettifyTable",
         "title": "Prettify Table",
         "enablement": "editorHasSelection"
@@ -289,6 +293,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.openTestFile",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.remove-config",
           "when": "false"
         },
@@ -410,6 +418,10 @@
         {
           "command": "electron-build-tools.openPatch",
           "when": "view == electron-build-tools:patches && viewItem =~ /^patch$/"
+        },
+        {
+          "command": "electron-build-tools.openTestFile",
+          "when": "view == electron-build-tools:tests && viewItem =~ /^test$|^suite$/"
         }
       ],
       "view/title": [

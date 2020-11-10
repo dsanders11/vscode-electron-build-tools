@@ -174,6 +174,7 @@ export class TestBaseTreeItem extends TreeItem {
   public readonly parent?: TestBaseTreeItem;
 
   constructor(
+    public readonly uri: vscode.Uri,
     public readonly label: string,
     public readonly runner: TestRunner,
     public readonly fullName: string,
@@ -233,6 +234,7 @@ class TestSuiteTreeItem extends TestBaseTreeItem {
     public readonly parent?: TestSuiteTreeItem
   ) {
     super(
+      vscode.Uri.file(suite.file),
       suite.title,
       runner,
       suite.title,
@@ -260,6 +262,7 @@ class TestTreeItem extends TestBaseTreeItem {
     public readonly parent: TestSuiteTreeItem
   ) {
     super(
+      vscode.Uri.file(parent.suite.file),
       truncateToLength(testName, 40),
       runner,
       testName,

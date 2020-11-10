@@ -731,6 +731,12 @@ function registerElectronBuildToolsCommands(
       (patchTreeItem: Patch) => {
         return vscode.commands.executeCommand("vscode.open", patchTreeItem.uri);
       }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.openTestFile",
+      (testOrSuite: TestBaseTreeItem) => {
+        return vscode.commands.executeCommand("vscode.open", testOrSuite.uri);
+      }
     )
   );
 }
