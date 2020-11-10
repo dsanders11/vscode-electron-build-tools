@@ -5,7 +5,7 @@ import { promisify } from "util";
 
 import * as vscode from "vscode";
 
-import { patchOverviewMarkdown } from "./utils";
+import { ensurePosixSeparators, patchOverviewMarkdown } from "./utils";
 
 const exec = promisify(callbackExec);
 
@@ -16,10 +16,9 @@ export class TextDocumentContentProvider
     let content = "";
 
     if (view === "contents") {
-      const relativeFilePath = path
-        .relative(checkoutPath as string, uri.fsPath)
-        .split(path.sep)
-        .join(path.posix.sep);
+      const relativeFilePath = ensurePosixSeparators(
+        path.relative(checkoutPath as string, uri.fsPath)
+      );
 
       const gitCommand = `git show ${gitObject as string}:${relativeFilePath}`;
 

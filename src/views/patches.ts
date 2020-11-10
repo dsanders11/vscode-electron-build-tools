@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { patchDirectoryPrettyNames } from "../constants";
 import { ElectronPatchesConfig } from "../types";
 import {
+  ensurePosixSeparators,
   getCheckoutDirectoryForPatchDirectory,
   getFilesInPatch,
   getPatches,
@@ -142,10 +143,9 @@ class FileInPatch extends vscode.TreeItem {
     super(uri, vscode.TreeItemCollapsibleState.None);
 
     // Label it with the path within the checkout directory to avoid duplicate names
-    this.label = path
-      .relative(checkoutDirectory.path, uri.path)
-      .split(path.sep)
-      .join(path.posix.sep);
+    this.label = ensurePosixSeparators(
+      path.relative(checkoutDirectory.path, uri.path)
+    );
 
     this.command = {
       command: "electron-build-tools.showCommitDiff",

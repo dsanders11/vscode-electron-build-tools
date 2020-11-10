@@ -282,10 +282,9 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
           } else if (href && child.type === "text") {
             // Mixed separators will mess with things, so make sure it's
             // POSIX since that's what links in the docs will be using
-            const filePath = path
-              .resolve(docsRoot.fsPath, href)
-              .split(path.sep)
-              .join(path.posix.sep);
+            const filePath = ensurePosixSeparators(
+              path.resolve(docsRoot.fsPath, href)
+            );
 
             // These links have fragments in them, so don't
             // use vscode.Uri.file to parse them
@@ -479,4 +478,8 @@ export async function withBusyState(workFn: Function) {
     );
     globalBusy = false;
   }
+}
+
+export function ensurePosixSeparators(filePath: string) {
+  return filePath.split(path.sep).join(path.posix.sep);
 }
