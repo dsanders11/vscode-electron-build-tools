@@ -26,6 +26,10 @@
     "Linters",
     "Other"
   ],
+  "keywords": [
+    "Electron",
+    "build-tools"
+  ],
   "contributes": {
     "colors": [
       {
