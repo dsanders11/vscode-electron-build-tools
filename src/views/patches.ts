@@ -146,6 +146,7 @@ class FileInPatch extends vscode.TreeItem {
     this.label = ensurePosixSeparators(
       path.relative(checkoutDirectory.path, uri.path)
     );
+    this.tooltip = this.label;
 
     this.command = {
       command: "electron-build-tools.showCommitDiff",
