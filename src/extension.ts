@@ -14,6 +14,8 @@ import {
   virtualDocumentScheme,
 } from "./constants";
 import { TextDocumentContentProvider } from "./documentContentProvider";
+import { DocsLinkablesProvider } from "./docsLinkablesProvider";
+import { setupDocsLinting } from "./docsLinting";
 import { runAsTask } from "./tasks";
 import { TestCodeLensProvider } from "./testCodeLens";
 import { ExtensionConfig } from "./types";
@@ -925,6 +927,10 @@ export async function activate(context: vscode.ExtensionContext) {
         true
       );
 
+      const diagnosticsCollection = vscode.languages.createDiagnosticCollection(
+        "electron-build-tools"
+      );
+
       const configsProvider = new ElectronBuildToolsConfigsProvider();
       const patchesProvider = new ElectronPatchesProvider(
         electronRoot,
@@ -936,7 +942,7 @@ export async function activate(context: vscode.ExtensionContext) {
           "typescript",
           new TestCodeLensProvider(testsProvider)
         ),
-        vscode.languages.createDiagnosticCollection("electron-build-tools"),
+        diagnosticsCollection,
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:configs",
           configsProvider
@@ -970,6 +976,11 @@ export async function activate(context: vscode.ExtensionContext) {
         testsProvider
       );
       registerHelperCommands(context);
+
+      const linkableProvider = new DocsLinkablesProvider(electronRoot);
+      context.subscriptions.push(linkableProvider);
+
+      setupDocsLinting(linkableProvider, diagnosticsCollection);
 
       // Render emojis in Markdown
       result.extendMarkdownIt = (md: MarkdownIt) => md.use(MarkdownItEmoji);

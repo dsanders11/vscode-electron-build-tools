@@ -483,3 +483,10 @@ export async function withBusyState(workFn: Function) {
 export function ensurePosixSeparators(filePath: string) {
   return filePath.split(path.sep).join(path.posix.sep);
 }
+
+export const slugifyHeading = (heading: string): string => {
+  return heading
+    .replace(/[^A-Za-z0-9 \-]/g, "")
+    .replace(/ /g, "-")
+    .toLowerCase();
+};

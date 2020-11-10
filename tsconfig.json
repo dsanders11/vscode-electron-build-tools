@@ -5,6 +5,7 @@
     "outDir": "out",
     "lib": [
       "es6",
+      "es2019.array",
       "es2020.string"
     ],
     "sourceMap": true,
