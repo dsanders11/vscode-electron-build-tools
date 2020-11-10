@@ -199,7 +199,7 @@ function registerElectronBuildToolsCommands(
             NINJA_STATUS: "%p %f/%t ",
           };
 
-          let lastBuildProgress = 0;
+          let lastBuildProgress = -1;
 
           const task = runAsTask(
             context,
