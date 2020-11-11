@@ -400,7 +400,7 @@
         {
           "command": "electron-build-tools.runTestFile",
           "group": "navigation",
-          "when": "resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
+          "when": "resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
         }
       ],
       "view/item/context": [
