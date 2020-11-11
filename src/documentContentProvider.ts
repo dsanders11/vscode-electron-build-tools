@@ -12,15 +12,11 @@ const exec = promisify(callbackExec);
 export class TextDocumentContentProvider
   implements vscode.TextDocumentContentProvider {
   async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
-    const { checkoutPath, gitObject, view } = querystring.parse(uri.query);
+    const { checkoutPath, fileIndex, view } = querystring.parse(uri.query);
     let content = "";
 
     if (view === "contents") {
-      const relativeFilePath = ensurePosixSeparators(
-        path.relative(checkoutPath as string, uri.fsPath)
-      );
-
-      const gitCommand = `git show ${gitObject as string}:${relativeFilePath}`;
+      const gitCommand = `git show ${fileIndex as string}`;
 
       const { stdout } = await exec(gitCommand, {
         encoding: "utf8",

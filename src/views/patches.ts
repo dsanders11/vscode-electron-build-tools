@@ -6,6 +6,7 @@ import { patchDirectoryPrettyNames } from "../constants";
 import { ElectronPatchesConfig } from "../types";
 import {
   ensurePosixSeparators,
+  FileInPatch,
   getCheckoutDirectoryForPatchDirectory,
   getFilesInPatch,
   getPatches,
@@ -88,8 +89,8 @@ export class ElectronPatchesProvider
 
         children.push(
           ...patchedFilenames.map(
-            (filename) =>
-              new FileInPatch(element.uri, checkoutDirectory, filename)
+            (metadata) =>
+              new FileInPatchTreeItem(element.uri, checkoutDirectory, metadata)
           )
         );
       }
@@ -134,23 +135,23 @@ class PatchOverview extends vscode.TreeItem {
   }
 }
 
-class FileInPatch extends vscode.TreeItem {
+class FileInPatchTreeItem extends vscode.TreeItem {
   constructor(
     patch: vscode.Uri,
     checkoutDirectory: vscode.Uri,
-    uri: vscode.Uri
+    metadata: FileInPatch
   ) {
-    super(uri, vscode.TreeItemCollapsibleState.None);
+    super(metadata.file, vscode.TreeItemCollapsibleState.None);
 
     // Label it with the path within the checkout directory to avoid duplicate names
     this.label = ensurePosixSeparators(
-      path.relative(checkoutDirectory.path, uri.path)
+      path.relative(checkoutDirectory.path, metadata.file.path)
     );
     this.tooltip = this.label;
 
     this.command = {
       command: "electron-build-tools.showCommitDiff",
-      arguments: [checkoutDirectory, patch, uri, this.label],
+      arguments: [checkoutDirectory, patch, metadata, this.label],
       title: "Show Commit Diff",
     };
   }

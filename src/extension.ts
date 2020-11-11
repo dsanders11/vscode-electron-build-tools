@@ -21,7 +21,7 @@ import { TestCodeLensProvider } from "./testCodeLens";
 import { ExtensionConfig } from "./types";
 import {
   escapeStringForRegex,
-  findCommitForPatch,
+  FileInPatch,
   getConfigDefaultTarget,
   getConfigs,
   getConfigsFilePath,
@@ -461,30 +461,24 @@ function registerElectronBuildToolsCommands(
       async (
         checkoutDirectory: vscode.Uri,
         patch: vscode.Uri,
-        filename: vscode.Uri,
+        metadata: FileInPatch,
         patchedFilename: string
       ) => {
-        const commitSha = await findCommitForPatch(checkoutDirectory, patch);
+        const originalFile = metadata.file.with({
+          scheme: virtualDocumentScheme,
+          query: `view=contents&fileIndex=${metadata.fileIndexA}&checkoutPath=${checkoutDirectory.fsPath}`,
+        });
+        const patchedFile = metadata.file.with({
+          scheme: virtualDocumentScheme,
+          query: `view=contents&fileIndex=${metadata.fileIndexB}&checkoutPath=${checkoutDirectory.fsPath}`,
+        });
 
-        if (commitSha) {
-          const originalFile = filename.with({
-            scheme: virtualDocumentScheme,
-            query: `view=contents&gitObject=${commitSha}~1&checkoutPath=${checkoutDirectory.fsPath}`,
-          });
-          const patchedFile = filename.with({
-            scheme: virtualDocumentScheme,
-            query: `view=contents&gitObject=${commitSha}&checkoutPath=${checkoutDirectory.fsPath}`,
-          });
-
-          vscode.commands.executeCommand(
-            "vscode.diff",
-            originalFile,
-            patchedFile,
-            `${path.basename(patch.path)} - ${patchedFilename}`
-          );
-        } else {
-          vscode.window.showErrorMessage("Couldn't open commit diff for file");
-        }
+        vscode.commands.executeCommand(
+          "vscode.diff",
+          originalFile,
+          patchedFile,
+          `${path.basename(patch.path)} - ${patchedFilename}`
+        );
       }
     ),
     vscode.commands.registerCommand(

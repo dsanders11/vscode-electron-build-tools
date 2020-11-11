@@ -20,7 +20,7 @@ import { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const exec = promisify(childProcess.exec);
 const fsReadFile = promisify(fs.readFile);
-const patchedFilenameRegex = /^\+\+\+ b\/(.*)$/gm;
+const patchedFilenameRegex = /^diff --git a\/\S+ b\/(\S+)[\r\n]+index (\S+)\.\.(\S+) \d+$/gm;
 
 export type DocLink = {
   description: string;
@@ -40,6 +40,12 @@ export enum TestRunner {
   MAIN = "main",
   REMOTE = "remote",
 }
+
+export type FileInPatch = {
+  file: vscode.Uri;
+  fileIndexA: string;
+  fileIndexB: string;
+};
 
 export async function isBuildToolsInstalled() {
   return new Promise((resolve, reject) => {
@@ -118,15 +124,20 @@ export async function getPatches(directory: vscode.Uri): Promise<vscode.Uri[]> {
 export async function getFilesInPatch(
   baseDirectory: vscode.Uri,
   patch: vscode.Uri
-): Promise<vscode.Uri[]> {
+): Promise<FileInPatch[]> {
   const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
-  const filenames = Array.from(
-    patchContents.matchAll(patchedFilenameRegex)
-  ).map((match) => match[1]);
+  const patchedFiles: FileInPatch[] = [];
+  const regexMatches = patchContents.matchAll(patchedFilenameRegex);
 
-  return filenames.map((filename) =>
-    vscode.Uri.joinPath(baseDirectory, filename)
-  );
+  for (const [_, filename, fileIndexA, fileIndexB] of regexMatches) {
+    patchedFiles.push({
+      file: vscode.Uri.joinPath(baseDirectory, filename),
+      fileIndexA,
+      fileIndexB,
+    });
+  }
+
+  return patchedFiles;
 }
 
 export async function parsePatchConfig(
@@ -223,38 +234,6 @@ export async function patchOverviewMarkdown(patch: vscode.Uri) {
   }
 
   return markdown;
-}
-
-export async function findCommitForPatch(
-  checkoutDirectory: vscode.Uri,
-  patch: vscode.Uri
-) {
-  const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
-  const patchMetadata = parsePatchMetadata(patchContents);
-  const patchName = path.basename(patch.path);
-
-  // A local patch that hasn't been re-applied won't have the Patch-Filename
-  // line, so include other details to try to ensure we get a single commit
-  const gitCommand = [
-    "git log refs/patches/upstream-head..HEAD",
-    `--author "${patchMetadata.from}"`,
-    `--since "${patchMetadata.date}"`,
-    `--grep "Patch-Filename: ${patchName}"`,
-    `--grep "${patchMetadata.subject}"`,
-    `--pretty=format:"%h"`,
-  ];
-
-  const { stdout } = await exec(gitCommand.join(" "), {
-    encoding: "utf8",
-    cwd: checkoutDirectory.fsPath,
-  });
-  const result = stdout.trim();
-
-  if (!result || result.split("\n").length !== 1) {
-    throw new Error("Couldn't find commit");
-  }
-
-  return result;
 }
 
 export async function parseDocsSections(electronRoot: vscode.Uri) {
