@@ -360,6 +360,44 @@ function registerElectronBuildToolsCommands(
       }
     ),
     registerCommandNoBusy(
+      "electron-build-tools.runTestFile",
+      () => {
+        vscode.window.showErrorMessage(
+          "Can't run tests, other work in-progress"
+        );
+      },
+      (file: vscode.Uri) => {
+        return withBusyState(async () => {
+          const operationName = "Electron Build Tools - Running Tests";
+          const command = `${buildToolsExecutable} test`;
+
+          let runner: string | undefined;
+
+          if (file.path.includes("electron/spec/")) {
+            runner = "remote";
+          } else if (file.path.includes("electron/spec-main/")) {
+            runner = "main";
+          }
+
+          // Test runner expects filenames as relative to the root, not absolute
+          const relativeFilePath = path.relative(
+            electronRoot.fsPath,
+            file.fsPath
+          );
+
+          // TODO - Fix this up
+          runAsTask(
+            context,
+            operationName,
+            "test",
+            `${command} --runners=${runner} --files ${relativeFilePath}"`,
+            {},
+            "$mocha"
+          );
+        });
+      }
+    ),
+    registerCommandNoBusy(
       "electron-build-tools.runTestRunner",
       () => {
         vscode.window.showErrorMessage(

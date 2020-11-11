@@ -110,6 +110,11 @@
         "icon": "$(run)"
       },
       {
+        "command": "electron-build-tools.runTestFile",
+        "title": "Run Test File",
+        "icon": "$(run-all)"
+      },
+      {
         "command": "electron-build-tools.runTestRunner",
         "title": "Run Test Runner",
         "icon": "$(run-all)"
@@ -324,6 +329,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.runTestFile",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.runTestRunner",
           "when": "false"
         },
@@ -385,6 +394,13 @@
           "command": "markdown.prettifyTable",
           "when": "electron-build-tools:ready && resourceLangId == markdown",
           "group": "1_modification"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "electron-build-tools.runTestFile",
+          "group": "navigation",
+          "when": "resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
         }
       ],
       "view/item/context": [
