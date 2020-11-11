@@ -91,7 +91,7 @@
         "command": "electron-build-tools.remove-config",
         "title": "Remove Config",
         "icon": "$(trash)",
-        "enablement": "viewItem =~ /^config$/"
+        "enablement": "viewItem == config"
       },
       {
         "command": "electron-build-tools.refreshPatches",
@@ -162,7 +162,7 @@
         "command": "electron-build-tools.use-config",
         "title": "Use Config",
         "icon": "$(check)",
-        "enablement": "viewItem =~ /^config$/"
+        "enablement": "viewItem == config"
       },
       {
         "command": "electron-build-tools.use-config.quick-pick",
@@ -412,27 +412,27 @@
         },
         {
           "command": "electron-build-tools.refreshPatches",
-          "when": "view == electron-build-tools:patches && viewItem =~ /^repo$/",
+          "when": "view == electron-build-tools:patches && viewItem == repo",
           "group": "inline"
         },
         {
           "command": "electron-build-tools.runTest",
-          "when": "view == electron-build-tools:tests && viewItem =~ /^^test$/",
+          "when": "view == electron-build-tools:tests && viewItem == test",
           "group": "inline"
         },
         {
           "command": "electron-build-tools.runTestRunner",
-          "when": "view == electron-build-tools:tests && viewItem =~ /^runner$/",
+          "when": "view == electron-build-tools:tests && viewItem == runner",
           "group": "inline"
         },
         {
           "command": "electron-build-tools.runTestSuite",
-          "when": "view == electron-build-tools:tests && viewItem =~ /^suite$/",
+          "when": "view == electron-build-tools:tests && viewItem == suite",
           "group": "inline"
         },
         {
           "command": "electron-build-tools.openPatch",
-          "when": "view == electron-build-tools:patches && viewItem =~ /^patch$/"
+          "when": "view == electron-build-tools:patches && viewItem == patch"
         },
         {
           "command": "electron-build-tools.openTestFile",
