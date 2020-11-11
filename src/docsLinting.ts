@@ -112,6 +112,10 @@ export function setupDocsLinting(
   diagnosticsCollection: vscode.DiagnosticCollection
 ) {
   const lintDocument = async (document: vscode.TextDocument) => {
+    if (document.languageId !== "markdown") {
+      throw new Error("Can only lint Markdown documents");
+    }
+
     const linkables = await linkableProvider.getLinkables();
     const links = getRelativeLinksInDocument(document);
 
@@ -160,7 +164,11 @@ export function setupDocsLinting(
   });
 
   vscode.window.onDidChangeVisibleTextEditors((textEditors) => {
-    textEditors.forEach((textEditor) => lintDocument(textEditor.document));
+    for (const textEditor of textEditors) {
+      if (textEditor.document.languageId === "markdown") {
+        lintDocument(textEditor.document);
+      }
+    }
   });
 
   const lintVisibleEditors = () => {
@@ -175,5 +183,7 @@ export function setupDocsLinting(
 
   // TODO - Should we just lint all documents and let it show in
   // the problems output panel?
+  // TODO - If we don't re-lint documents with problems, the problem
+  // remains in the output panel even after the linkable is fixed
   linkableProvider.onDidChangeLinkables(() => lintVisibleEditors());
 }
