@@ -199,18 +199,17 @@ export class TestBaseTreeItem extends TreeItem {
   }
 
   setState(state: TestState) {
-    // TODO - Color is disabled because it's buggy as heck in VS Code 1.51.0
     if (state === TestState.RUNNING) {
       this.iconPath = new ThemeIcon("loading");
     } else if (state === TestState.SUCCESS) {
       this.iconPath = new ThemeIcon(
-        "check"
-        // new vscode.ThemeColor("debugIcon.startForeground")
+        "check",
+        new vscode.ThemeColor("debugIcon.startForeground")
       );
     } else if (state === TestState.FAILURE) {
       this.iconPath = new ThemeIcon(
-        "error"
-        // new vscode.ThemeColor("debugIcon.stopForeground")
+        "error",
+        new vscode.ThemeColor("debugIcon.stopForeground")
       );
     }
   }

@@ -11,7 +11,7 @@
   "license": "MIT",
   "version": "0.2.0",
   "engines": {
-    "vscode": "^1.51.0"
+    "vscode": "^1.51.1"
   },
   "activationEvents": [
     "workspaceContains:ELECTRON_VERSION",
