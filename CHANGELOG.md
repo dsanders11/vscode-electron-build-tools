@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 (11-12-2020)
+
+* chore: swap activity bar icon for better one
+
 ## 0.2.1 ((11-12-2020))
 
 * feat: color on test result icons
