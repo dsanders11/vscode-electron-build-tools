@@ -2,7 +2,7 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import { patchDirectoryPrettyNames } from "../constants";
+import { patchDirectoryPrettyNames, pullRequestScheme } from "../constants";
 import { ElectronPatchesConfig } from "../types";
 import {
   ensurePosixSeparators,
@@ -16,6 +16,12 @@ import {
   truncateToLength,
 } from "../utils";
 
+export type PullRequestWithPatch = {
+  prNumber: string;
+  title: string;
+  patchDirectories: string[];
+};
+
 export class ElectronPatchesProvider
   implements vscode.TreeDataProvider<vscode.TreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | void>();
@@ -23,14 +29,43 @@ export class ElectronPatchesProvider
 
   private readonly patchesConfig: Promise<ElectronPatchesConfig>;
   private readonly rootDirectory: vscode.Uri;
+  private readonly viewPullRequestTreeItem: ViewPullRequestPatchTreeItem;
 
   constructor(electronRoot: vscode.Uri, patchesConfig: vscode.Uri) {
     this.rootDirectory = vscode.Uri.joinPath(electronRoot, "..", "..");
     this.patchesConfig = parsePatchConfig(patchesConfig);
+
+    this.viewPullRequestTreeItem = new ViewPullRequestPatchTreeItem();
   }
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
+  }
+
+  showPr(pullRequest: PullRequestWithPatch) {
+    if (!this.viewPullRequestTreeItem.pullRequests.has(pullRequest.prNumber)) {
+      this.viewPullRequestTreeItem.collapsibleState =
+        vscode.TreeItemCollapsibleState.Expanded;
+      this.viewPullRequestTreeItem.pullRequests.set(
+        pullRequest.prNumber,
+        new PullRequestTreeItem(pullRequest)
+      );
+
+      this._onDidChangeTreeData.fire(this.viewPullRequestTreeItem);
+    }
+  }
+
+  removePr(pullRequest: PullRequestWithPatch) {
+    if (
+      this.viewPullRequestTreeItem.pullRequests.delete(pullRequest.prNumber)
+    ) {
+      if (this.viewPullRequestTreeItem.pullRequests.size === 0) {
+        this.viewPullRequestTreeItem.collapsibleState =
+          vscode.TreeItemCollapsibleState.None;
+      }
+
+      this._onDidChangeTreeData.fire(this.viewPullRequestTreeItem);
+    }
   }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
@@ -58,6 +93,9 @@ export class ElectronPatchesProvider
 
         children.push(new PatchDirectory(label, uri, patchDirectoryBasename));
       }
+
+      // Also include the node for viewing patches in pull requests
+      children.push(this.viewPullRequestTreeItem);
     } else if (
       element.collapsibleState !== vscode.TreeItemCollapsibleState.None
     ) {
@@ -93,6 +131,26 @@ export class ElectronPatchesProvider
               new FileInPatchTreeItem(element.uri, checkoutDirectory, metadata)
           )
         );
+      } else if (element instanceof ViewPullRequestPatchTreeItem) {
+        children.push(...element.pullRequests.values());
+      } else if (element instanceof PullRequestTreeItem) {
+        for (const patchDirectory of element.pullRequest.patchDirectories) {
+          const patchDirectoryBasename = path.basename(patchDirectory);
+          const uri = vscode.Uri.joinPath(this.rootDirectory, patchDirectory);
+          const label =
+            patchDirectoryPrettyNames[patchDirectory] ?? patchDirectoryBasename;
+
+          children.push(
+            new PatchDirectory(
+              label,
+              uri.with({
+                scheme: pullRequestScheme,
+                query: `pullRequest=${element.pullRequest.prNumber}`,
+              }),
+              patchDirectoryBasename
+            )
+          );
+        }
       }
     }
 
@@ -107,7 +165,8 @@ export class PatchDirectory extends vscode.TreeItem {
     this.name = name;
     this.uri = uri; // BUG - resourceUri doesn't play nice with advanced hover
     this.iconPath = new vscode.ThemeIcon("repo");
-    this.contextValue = "repo";
+    this.contextValue =
+      uri.scheme === pullRequestScheme ? "pull-request-repo" : "repo";
   }
 }
 
@@ -154,5 +213,29 @@ class FileInPatchTreeItem extends vscode.TreeItem {
       arguments: [checkoutDirectory, patch, metadata, this.label],
       title: "Show Commit Diff",
     };
+  }
+}
+
+class ViewPullRequestPatchTreeItem extends vscode.TreeItem {
+  public readonly pullRequests: Map<string, PullRequestTreeItem> = new Map();
+
+  constructor() {
+    super("View Patches in Pull Request", vscode.TreeItemCollapsibleState.None);
+
+    this.iconPath = new vscode.ThemeIcon("git-pull-request");
+    this.contextValue = "view-pull-request-patch";
+  }
+}
+
+export class PullRequestTreeItem extends vscode.TreeItem {
+  constructor(public readonly pullRequest: PullRequestWithPatch) {
+    super(
+      `#${pullRequest.prNumber} - ${pullRequest.title}`,
+      vscode.TreeItemCollapsibleState.Expanded
+    );
+
+    this.tooltip = this.label;
+    this.iconPath = new vscode.ThemeIcon("git-pull-request");
+    this.contextValue = "pull-request";
   }
 }

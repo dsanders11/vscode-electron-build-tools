@@ -32,6 +32,8 @@ export const patchDirectoryPrettyNames: ElectronPatchesConfig = Object.freeze({
 
 export const virtualDocumentScheme = "electron-build-tools";
 
+export const pullRequestScheme = "electron-pull-request";
+
 export const buildToolsRepository = "https://github.com/electron/build-tools";
 
 export const repositoryUrl =

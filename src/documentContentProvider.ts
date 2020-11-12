@@ -1,32 +1,41 @@
-import { exec as callbackExec } from "child_process";
-import * as path from "path";
-import * as querystring from "querystring";
-import { promisify } from "util";
-
 import * as vscode from "vscode";
 
-import { ensurePosixSeparators, patchOverviewMarkdown } from "./utils";
-
-const exec = promisify(callbackExec);
+import { pullRequestScheme } from "./constants";
+import {
+  getContentForFileIndex,
+  patchOverviewMarkdown,
+  querystringParse,
+} from "./utils";
 
 export class TextDocumentContentProvider
   implements vscode.TextDocumentContentProvider {
   async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
-    const { checkoutPath, fileIndex, view } = querystring.parse(uri.query);
+    const { checkoutPath, fileIndex, pullRequest, view } = querystringParse(
+      uri.query
+    );
     let content = "";
 
     if (view === "contents") {
-      const gitCommand = `git show ${fileIndex as string}`;
-
-      const { stdout } = await exec(gitCommand, {
-        encoding: "utf8",
-        cwd: checkoutPath as string,
-      });
-      content = stdout.trim();
+      // Try on-disk first, and if that fails, and it's a PR, use the PR filesystem
+      try {
+        content = await getContentForFileIndex(fileIndex, checkoutPath);
+      } catch (err) {
+        if (err && err.code === 128 && pullRequest) {
+          content = (
+            await vscode.workspace.fs.readFile(
+              uri.with({ scheme: pullRequestScheme })
+            )
+          ).toString();
+        } else {
+          throw err;
+        }
+      }
     } else if (view === "patch-overview") {
-      content = (
-        await patchOverviewMarkdown(uri.with({ scheme: "file", query: "" }))
-      ).value;
+      const scheme = pullRequest ? pullRequestScheme : "file";
+      const query = pullRequest ? `pullRequest=${pullRequest}` : "";
+
+      content = (await patchOverviewMarkdown(uri.with({ scheme, query })))
+        .value;
     } else {
       throw new Error("Unknown view");
     }

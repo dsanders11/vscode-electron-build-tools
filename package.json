@@ -105,6 +105,11 @@
         "enablement": "!electron-build-tools:loadingTests"
       },
       {
+        "command": "electron-build-tools.removePullRequestPatch",
+        "title": "Remove Pull Request",
+        "icon": "$(x)"
+      },
+      {
         "command": "electron-build-tools.runTest",
         "title": "Run Test",
         "icon": "$(run)"
@@ -172,6 +177,11 @@
       {
         "command": "electron-build-tools.use-config.quick-pick",
         "title": "Electron Build Tools: Use Config"
+      },
+      {
+        "command": "electron-build-tools.viewPullRequestPatch",
+        "title": "Find Pull Request",
+        "icon": "$(search)"
       }
     ],
     "configuration": {
@@ -325,6 +335,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.removePullRequestPatch",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.runTest",
           "when": "false"
         },
@@ -385,6 +399,10 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
+          "command": "electron-build-tools.viewPullRequestPatch",
+          "when": "false"
+        },
+        {
           "command": "markdown.prettifyTable",
           "when": "false"
         }
@@ -429,6 +447,20 @@
         {
           "command": "electron-build-tools.refreshPatches",
           "when": "view == electron-build-tools:patches && viewItem == repo",
+          "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.removePullRequestPatch",
+          "when": "view == electron-build-tools:patches && viewItem == pull-request"
+        },
+        {
+          "command": "electron-build-tools.removePullRequestPatch",
+          "when": "view == electron-build-tools:patches && viewItem == pull-request",
+          "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.viewPullRequestPatch",
+          "when": "view == electron-build-tools:patches && viewItem == view-pull-request-patch",
           "group": "inline"
         },
         {
@@ -603,6 +635,8 @@
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
+    "@octokit/types": "^5.5.0",
+    "@types/diff": "^4.0.2",
     "@types/glob": "^7.1.3",
     "@types/markdown-it": "^10.0.2",
     "@types/markdown-it-emoji": "^1.4.0",
@@ -626,7 +660,9 @@
   },
   "dependencies": {
     "@electron/docs-parser": "^0.10.1",
+    "@octokit/rest": "^18.0.9",
     "chokidar": "^3.4.3",
+    "diff": "^5.0.0",
     "markdown-it": "^10.0.0",
     "markdown-it-emoji": "^2.0.0",
     "mocha": "^8.2.1",

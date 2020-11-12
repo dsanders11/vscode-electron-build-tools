@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as net from "net";
 import * as os from "os";
 import * as path from "path";
+import * as querystring from "querystring";
 import { promisify } from "util";
 
 import * as vscode from "vscode";
@@ -20,7 +21,8 @@ import { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const exec = promisify(childProcess.exec);
 const fsReadFile = promisify(fs.readFile);
-const patchedFilenameRegex = /^diff --git a\/\S+ b\/(\S+)[\r\n]+index (\S+)\.\.(\S+) \d+$/gm;
+
+export const patchedFilenameRegex = /diff --git a\/\S+ b\/(\S+)[\r\n]+index (\S+)\.\.(\S+).*?(?:(?=diff)|$)/gs;
 
 export type DocLink = {
   description: string;
@@ -131,7 +133,11 @@ export async function getFilesInPatch(
 
   for (const [_, filename, fileIndexA, fileIndexB] of regexMatches) {
     patchedFiles.push({
-      file: vscode.Uri.joinPath(baseDirectory, filename),
+      // Retain the scheme and query parameters from the patch URI
+      file: vscode.Uri.joinPath(baseDirectory, filename).with({
+        scheme: patch.scheme,
+        query: patch.query,
+      }),
       fileIndexA,
       fileIndexB,
     });
@@ -472,3 +478,38 @@ export const slugifyHeading = (heading: string): string => {
     .replace(/ /g, "-")
     .toLowerCase();
 };
+
+export async function getContentForFileIndex(
+  fileIndex: string,
+  checkoutPath: string
+) {
+  const { stdout } = await exec(`git show ${fileIndex}`, {
+    encoding: "utf8",
+    cwd: checkoutPath,
+  });
+
+  return stdout.trim();
+}
+
+export function querystringParse(
+  str: string,
+  sep?: string | undefined,
+  eq?: string | undefined,
+  options?: querystring.ParseOptions | undefined
+) {
+  const parsedUrlQuery = querystring.parse(str, sep, eq, options);
+
+  for (const param in parsedUrlQuery) {
+    const value = parsedUrlQuery[param];
+
+    if (Array.isArray(value)) {
+      if (value.length === 1) {
+        parsedUrlQuery[param] = value[0];
+      } else {
+        throw new Error("Expected a single value for query param");
+      }
+    }
+  }
+
+  return parsedUrlQuery as Record<string, string>;
+}

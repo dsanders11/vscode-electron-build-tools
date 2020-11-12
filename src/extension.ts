@@ -1,16 +1,19 @@
 import * as childProcess from "child_process";
 import * as path from "path";
+import * as querystring from "querystring";
 import { promisify } from "util";
 
 import * as vscode from "vscode";
 
 import MarkdownIt from "markdown-it";
 import MarkdownItEmoji from "markdown-it-emoji";
+import { Octokit } from "@octokit/rest";
 
 import {
   blankConfigEnumValue,
   buildTargets,
   buildToolsExecutable,
+  pullRequestScheme,
   virtualDocumentScheme,
 } from "./constants";
 import { TextDocumentContentProvider } from "./documentContentProvider";
@@ -40,6 +43,7 @@ import {
   ElectronPatchesProvider,
   Patch,
   PatchDirectory,
+  PullRequestTreeItem,
 } from "./views/patches";
 import { HelpTreeDataProvider } from "./views/help";
 import {
@@ -49,6 +53,7 @@ import {
   TestState,
   TestsTreeDataProvider,
 } from "./views/tests";
+import { ElectronPullRequestFileSystemProvider } from "./pullRequestFileSystemProvider";
 
 enum MarkdownTableColumnAlignment {
   LEFT,
@@ -95,7 +100,8 @@ function registerElectronBuildToolsCommands(
   electronRoot: vscode.Uri,
   configsProvider: ElectronBuildToolsConfigsProvider,
   patchesProvider: ElectronPatchesProvider,
-  testsProvider: TestsTreeDataProvider
+  testsProvider: TestsTreeDataProvider,
+  pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
 ) {
   context.subscriptions.push(
     registerCommandNoBusy(
@@ -466,11 +472,21 @@ function registerElectronBuildToolsCommands(
       ) => {
         const originalFile = metadata.file.with({
           scheme: virtualDocumentScheme,
-          query: `view=contents&fileIndex=${metadata.fileIndexA}&checkoutPath=${checkoutDirectory.fsPath}`,
+          query: querystring.stringify({
+            ...querystring.parse(metadata.file.query),
+            view: "contents",
+            fileIndex: metadata.fileIndexA,
+            checkoutPath: checkoutDirectory.fsPath,
+          }),
         });
         const patchedFile = metadata.file.with({
           scheme: virtualDocumentScheme,
-          query: `view=contents&fileIndex=${metadata.fileIndexB}&checkoutPath=${checkoutDirectory.fsPath}`,
+          query: querystring.stringify({
+            ...querystring.parse(metadata.file.query),
+            view: "contents",
+            fileIndex: metadata.fileIndexB,
+            checkoutPath: checkoutDirectory.fsPath,
+          }),
         });
 
         vscode.commands.executeCommand(
@@ -506,7 +522,10 @@ function registerElectronBuildToolsCommands(
           "markdown.showPreview",
           patch.with({
             scheme: virtualDocumentScheme,
-            query: "view=patch-overview",
+            query: querystring.stringify({
+              ...querystring.parse(patch.query),
+              view: "patch-overview",
+            }),
           })
         );
       }
@@ -777,6 +796,68 @@ function registerElectronBuildToolsCommands(
       (testOrSuite: TestBaseTreeItem) => {
         return vscode.commands.executeCommand("vscode.open", testOrSuite.uri);
       }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.removePullRequestPatch",
+      async (treeItem: PullRequestTreeItem) => {
+        patchesProvider.removePr(treeItem.pullRequest);
+      }
+    ),
+    vscode.commands.registerCommand(
+      "electron-build-tools.viewPullRequestPatch",
+      async () => {
+        const prNumber = await vscode.window.showInputBox({
+          prompt: "Enter the pull request number",
+          validateInput: (value: string) => {
+            if (isNaN(parseInt(value))) {
+              return "Enter a number only";
+            }
+          },
+        });
+
+        if (prNumber) {
+          const octokit = new Octokit();
+          const prDetails = {
+            owner: "electron",
+            repo: "electron",
+            pull_number: parseInt(prNumber),
+          };
+          const prResponse = await octokit.pulls.get(prDetails);
+          const prFilesResponse = await octokit.pulls.listFiles(prDetails);
+
+          if (prResponse.status === 200 && prFilesResponse.status === 200) {
+            const pullRequest = prResponse.data;
+            const pulRequestFiles = prFilesResponse.data;
+            const patchDirectoryRegex = /^patches\/(\S*)\/.patches$/;
+            const patchDirectories = [];
+
+            for (const file of prFilesResponse.data) {
+              const matches = patchDirectoryRegex.exec(file.filename);
+
+              if (matches) {
+                patchDirectories.push(`src/electron/patches/${matches[1]}`);
+              }
+            }
+
+            if (patchDirectories.length > 0) {
+              await pullRequestFileSystemProvider.addPullRequestFiles(
+                prNumber,
+                pulRequestFiles
+              );
+
+              patchesProvider.showPr({
+                prNumber,
+                title: pullRequest.title,
+                patchDirectories,
+              });
+            } else {
+              vscode.window.showWarningMessage("No patches in pull request");
+            }
+          } else {
+            vscode.window.showErrorMessage("Couldn't find pull request");
+          }
+        }
+      }
     )
   );
 }
@@ -968,10 +1049,15 @@ export async function activate(context: vscode.ExtensionContext) {
         "electron-build-tools"
       );
 
+      const patchesConfig = getPatchesConfigFile(electronRoot);
       const configsProvider = new ElectronBuildToolsConfigsProvider();
       const patchesProvider = new ElectronPatchesProvider(
         electronRoot,
-        getPatchesConfigFile(electronRoot)
+        patchesConfig
+      );
+      const pullRequestFileSystemProvider = new ElectronPullRequestFileSystemProvider(
+        electronRoot,
+        patchesConfig
       );
       const testsProvider = new TestsTreeDataProvider(context, electronRoot);
       context.subscriptions.push(
@@ -1003,6 +1089,11 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.workspace.registerTextDocumentContentProvider(
           virtualDocumentScheme,
           new TextDocumentContentProvider()
+        ),
+        vscode.workspace.registerFileSystemProvider(
+          pullRequestScheme,
+          pullRequestFileSystemProvider,
+          { isReadonly: true }
         )
       );
       registerElectronBuildToolsCommands(
@@ -1010,7 +1101,8 @@ export async function activate(context: vscode.ExtensionContext) {
         electronRoot,
         configsProvider,
         patchesProvider,
-        testsProvider
+        testsProvider,
+        pullRequestFileSystemProvider
       );
       registerHelperCommands(context);
 
