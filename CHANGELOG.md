@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 ((11-12-2020))
+
+* feat: color on test result icons
+
 ## 0.2.0 (11-12-2020)
 
 * feat: view patches in pull requests
