@@ -1,14 +1,19 @@
 import * as net from "net";
 import * as readline from "readline";
+import { PassThrough } from "stream";
 
 import * as vscode from "vscode";
 
+import { IpcMessage } from "./common";
 import { generateSocketName } from "./utils";
 
 type ElectronBuildToolsTask = {
+  onDidWriteData: vscode.Event<OnDidWriteData>;
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
   finished: Promise<void>;
 };
+
+type OnDidWriteData = IpcMessage;
 
 type OnDidWriteLine = {
   progress: vscode.Progress<{
@@ -60,6 +65,7 @@ export function runAsTask(
 
   const socketServer = net.createServer().listen(socketName);
 
+  const onDidWriteDataEmitter = new vscode.EventEmitter<OnDidWriteData>();
   const onDidWriteLineEmitter = new vscode.EventEmitter<OnDidWriteLine>();
 
   const taskPromise = vscode.window.withProgress(
@@ -69,9 +75,20 @@ export function runAsTask(
       cancellable: true,
     },
     async (progress, token) => {
-      socketServer.once("connection", (socket) => {
+      socketServer.on("connection", (socket) => {
+        const stdoutStream = new PassThrough();
         const rl = readline.createInterface({
-          input: socket,
+          input: stdoutStream,
+        });
+
+        socket.on("data", (data) => {
+          const message: IpcMessage = JSON.parse(data.toString());
+
+          if (message.stream === "stdout") {
+            stdoutStream.write(message.data);
+          } else {
+            onDidWriteDataEmitter.fire(message);
+          }
         });
 
         rl.on("line", (line) => onDidWriteLineEmitter.fire({ progress, line }));
@@ -110,6 +127,7 @@ export function runAsTask(
   );
 
   return {
+    onDidWriteData: onDidWriteDataEmitter.event,
     onDidWriteLine: onDidWriteLineEmitter.event,
     finished: new Promise(async (resolve) => {
       try {
