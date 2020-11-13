@@ -201,7 +201,6 @@ function registerElectronBuildToolsCommands(
 
           const buildEnv = {
             ...process.env,
-            FORCE_COLOR: "true",
             NINJA_STATUS: "%p %f/%t ",
           };
 
@@ -334,7 +333,7 @@ function registerElectronBuildToolsCommands(
               operationName,
               "test",
               `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
-              {},
+              undefined,
               "$mocha",
               (exitCode) => {
                 test.setState(
@@ -356,7 +355,7 @@ function registerElectronBuildToolsCommands(
               operationName,
               "test",
               `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
-              {},
+              undefined,
               "$mocha"
             );
           }
@@ -397,7 +396,7 @@ function registerElectronBuildToolsCommands(
             operationName,
             "test",
             `${command} --runners=${runner} --files ${relativeFilePath}"`,
-            {},
+            undefined,
             "$mocha"
           );
         });
@@ -420,7 +419,7 @@ function registerElectronBuildToolsCommands(
           operationName,
           "test",
           `${command} --runners=${testRunner.runner.toString()}"`,
-          {},
+          undefined,
           "$mocha"
         );
       }
@@ -446,7 +445,7 @@ function registerElectronBuildToolsCommands(
           operationName,
           "test",
           `${command} --runners=${testSuite.runner.toString()} -g "${testRegex}"`,
-          {},
+          undefined,
           "$mocha",
           (exitCode) => {
             testSuite.setState(
@@ -610,11 +609,6 @@ function registerElectronBuildToolsCommands(
             force ? "Force " : ""
           }Syncing`;
 
-          const syncEnv = {
-            ...process.env,
-            FORCE_COLOR: "true",
-          };
-
           let initialProgress = false;
 
           const task = runAsTask(
@@ -622,7 +616,7 @@ function registerElectronBuildToolsCommands(
             operationName,
             "sync",
             command,
-            { env: syncEnv },
+            undefined,
             undefined,
             (exitCode) => {
               if (exitCode === 1 && !force) {
@@ -705,7 +699,7 @@ function registerElectronBuildToolsCommands(
           operationName,
           "test",
           `${command} ${extraArgs}`,
-          {},
+          undefined,
           "$mocha"
         );
       }

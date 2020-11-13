@@ -39,7 +39,14 @@ export function runAsTask(
     "electron-build-tools",
     new vscode.ShellExecution(
       `node out/scripts/echo-to-socket.js "${b64command}" ${socketName}`,
-      { cwd: context.extensionPath, ...shellOptions }
+      {
+        cwd: context.extensionPath,
+        ...shellOptions,
+        env: {
+          FORCE_COLOR: "true",
+          ...shellOptions?.env,
+        },
+      }
     ),
     problemMatchers
   );
