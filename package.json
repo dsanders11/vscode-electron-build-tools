@@ -665,7 +665,6 @@
     "diff": "^5.0.0",
     "markdown-it": "^10.0.0",
     "markdown-it-emoji": "^2.0.0",
-    "mocha": "^8.2.1",
     "throttle-debounce": "^3.0.1",
     "ts-node": "^9.0.0",
     "typescript-cached-transpile": "^0.0.6",

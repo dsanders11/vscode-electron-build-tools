@@ -6,6 +6,7 @@ const readline = require("readline");
 // We need the typescript module but it would be 60 MB to bundle it with the
 // extension, which doesn't seem like the right thing to do. It's already in
 // the Electron source tree, so give access to it by adding to the global path
+// This also gives access to Mocha, rather than including it in the extension
 Module.globalPaths.push(path.resolve(process.cwd(), "node_modules"));
 
 // Needed or some imports at the start of test files will fail
@@ -63,7 +64,7 @@ app.whenReady().then(async () => {
         mocha.addFile(line);
       } else {
         try {
-          await mocha.loadFilesAsync();
+          await mocha.loadFiles();
           socket.write(JSON.stringify(parseTestSuites(mocha.suite), undefined, 4));
           process.exit(0);
         } catch (err) {
