@@ -24,6 +24,7 @@ import { TestCodeLensProvider } from "./testCodeLens";
 import { ExtensionConfig } from "./types";
 import {
   FileInPatch,
+  findElectronRoot,
   getConfigDefaultTarget,
   getPatchesConfigFile,
   isBuildToolsInstalled,
@@ -47,38 +48,6 @@ import { registerHelperCommands } from "./commands/helpers";
 import { registerConfigsCommands } from "./commands/configs";
 
 const exec = promisify(childProcess.exec);
-
-async function findElectronRoot(
-  workspaceFolder: vscode.WorkspaceFolder
-): Promise<vscode.Uri | undefined> {
-  // Support opening the src/electron folder, as well as src/
-  const possiblePackageRoots = [".", "electron"];
-
-  for (const possibleRoot of possiblePackageRoots) {
-    const rootPackageFilename = vscode.Uri.joinPath(
-      workspaceFolder.uri,
-      possibleRoot,
-      "package.json"
-    );
-
-    try {
-      const rootPackageFile = await vscode.workspace.fs.readFile(
-        rootPackageFilename
-      );
-
-      const { name } = JSON.parse(rootPackageFile.toString()) as Record<
-        string,
-        string
-      >;
-
-      if (name === "electron") {
-        return vscode.Uri.joinPath(workspaceFolder.uri, possibleRoot);
-      }
-    } catch {
-      continue;
-    }
-  }
-}
 
 function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
@@ -267,7 +236,6 @@ function registerElectronBuildToolsCommands(
         });
       }
     ),
-
     vscode.commands.registerCommand(
       "electron-build-tools.showCommitDiff",
       async (
