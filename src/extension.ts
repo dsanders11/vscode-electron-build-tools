@@ -23,7 +23,6 @@ import { runAsTask } from "./tasks";
 import { TestCodeLensProvider } from "./testCodeLens";
 import { ExtensionConfig } from "./types";
 import {
-  escapeStringForRegex,
   FileInPatch,
   getConfigDefaultTarget,
   getConfigs,
@@ -46,20 +45,10 @@ import {
   PullRequestTreeItem,
 } from "./views/patches";
 import { HelpTreeDataProvider } from "./views/help";
-import {
-  Test,
-  TestBaseTreeItem,
-  TestRunnerTreeItem,
-  TestState,
-  TestsTreeDataProvider,
-} from "./views/tests";
+import { TestsTreeDataProvider } from "./views/tests";
 import { ElectronPullRequestFileSystemProvider } from "./pullRequestFileSystemProvider";
-
-enum MarkdownTableColumnAlignment {
-  LEFT,
-  CENTER,
-  RIGHT,
-}
+import { registerTestCommands } from "./commands/tests";
+import { registerHelperCommands } from "./commands/helpers";
 
 const exec = promisify(childProcess.exec);
 
@@ -103,6 +92,8 @@ function registerElectronBuildToolsCommands(
   testsProvider: TestsTreeDataProvider,
   pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
 ) {
+  registerTestCommands(context, electronRoot, testsProvider);
+
   context.subscriptions.push(
     registerCommandNoBusy(
       "electron-build-tools.build",
@@ -279,11 +270,6 @@ function registerElectronBuildToolsCommands(
         });
       }
     ),
-    vscode.commands.registerCommand("electron-build-tools.refreshTests", () => {
-      withBusyState(() => {
-        testsProvider.refresh();
-      }, "loadingTests");
-    }),
     vscode.commands.registerCommand(
       "electron-build-tools.remove-config",
       (config: ConfigTreeItem) => {
@@ -304,161 +290,6 @@ function registerElectronBuildToolsCommands(
             }
           }
         );
-      }
-    ),
-    registerCommandNoBusy(
-      "electron-build-tools.runTest",
-      () => {
-        vscode.window.showErrorMessage(
-          "Can't run test, other work in-progress"
-        );
-      },
-      async (test: TestBaseTreeItem | Test) => {
-        return withBusyState(async () => {
-          const operationName = "Electron Build Tools - Running Test";
-          let command = `${buildToolsExecutable} test`;
-          let task;
-
-          // TODO - Need to sanity check output to make sure tests ran
-          // and there wasn't a regex problem causing 0 tests to be run
-
-          // TODO - Fix this up
-          if (test instanceof TestBaseTreeItem) {
-            const testRegex = escapeStringForRegex(
-              test.getFullyQualifiedTestName()
-            );
-
-            task = runAsTask(
-              context,
-              operationName,
-              "test",
-              `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
-              undefined,
-              "$mocha",
-              (exitCode) => {
-                test.setState(
-                  exitCode === 0 ? TestState.SUCCESS : TestState.FAILURE
-                );
-                testsProvider.refresh(test);
-
-                return false;
-              }
-            );
-
-            test.setState(TestState.RUNNING);
-            testsProvider.refresh(test);
-          } else {
-            const testRegex = escapeStringForRegex(test.test);
-
-            task = runAsTask(
-              context,
-              operationName,
-              "test",
-              `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
-              undefined,
-              "$mocha"
-            );
-          }
-
-          await task.finished;
-        });
-      }
-    ),
-    registerCommandNoBusy(
-      "electron-build-tools.runTestFile",
-      () => {
-        vscode.window.showErrorMessage(
-          "Can't run tests, other work in-progress"
-        );
-      },
-      (file: vscode.Uri) => {
-        return withBusyState(async () => {
-          const operationName = "Electron Build Tools - Running Tests";
-          const command = `${buildToolsExecutable} test`;
-
-          let runner: string | undefined;
-
-          if (file.path.includes("electron/spec/")) {
-            runner = "remote";
-          } else if (file.path.includes("electron/spec-main/")) {
-            runner = "main";
-          }
-
-          // Test runner expects filenames as relative to the root, not absolute
-          const relativeFilePath = path.relative(
-            electronRoot.fsPath,
-            file.fsPath
-          );
-
-          // TODO - Fix this up
-          runAsTask(
-            context,
-            operationName,
-            "test",
-            `${command} --runners=${runner} --files ${relativeFilePath}"`,
-            undefined,
-            "$mocha"
-          );
-        });
-      }
-    ),
-    registerCommandNoBusy(
-      "electron-build-tools.runTestRunner",
-      () => {
-        vscode.window.showErrorMessage(
-          "Can't run tests, other work in-progress"
-        );
-      },
-      async (testRunner: TestRunnerTreeItem) => {
-        const operationName = "Electron Build Tools - Running Tests";
-        let command = `${buildToolsExecutable} test`;
-
-        // TODO - Fix this up
-        runAsTask(
-          context,
-          operationName,
-          "test",
-          `${command} --runners=${testRunner.runner.toString()}"`,
-          undefined,
-          "$mocha"
-        );
-      }
-    ),
-    registerCommandNoBusy(
-      "electron-build-tools.runTestSuite",
-      () => {
-        vscode.window.showErrorMessage(
-          "Can't run tests, other work in-progress"
-        );
-      },
-      async (testSuite: TestBaseTreeItem) => {
-        const operationName = "Electron Build Tools - Running Tests";
-        let command = `${buildToolsExecutable} test`;
-
-        const testRegex = escapeStringForRegex(
-          testSuite.getFullyQualifiedTestName()
-        );
-
-        // TODO - Fix this up
-        runAsTask(
-          context,
-          operationName,
-          "test",
-          `${command} --runners=${testSuite.runner.toString()} -g "${testRegex}"`,
-          undefined,
-          "$mocha",
-          (exitCode) => {
-            testSuite.setState(
-              exitCode === 0 ? TestState.SUCCESS : TestState.FAILURE
-            );
-            testsProvider.refresh(testSuite);
-
-            return false;
-          }
-        );
-
-        testSuite.setState(TestState.RUNNING);
-        testsProvider.refresh(testSuite);
       }
     ),
     vscode.commands.registerCommand(
@@ -502,15 +333,6 @@ function registerElectronBuildToolsCommands(
         vscode.commands.executeCommand(
           "markdown.showPreview",
           vscode.Uri.joinPath(electronRoot, "docs", "development", "patches.md")
-        );
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.showTestsDocs",
-      () => {
-        vscode.commands.executeCommand(
-          "markdown.showPreview",
-          vscode.Uri.joinPath(electronRoot, "docs", "development", "testing.md")
         );
       }
     ),
@@ -660,50 +482,6 @@ function registerElectronBuildToolsCommands(
     vscode.commands.registerCommand("electron-build-tools.sync.force", () => {
       return vscode.commands.executeCommand("electron-build-tools.sync", true);
     }),
-    vscode.commands.registerCommand("electron-build-tools.test", async () => {
-      const operationName = "Electron Build Tools - Running Tests";
-      let command = `${buildToolsExecutable} test`;
-
-      const runnerOptions: vscode.QuickPickItem[] = [
-        {
-          label: "main",
-          picked: true,
-        },
-        {
-          label: "native",
-          picked: true,
-        },
-        {
-          label: "remote",
-          picked: true,
-        },
-      ];
-
-      const runners = await vscode.window.showQuickPick(runnerOptions, {
-        placeHolder: "Choose runners to use",
-        canPickMany: true,
-      });
-      const extraArgs = await vscode.window.showInputBox({
-        placeHolder: "Extra args to pass to the test runner",
-      });
-
-      if (runners && extraArgs) {
-        if (runners.length > 0) {
-          command = `${command} --runners=${runners
-            .map((runner) => runner.label)
-            .join(",")}`;
-        }
-
-        runAsTask(
-          context,
-          operationName,
-          "test",
-          `${command} ${extraArgs}`,
-          undefined,
-          "$mocha"
-        );
-      }
-    }),
     registerCommandNoBusy(
       "electron-build-tools.use-config",
       () => {
@@ -786,12 +564,6 @@ function registerElectronBuildToolsCommands(
       }
     ),
     vscode.commands.registerCommand(
-      "electron-build-tools.openTestFile",
-      (testOrSuite: TestBaseTreeItem) => {
-        return vscode.commands.executeCommand("vscode.open", testOrSuite.uri);
-      }
-    ),
-    vscode.commands.registerCommand(
       "electron-build-tools.removePullRequestPatch",
       async (treeItem: PullRequestTreeItem) => {
         patchesProvider.removePr(treeItem.pullRequest);
@@ -849,139 +621,6 @@ function registerElectronBuildToolsCommands(
             }
           } else {
             vscode.window.showErrorMessage("Couldn't find pull request");
-          }
-        }
-      }
-    )
-  );
-}
-
-function registerHelperCommands(context: vscode.ExtensionContext) {
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "vscode.window.showOpenDialog",
-      async (options: vscode.OpenDialogOptions | undefined) => {
-        const results = await vscode.window.showOpenDialog(options);
-
-        if (results) {
-          return results[0].fsPath;
-        }
-      }
-    ),
-    vscode.commands.registerCommand(
-      "markdown.prettifyTable",
-      (uri: vscode.Uri) => {
-        if (
-          vscode.window.activeTextEditor &&
-          vscode.window.activeTextEditor.document.uri.path === uri.path
-        ) {
-          const selection = vscode.window.activeTextEditor.selection;
-          const document = vscode.window.activeTextEditor.document;
-          const selectedText = document
-            .getText(new vscode.Range(selection.start, selection.end))
-            .trim();
-          const md = new MarkdownIt();
-          const tokens = md.parse(selectedText, {});
-
-          // TODO - Would be more robust to prettify the table off the parsed tokens
-          if (
-            tokens[0].type === "table_open" &&
-            tokens[tokens.length - 1].type === "table_close"
-          ) {
-            const tableRawLines = selectedText.split("\n");
-            const columnAlignments: MarkdownTableColumnAlignment[] = [];
-            const columnMaxLengths: number[] = [];
-            const table: string[][] = [];
-
-            for (const [lineNumber, line] of tableRawLines.entries()) {
-              const columns = line.split("|").map((column) => column.trim());
-              table.push(columns);
-
-              if (lineNumber !== 1) {
-                for (const [idx, column] of columns.entries()) {
-                  if (column.length > (columnMaxLengths[idx] || 0)) {
-                    columnMaxLengths[idx] = column.length;
-                  }
-                }
-              } else {
-                columnAlignments.push(
-                  ...columns.map((value) => {
-                    if (value.startsWith(":") && value.endsWith(":")) {
-                      return MarkdownTableColumnAlignment.CENTER;
-                    } else if (value.startsWith(":")) {
-                      return MarkdownTableColumnAlignment.LEFT;
-                    } else if (value.endsWith(":")) {
-                      return MarkdownTableColumnAlignment.RIGHT;
-                    } else {
-                      return MarkdownTableColumnAlignment.LEFT;
-                    }
-                  })
-                );
-              }
-            }
-
-            let prettiedTable = "";
-
-            for (const [lineNumber, line] of table.entries()) {
-              const prettiedColumns = [];
-
-              for (const [idx, column] of line.entries()) {
-                const alignment = columnAlignments[idx];
-                const targetLength = columnMaxLengths[idx];
-                let prettifiedColumn = "";
-
-                // The second line is a special case since it defines column alignment
-                if (lineNumber === 1) {
-                  switch (alignment) {
-                    case MarkdownTableColumnAlignment.LEFT:
-                      if (column.startsWith(":")) {
-                        prettifiedColumn = `:${"-".repeat(targetLength - 1)}`;
-                      } else {
-                        prettifiedColumn = "-".repeat(targetLength);
-                      }
-                      break;
-
-                    case MarkdownTableColumnAlignment.CENTER:
-                      prettifiedColumn = `:${"-".repeat(targetLength - 2)}:`;
-                      break;
-
-                    case MarkdownTableColumnAlignment.RIGHT:
-                      prettifiedColumn = `${"-".repeat(targetLength - 1)}:`;
-                      break;
-                  }
-                } else {
-                  switch (alignment) {
-                    case MarkdownTableColumnAlignment.LEFT:
-                      prettifiedColumn = column.padEnd(targetLength, " ");
-                      break;
-
-                    case MarkdownTableColumnAlignment.CENTER:
-                      const padLeft = Math.ceil(
-                        (targetLength - column.length) / 2
-                      );
-                      const padRight = targetLength - column.length - padLeft;
-                      prettifiedColumn = `${" ".repeat(
-                        padLeft
-                      )}${column}${" ".repeat(padRight)}`;
-                      break;
-
-                    case MarkdownTableColumnAlignment.RIGHT:
-                      prettifiedColumn = column.padStart(targetLength, " ");
-                      break;
-                  }
-                }
-
-                prettiedColumns.push(` ${prettifiedColumn} `);
-              }
-
-              prettiedTable += `${prettiedColumns.join("|").trim()}\n`;
-            }
-
-            vscode.window.activeTextEditor.edit((editBuilder) => {
-              editBuilder.replace(selection, prettiedTable.trim());
-            });
-          } else {
-            vscode.window.setStatusBarMessage("No markdown table selected");
           }
         }
       }
