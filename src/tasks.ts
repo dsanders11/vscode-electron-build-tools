@@ -10,7 +10,7 @@ import { generateSocketName } from "./utils";
 type ElectronBuildToolsTask = {
   onDidWriteData: vscode.Event<OnDidWriteData>;
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
-  finished: Promise<void>;
+  finished: Promise<boolean>;
 };
 
 type OnDidWriteData = IpcMessage;
@@ -96,17 +96,18 @@ export function runAsTask(
 
       const taskExecution = await vscode.tasks.executeTask(task);
 
-      return new Promise(async (resolve, reject) => {
+      return new Promise<boolean>(async (resolve, reject) => {
         socketServer.once("error", () => reject("Socket server error"));
 
         vscode.tasks.onDidEndTask(({ execution }) => {
           if (execution === taskExecution) {
-            resolve();
+            resolve(true);
           }
         });
 
         vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
           if (execution === taskExecution && exitCode !== undefined) {
+            resolve(exitCode === 0);
             const handled = exitCodeHandler ? exitCodeHandler(exitCode) : false;
 
             if (exitCode !== 0 && !handled) {
@@ -118,7 +119,7 @@ export function runAsTask(
         });
 
         token.onCancellationRequested(() => {
-          resolve();
+          resolve(false);
           taskExecution.terminate();
           console.warn(`User canceled '${command}'`);
         });
@@ -129,11 +130,11 @@ export function runAsTask(
   return {
     onDidWriteData: onDidWriteDataEmitter.event,
     onDidWriteLine: onDidWriteLineEmitter.event,
-    finished: new Promise(async (resolve) => {
+    finished: new Promise<boolean>(async (resolve) => {
       try {
-        await taskPromise;
-      } finally {
-        resolve();
+        resolve(await taskPromise);
+      } catch {
+        resolve(false);
       }
     }),
   };
