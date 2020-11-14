@@ -1,13 +1,10 @@
 import * as childProcess from "child_process";
-import * as path from "path";
-import * as querystring from "querystring";
 import { promisify } from "util";
 
 import * as vscode from "vscode";
 
 import MarkdownIt from "markdown-it";
 import MarkdownItEmoji from "markdown-it-emoji";
-import { Octokit } from "@octokit/rest";
 
 import {
   blankConfigEnumValue,
@@ -23,7 +20,6 @@ import { runAsTask } from "./tasks";
 import { TestCodeLensProvider } from "./testCodeLens";
 import { ExtensionConfig } from "./types";
 import {
-  FileInPatch,
   findElectronRoot,
   getConfigDefaultTarget,
   getPatchesConfigFile,
@@ -34,18 +30,14 @@ import {
 import { ElectronBuildToolsConfigsProvider } from "./views/configs";
 import { DocsTreeDataProvider } from "./views/docs";
 import { ElectronViewProvider } from "./views/electron";
-import {
-  ElectronPatchesProvider,
-  Patch,
-  PatchDirectory,
-  PullRequestTreeItem,
-} from "./views/patches";
+import { ElectronPatchesProvider } from "./views/patches";
 import { HelpTreeDataProvider } from "./views/help";
 import { TestsTreeDataProvider } from "./views/tests";
 import { ElectronPullRequestFileSystemProvider } from "./pullRequestFileSystemProvider";
 import { registerTestCommands } from "./commands/tests";
 import { registerHelperCommands } from "./commands/helpers";
 import { registerConfigsCommands } from "./commands/configs";
+import { registerPatchesCommands } from "./commands/patches";
 
 const exec = promisify(childProcess.exec);
 
@@ -59,6 +51,12 @@ function registerElectronBuildToolsCommands(
 ) {
   registerConfigsCommands(context, configsProvider);
   registerTestCommands(context, electronRoot, testsProvider);
+  registerPatchesCommands(
+    context,
+    electronRoot,
+    patchesProvider,
+    pullRequestFileSystemProvider
+  );
 
   context.subscriptions.push(
     registerCommandNoBusy(
@@ -205,96 +203,6 @@ function registerElectronBuildToolsCommands(
         });
       }
     ),
-    registerCommandNoBusy(
-      "electron-build-tools.refreshPatches",
-      () => {
-        vscode.window.showErrorMessage(
-          "Can't refresh patches, other work in-progress"
-        );
-      },
-      (arg: PatchDirectory | string) => {
-        return withBusyState(() => {
-          const target = arg instanceof PatchDirectory ? arg.name : arg;
-
-          return new Promise((resolve, reject) => {
-            const cp = childProcess.exec(
-              `${buildToolsExecutable} patches ${target || "all"}`
-            );
-
-            cp.once("error", (err) => reject(err));
-            cp.once("exit", (code) => {
-              if (code !== 0) {
-                vscode.window.showErrorMessage("Failed to refresh patches");
-              } else {
-                // TBD - This isn't very noticeable
-                vscode.window.setStatusBarMessage("Refreshed patches");
-                patchesProvider.refresh();
-                resolve();
-              }
-            });
-          });
-        });
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.showCommitDiff",
-      async (
-        checkoutDirectory: vscode.Uri,
-        patch: vscode.Uri,
-        metadata: FileInPatch,
-        patchedFilename: string
-      ) => {
-        const originalFile = metadata.file.with({
-          scheme: virtualDocumentScheme,
-          query: querystring.stringify({
-            ...querystring.parse(metadata.file.query),
-            view: "contents",
-            fileIndex: metadata.fileIndexA,
-            checkoutPath: checkoutDirectory.fsPath,
-          }),
-        });
-        const patchedFile = metadata.file.with({
-          scheme: virtualDocumentScheme,
-          query: querystring.stringify({
-            ...querystring.parse(metadata.file.query),
-            view: "contents",
-            fileIndex: metadata.fileIndexB,
-            checkoutPath: checkoutDirectory.fsPath,
-          }),
-        });
-
-        vscode.commands.executeCommand(
-          "vscode.diff",
-          originalFile,
-          patchedFile,
-          `${path.basename(patch.path)} - ${patchedFilename}`
-        );
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.showPatchesDocs",
-      () => {
-        vscode.commands.executeCommand(
-          "markdown.showPreview",
-          vscode.Uri.joinPath(electronRoot, "docs", "development", "patches.md")
-        );
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.showPatchOverview",
-      (patch: vscode.Uri) => {
-        return vscode.commands.executeCommand(
-          "markdown.showPreview",
-          patch.with({
-            scheme: virtualDocumentScheme,
-            query: querystring.stringify({
-              ...querystring.parse(patch.query),
-              view: "patch-overview",
-            }),
-          })
-        );
-      }
-    ),
     vscode.commands.registerCommand(
       "electron-build-tools.show.exe",
       async () => {
@@ -401,75 +309,7 @@ function registerElectronBuildToolsCommands(
     ),
     vscode.commands.registerCommand("electron-build-tools.sync.force", () => {
       return vscode.commands.executeCommand("electron-build-tools.sync", true);
-    }),
-    vscode.commands.registerCommand(
-      "electron-build-tools.openPatch",
-      (patchTreeItem: Patch) => {
-        return vscode.commands.executeCommand("vscode.open", patchTreeItem.uri);
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.removePullRequestPatch",
-      async (treeItem: PullRequestTreeItem) => {
-        patchesProvider.removePr(treeItem.pullRequest);
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.viewPullRequestPatch",
-      async () => {
-        const prNumber = await vscode.window.showInputBox({
-          prompt: "Enter the pull request number",
-          validateInput: (value: string) => {
-            if (isNaN(parseInt(value))) {
-              return "Enter a number only";
-            }
-          },
-        });
-
-        if (prNumber) {
-          const octokit = new Octokit();
-          const prDetails = {
-            owner: "electron",
-            repo: "electron",
-            pull_number: parseInt(prNumber),
-          };
-          const prResponse = await octokit.pulls.get(prDetails);
-          const prFilesResponse = await octokit.pulls.listFiles(prDetails);
-
-          if (prResponse.status === 200 && prFilesResponse.status === 200) {
-            const pullRequest = prResponse.data;
-            const pulRequestFiles = prFilesResponse.data;
-            const patchDirectoryRegex = /^patches\/(\S*)\/.patches$/;
-            const patchDirectories = [];
-
-            for (const file of prFilesResponse.data) {
-              const matches = patchDirectoryRegex.exec(file.filename);
-
-              if (matches) {
-                patchDirectories.push(`src/electron/patches/${matches[1]}`);
-              }
-            }
-
-            if (patchDirectories.length > 0) {
-              await pullRequestFileSystemProvider.addPullRequestFiles(
-                prNumber,
-                pulRequestFiles
-              );
-
-              patchesProvider.showPr({
-                prNumber,
-                title: pullRequest.title,
-                patchDirectories,
-              });
-            } else {
-              vscode.window.showWarningMessage("No patches in pull request");
-            }
-          } else {
-            vscode.window.showErrorMessage("Couldn't find pull request");
-          }
-        }
-      }
-    )
+    })
   );
 }
 
