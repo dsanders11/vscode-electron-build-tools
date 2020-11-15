@@ -70,7 +70,7 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
   ) {
     this.mainProcessRunner = new TestRunnerTreeItem(
       "Main Process",
-      new ThemeIcon("device-desktop~spin"),
+      new ThemeIcon("device-desktop"),
       TestRunner.MAIN
     );
     this.rendererRunner = new TestRunnerTreeItem(
