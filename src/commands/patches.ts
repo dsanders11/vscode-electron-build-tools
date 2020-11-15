@@ -20,6 +20,7 @@ export function registerPatchesCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   patchesProvider: ElectronPatchesProvider,
+  patchesView: vscode.TreeView<vscode.TreeItem>,
   pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
 ) {
   context.subscriptions.push(
@@ -168,10 +169,15 @@ export function registerPatchesCommands(
                 pulRequestFiles
               );
 
-              patchesProvider.showPr({
+              const patchTreeItem = patchesProvider.showPr({
                 prNumber,
                 title: pullRequest.title,
                 patchDirectories,
+              });
+
+              patchesView.reveal(patchTreeItem, {
+                select: false,
+                expand: true,
               });
             } else {
               vscode.window.showWarningMessage("No patches in pull request");

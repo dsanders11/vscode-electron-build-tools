@@ -42,7 +42,7 @@ export class ElectronPatchesProvider
     this._onDidChangeTreeData.fire();
   }
 
-  showPr(pullRequest: PullRequestWithPatch) {
+  showPr(pullRequest: PullRequestWithPatch): PullRequestTreeItem {
     if (!this.viewPullRequestTreeItem.pullRequests.has(pullRequest.prNumber)) {
       this.viewPullRequestTreeItem.collapsibleState =
         vscode.TreeItemCollapsibleState.Expanded;
@@ -53,6 +53,8 @@ export class ElectronPatchesProvider
 
       this._onDidChangeTreeData.fire(this.viewPullRequestTreeItem);
     }
+
+    return this.viewPullRequestTreeItem.pullRequests.get(pullRequest.prNumber)!;
   }
 
   removePr(pullRequest: PullRequestWithPatch) {
@@ -78,6 +80,16 @@ export class ElectronPatchesProvider
     }
 
     return item;
+  }
+
+  getParent(element: vscode.TreeItem): vscode.TreeItem | null {
+    if (element instanceof PullRequestTreeItem) {
+      return this.viewPullRequestTreeItem;
+    } else if (element === this.viewPullRequestTreeItem) {
+      return null;
+    } else {
+      throw new Error("Not implemented");
+    }
   }
 
   async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {

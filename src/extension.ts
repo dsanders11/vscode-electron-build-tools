@@ -47,6 +47,7 @@ function registerElectronBuildToolsCommands(
   electronRoot: vscode.Uri,
   configsProvider: ElectronBuildToolsConfigsProvider,
   patchesProvider: ElectronPatchesProvider,
+  patchesView: vscode.TreeView<vscode.TreeItem>,
   testsProvider: TestsTreeDataProvider,
   pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
 ) {
@@ -56,6 +57,7 @@ function registerElectronBuildToolsCommands(
     context,
     electronRoot,
     patchesProvider,
+    patchesView,
     pullRequestFileSystemProvider
   );
   registerSyncCommands(context);
@@ -308,6 +310,12 @@ export async function activate(context: vscode.ExtensionContext) {
         electronRoot,
         patchesConfig
       );
+      const patchesView = vscode.window.createTreeView(
+        "electron-build-tools:patches",
+        {
+          treeDataProvider: patchesProvider,
+        }
+      );
       const pullRequestFileSystemProvider = new ElectronPullRequestFileSystemProvider(
         electronRoot,
         patchesConfig
@@ -323,10 +331,7 @@ export async function activate(context: vscode.ExtensionContext) {
           "electron-build-tools:configs",
           configsProvider
         ),
-        vscode.window.registerTreeDataProvider(
-          "electron-build-tools:patches",
-          patchesProvider
-        ),
+        patchesView,
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:docs",
           new DocsTreeDataProvider(electronRoot)
@@ -354,6 +359,7 @@ export async function activate(context: vscode.ExtensionContext) {
         electronRoot,
         configsProvider,
         patchesProvider,
+        patchesView,
         testsProvider,
         pullRequestFileSystemProvider
       );
