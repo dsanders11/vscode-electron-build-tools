@@ -313,6 +313,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const patchesView = vscode.window.createTreeView(
         "electron-build-tools:patches",
         {
+          showCollapseAll: true,
           treeDataProvider: patchesProvider,
         }
       );
@@ -332,18 +333,18 @@ export async function activate(context: vscode.ExtensionContext) {
           configsProvider
         ),
         patchesView,
-        vscode.window.registerTreeDataProvider(
-          "electron-build-tools:docs",
-          new DocsTreeDataProvider(electronRoot)
-        ),
+        vscode.window.createTreeView("electron-build-tools:docs", {
+          showCollapseAll: true,
+          treeDataProvider: new DocsTreeDataProvider(electronRoot),
+        }),
         vscode.window.registerTreeDataProvider(
           "electron-build-tools:electron",
           new ElectronViewProvider(electronRoot)
         ),
-        vscode.window.registerTreeDataProvider(
-          "electron-build-tools:tests",
-          testsProvider
-        ),
+        vscode.window.createTreeView("electron-build-tools:tests", {
+          showCollapseAll: true,
+          treeDataProvider: testsProvider,
+        }),
         vscode.workspace.registerTextDocumentContentProvider(
           virtualDocumentScheme,
           new TextDocumentContentProvider()
