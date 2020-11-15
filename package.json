@@ -557,6 +557,12 @@
         ]
       }
     ],
+    "snippets": [
+      {
+        "language": "typescript",
+        "path": "./snippets/mocha-specs.json"
+      }
+    ],
     "views": {
       "electron-build-tools": [
         {
