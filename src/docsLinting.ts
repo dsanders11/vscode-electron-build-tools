@@ -32,11 +32,9 @@ function getLinksInDocument(document: vscode.TextDocument) {
       document.positionAt(matchIdx + match[1].length),
       document.positionAt(matchIdx + match[1].length + linkUri.length)
     );
-    let uri: vscode.Uri;
+    let uri = vscode.Uri.parse(linkUri);
 
-    if (linkUri.startsWith("http")) {
-      uri = vscode.Uri.parse(linkUri);
-    } else {
+    if (uri.scheme === "file") {
       // Use a fake scheme
       uri = vscode.Uri.parse(`electron-docs:${linkUri}`);
     }
@@ -49,7 +47,7 @@ function getLinksInDocument(document: vscode.TextDocument) {
 
 function getRelativeLinksInDocument(document: vscode.TextDocument) {
   return getLinksInDocument(document).filter(
-    (link) => !["http", "https"].includes(link.target!.scheme)
+    (link) => link.target!.scheme === "electron-docs"
   );
 }
 
