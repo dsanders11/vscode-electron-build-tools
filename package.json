@@ -134,8 +134,8 @@
         "title": "Sanitize Config"
       },
       {
-        "command": "electron-build-tools.showCommitDiff",
-        "title": "Show Commit Diff"
+        "command": "electron-build-tools.showPatchedFileDiff",
+        "title": "Show Patched File Diff"
       },
       {
         "command": "electron-build-tools.show.goma",
@@ -363,7 +363,7 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
-          "command": "electron-build-tools.showCommitDiff",
+          "command": "electron-build-tools.showPatchedFileDiff",
           "when": "false"
         },
         {

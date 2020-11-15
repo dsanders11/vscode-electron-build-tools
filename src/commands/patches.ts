@@ -68,7 +68,7 @@ export function registerPatchesCommands(
       }
     ),
     vscode.commands.registerCommand(
-      "electron-build-tools.showCommitDiff",
+      "electron-build-tools.showPatchedFileDiff",
       async (
         checkoutDirectory: vscode.Uri,
         patch: vscode.Uri,

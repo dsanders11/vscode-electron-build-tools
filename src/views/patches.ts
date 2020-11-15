@@ -221,9 +221,9 @@ class FileInPatchTreeItem extends vscode.TreeItem {
     this.tooltip = this.label;
 
     this.command = {
-      command: "electron-build-tools.showCommitDiff",
+      command: "electron-build-tools.showPatchedFileDiff",
       arguments: [checkoutDirectory, patch, metadata, this.label],
-      title: "Show Commit Diff",
+      title: "Show Patched File Diff",
     };
   }
 }
