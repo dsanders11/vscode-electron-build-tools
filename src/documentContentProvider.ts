@@ -16,18 +16,23 @@ export class TextDocumentContentProvider
     let content = "";
 
     if (view === "contents") {
-      // Try on-disk first, and if that fails, and it's a PR, use the PR filesystem
-      try {
-        content = await getContentForFileIndex(fileIndex, checkoutPath);
-      } catch (err) {
-        if (err && err.code === 128 && pullRequest) {
-          content = (
-            await vscode.workspace.fs.readFile(
-              uri.with({ scheme: pullRequestScheme })
-            )
-          ).toString();
-        } else {
-          throw err;
+      if (/^[0]+$/.test(fileIndex)) {
+        // Special case where it's all zeroes, so it's an empty file
+        content = "";
+      } else {
+        // Try on-disk first, and if that fails, and it's a PR, use the PR filesystem
+        try {
+          content = await getContentForFileIndex(fileIndex, checkoutPath);
+        } catch (err) {
+          if (err && err.code === 128 && pullRequest) {
+            content = (
+              await vscode.workspace.fs.readFile(
+                uri.with({ scheme: pullRequestScheme })
+              )
+            ).toString();
+          } else {
+            throw err;
+          }
         }
       }
     } else if (view === "patch-overview") {
