@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import { buildToolsExecutable } from "../constants";
-import { runAsTask } from "../tasks";
+import { ElectronBuildToolsTask, runAsTask } from "../tasks";
 import {
   escapeStringForRegex,
   registerCommandNoBusy,
@@ -45,7 +45,7 @@ export function registerTestCommands(
         return withBusyState(async () => {
           const operationName = "Electron Build Tools - Running Test";
           let command = `${buildToolsExecutable} test`;
-          let task;
+          let task: ElectronBuildToolsTask;
 
           // TODO - Need to sanity check output to make sure tests ran
           // and there wasn't a regex problem causing 0 tests to be run

@@ -7,7 +7,7 @@ import * as vscode from "vscode";
 import { IpcMessage } from "./common";
 import { generateSocketName } from "./utils";
 
-type ElectronBuildToolsTask = {
+export type ElectronBuildToolsTask = {
   onDidWriteData: vscode.Event<OnDidWriteData>;
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
   finished: Promise<boolean>;
