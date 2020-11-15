@@ -561,6 +561,18 @@
       {
         "language": "typescript",
         "path": "./snippets/mocha-specs.json"
+      },
+      {
+        "language": "typescript",
+        "path": "./snippets/todo-comments.json"
+      },
+      {
+        "language": "cpp",
+        "path": "./snippets/todo-comments.json"
+      },
+      {
+        "language": "objective-cpp",
+        "path": "./snippets/todo-comments.json"
       }
     ],
     "views": {

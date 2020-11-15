@@ -1,0 +1,16 @@
+{
+  "FIXME Comment": {
+    "prefix": "// FIXME",
+    "body": [
+      "// FIXME(${1}): ${2}"
+    ],
+    "description": "A '// FIXME(...):' comment."
+  },
+  "TODO Comment": {
+    "prefix": "// TODO",
+    "body": [
+      "// TODO(${1}): ${2}"
+    ],
+    "description": "A '// TODO(...):' comment."
+  }
+}
