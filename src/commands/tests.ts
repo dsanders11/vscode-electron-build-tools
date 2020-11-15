@@ -56,36 +56,34 @@ export function registerTestCommands(
               test.getFullyQualifiedTestName()
             );
 
-            task = runAsTask(
+            task = runAsTask({
               context,
               operationName,
-              "test",
-              `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
-              undefined,
-              "$mocha",
-              (exitCode) => {
+              taskName: "test",
+              command: `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
+              problemMatchers: "$mocha",
+              exitCodeHandler: (exitCode) => {
                 test.setState(
                   exitCode === 0 ? TestState.SUCCESS : TestState.FAILURE
                 );
                 testsProvider.refresh(test);
 
                 return false;
-              }
-            );
+              },
+            });
 
             test.setState(TestState.RUNNING);
             testsProvider.refresh(test);
           } else {
             const testRegex = escapeStringForRegex(test.test);
 
-            task = runAsTask(
+            task = runAsTask({
               context,
               operationName,
-              "test",
-              `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
-              undefined,
-              "$mocha"
-            );
+              taskName: "test",
+              command: `${command} --runners=${test.runner.toString()} -g "${testRegex}"`,
+              problemMatchers: "$mocha",
+            });
           }
 
           await task.finished;
@@ -119,14 +117,13 @@ export function registerTestCommands(
           );
 
           // TODO - Fix this up
-          runAsTask(
+          runAsTask({
             context,
             operationName,
-            "test",
-            `${command} --runners=${runner} --files ${relativeFilePath}"`,
-            undefined,
-            "$mocha"
-          );
+            taskName: "test",
+            command: `${command} --runners=${runner} --files ${relativeFilePath}"`,
+            problemMatchers: "$mocha",
+          });
         });
       }
     ),
@@ -142,14 +139,13 @@ export function registerTestCommands(
         let command = `${buildToolsExecutable} test`;
 
         // TODO - Fix this up
-        runAsTask(
+        runAsTask({
           context,
           operationName,
-          "test",
-          `${command} --runners=${testRunner.runner.toString()}"`,
-          undefined,
-          "$mocha"
-        );
+          taskName: "test",
+          command: `${command} --runners=${testRunner.runner.toString()}"`,
+          problemMatchers: "$mocha",
+        });
       }
     ),
     registerCommandNoBusy(
@@ -168,22 +164,21 @@ export function registerTestCommands(
         );
 
         // TODO - Fix this up
-        runAsTask(
+        runAsTask({
           context,
           operationName,
-          "test",
-          `${command} --runners=${testSuite.runner.toString()} -g "${testRegex}"`,
-          undefined,
-          "$mocha",
-          (exitCode) => {
+          taskName: "test",
+          command: `${command} --runners=${testSuite.runner.toString()} -g "${testRegex}"`,
+          problemMatchers: "$mocha",
+          exitCodeHandler: (exitCode) => {
             testSuite.setState(
               exitCode === 0 ? TestState.SUCCESS : TestState.FAILURE
             );
             testsProvider.refresh(testSuite);
 
             return false;
-          }
-        );
+          },
+        });
 
         testSuite.setState(TestState.RUNNING);
         testsProvider.refresh(testSuite);
@@ -232,14 +227,13 @@ export function registerTestCommands(
             .join(",")}`;
         }
 
-        runAsTask(
+        runAsTask({
           context,
           operationName,
-          "test",
-          `${command} ${extraArgs}`,
-          undefined,
-          "$mocha"
-        );
+          taskName: "test",
+          command: `${command} ${extraArgs}`,
+          problemMatchers: "$mocha",
+        });
       }
     })
   );

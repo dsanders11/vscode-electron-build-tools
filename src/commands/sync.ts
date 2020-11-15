@@ -140,14 +140,13 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
           }Syncing`;
           const progressWatcher = new SyncProgressWatcher(context);
 
-          const task = runAsTask(
+          const task = runAsTask({
             context,
             operationName,
-            "sync",
+            taskName: "sync",
             command,
-            undefined,
-            undefined,
-            (exitCode) => {
+            cancellable: false,
+            exitCodeHandler: (exitCode) => {
               if (exitCode === 1 && !force) {
                 const confirm = "Force";
 
@@ -164,8 +163,8 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
 
                 return true;
               }
-            }
-          );
+            },
+          });
 
           progressWatcher.startRun();
 

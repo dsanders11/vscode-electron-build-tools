@@ -163,16 +163,14 @@ function registerElectronBuildToolsCommands(
 
           let lastBuildProgress = -1;
 
-          const task = runAsTask(
+          const task = runAsTask({
             context,
             operationName,
-            "build",
+            taskName: "build",
             command,
-            {
-              env: buildEnv,
-            },
-            "$electron"
-          );
+            shellOptions: { env: buildEnv },
+            problemMatchers: "$electron",
+          });
 
           task.onDidWriteLine(({ progress, line }) => {
             if (/Regenerating ninja files/.test(line)) {

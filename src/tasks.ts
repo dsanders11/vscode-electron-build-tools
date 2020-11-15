@@ -23,15 +23,25 @@ type OnDidWriteLine = {
   line: string;
 };
 
-export function runAsTask(
-  context: vscode.ExtensionContext,
-  operationName: string,
-  taskName: string,
-  command: string,
-  shellOptions?: vscode.ShellExecutionOptions,
-  problemMatchers?: string | string[],
-  exitCodeHandler?: (exitCode: number) => boolean | undefined
-): ElectronBuildToolsTask {
+export function runAsTask({
+  context,
+  operationName,
+  taskName,
+  command,
+  cancellable = true,
+  shellOptions,
+  problemMatchers,
+  exitCodeHandler,
+}: {
+  context: vscode.ExtensionContext;
+  operationName: string;
+  taskName: string;
+  command: string;
+  cancellable?: boolean;
+  shellOptions?: vscode.ShellExecutionOptions;
+  problemMatchers?: string | string[];
+  exitCodeHandler?: (exitCode: number) => boolean | undefined;
+}): ElectronBuildToolsTask {
   const socketName = generateSocketName();
 
   // base64 encode the command to get around shell quoting issues
@@ -72,7 +82,7 @@ export function runAsTask(
     {
       location: vscode.ProgressLocation.Notification,
       title: operationName.split("-")[1].trim(),
-      cancellable: true,
+      cancellable,
     },
     async (progress, token) => {
       socketServer.on("connection", (socket) => {
