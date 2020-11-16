@@ -410,7 +410,9 @@ export async function getElectronTests(
   });
 }
 
-export function alphabetizeByLabel(treeItems: vscode.TreeItem[]) {
+export function alphabetizeByLabel<T extends vscode.TreeItem>(
+  treeItems: T[]
+): T[] {
   return treeItems.sort((a, b) => {
     if (a.label!.toLowerCase() < b.label!.toLowerCase()) {
       return -1;
