@@ -234,7 +234,7 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
     if (!element) {
       return Array.from(this._testRunnerTreeItems.values());
     } else if (element instanceof TestSuiteTreeItem) {
-      return [
+      const children: TestBaseTreeItem[] = [
         ...alphabetizeByLabel(
           element.suite.suites.map(
             (suite) => new TestSuiteTreeItem(suite, element.runner, element)
@@ -246,6 +246,12 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
           )
         ),
       ];
+
+      if (element.getState() === TestState.RUNNING) {
+        children.forEach((treeItem) => treeItem.setState(TestState.RUNNING));
+      }
+
+      return children;
     } else if (element instanceof TestRunnerTreeItem) {
       try {
         element.suite = await this._testCollector.getTestSuites(element.runner);
@@ -272,6 +278,7 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
 
 export class TestBaseTreeItem extends TreeItem {
   public readonly parent?: TestBaseTreeItem;
+  private _state: TestState;
 
   constructor(
     public readonly uri: vscode.Uri,
@@ -281,6 +288,8 @@ export class TestBaseTreeItem extends TreeItem {
     public readonly collapsibleState?: vscode.TreeItemCollapsibleState
   ) {
     super(label, collapsibleState);
+
+    this._state = TestState.NONE;
   }
 
   getFullyQualifiedTestName() {
@@ -293,6 +302,10 @@ export class TestBaseTreeItem extends TreeItem {
     }
 
     return fullName;
+  }
+
+  getState() {
+    return this._state;
   }
 
   setState(state: TestState) {
@@ -309,6 +322,8 @@ export class TestBaseTreeItem extends TreeItem {
         new vscode.ThemeColor("debugIcon.stopForeground")
       );
     }
+
+    this._state = state;
   }
 }
 
