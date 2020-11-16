@@ -29,6 +29,9 @@ export class BuildToolsConfigCollector implements ConfigCollector {
       "cachedConfigs"
     );
 
+    // Fire off an initial refresh for a better UX
+    this.refreshConfigs();
+
     const watcher = chokidar.watch(getConfigsFilePath(), {
       ignoreInitial: true,
     });
@@ -60,10 +63,6 @@ export class BuildToolsConfigCollector implements ConfigCollector {
   }> {
     if (this._configs === undefined) {
       await this._getConfigs();
-    } else if (this._activeConfig === null) {
-      // Active config isn't stored since it changes more often, so
-      // do a background refresh to get the currently active config
-      this.refreshConfigs();
     }
 
     return { configs: this._configs!, activeConfig: this._activeConfig };
