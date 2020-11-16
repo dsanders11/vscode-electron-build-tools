@@ -27,7 +27,10 @@ import {
   registerCommandNoBusy,
   withBusyState,
 } from "./utils";
-import { ElectronBuildToolsConfigsProvider } from "./views/configs";
+import {
+  BuildToolsConfigCollector,
+  ElectronBuildToolsConfigsProvider,
+} from "./views/configs";
 import { DocsTreeDataProvider } from "./views/docs";
 import { ElectronViewProvider } from "./views/electron";
 import { ElectronPatchesProvider } from "./views/patches";
@@ -310,7 +313,10 @@ export async function activate(context: vscode.ExtensionContext) {
       );
 
       const patchesConfig = getPatchesConfigFile(electronRoot);
-      const configsProvider = new ElectronBuildToolsConfigsProvider();
+      const configsCollector = new BuildToolsConfigCollector(context);
+      const configsProvider = new ElectronBuildToolsConfigsProvider(
+        configsCollector
+      );
       const patchesProvider = new ElectronPatchesProvider(
         electronRoot,
         patchesConfig
@@ -328,9 +334,17 @@ export async function activate(context: vscode.ExtensionContext) {
       );
       const testsCollector = new ElectronTestCollector(context, electronRoot);
 
-      // Show progress on the tests view while the collector is working. This
-      // lets us immediately show the list of tests from extension storage,
-      // while refreshing them in the background and showing that it's working
+      // Show progress on views while the collector is working. This lets us
+      // immediately show the cached data from extension storage, while
+      // refreshing them in the background and showing that it's working
+      configsCollector.onDidStartRefreshing(({ refreshFinished }) => {
+        vscode.window.withProgress(
+          { location: { viewId: "electron-build-tools:configs" } },
+          async () => {
+            await refreshFinished;
+          }
+        );
+      });
       testsCollector.onDidStartRefreshing(({ refreshFinished }) => {
         vscode.window.withProgress(
           { location: { viewId: "electron-build-tools:tests" } },
