@@ -12,6 +12,7 @@ import {
 import {
   Test,
   TestBaseTreeItem,
+  TestCollector,
   TestRunnerTreeItem,
   TestState,
   TestsTreeDataProvider,
@@ -20,7 +21,8 @@ import {
 export function registerTestCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
-  testsProvider: TestsTreeDataProvider
+  testsProvider: TestsTreeDataProvider,
+  testsCollector: TestCollector
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -31,7 +33,7 @@ export function registerTestCommands(
     ),
     vscode.commands.registerCommand("electron-build-tools.refreshTests", () => {
       withBusyState(() => {
-        testsProvider.refresh();
+        testsCollector.refreshTestSuites();
       }, "loadingTests");
     }),
     registerCommandNoBusy(

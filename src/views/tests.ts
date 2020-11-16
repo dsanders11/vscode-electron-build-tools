@@ -54,29 +54,140 @@ function findFullPathForTest(
   return matches;
 }
 
-// TODO - When adding a code lens this is now pretty overloaded, pull out
-// the test listing logic so it's not all tied up in here
+export type OnDidStartRefreshing = {
+  runner: TestRunner;
+  refreshFinished: Promise<void>;
+};
+
+export interface TestCollector {
+  onDidStartRefreshing: vscode.Event<OnDidStartRefreshing>;
+
+  refreshTestSuites(): Promise<void>;
+  getTestSuites(runner: TestRunner): Promise<ParsedTestSuite>;
+}
+
+export class ElectronTestCollector implements TestCollector {
+  private _onDidStartRefreshing = new EventEmitter<OnDidStartRefreshing>();
+  readonly onDidStartRefreshing = this._onDidStartRefreshing.event;
+
+  private readonly _testSuites: Map<TestRunner, ParsedTestSuite>;
+  private readonly _initialRefreshDone = new Map<TestRunner, boolean>([
+    [TestRunner.MAIN, false],
+    [TestRunner.REMOTE, false],
+  ]);
+
+  constructor(
+    private readonly _extensionContext: vscode.ExtensionContext,
+    private readonly _electronRoot: vscode.Uri
+  ) {
+    this._testSuites = new Map<TestRunner, ParsedTestSuite>(
+      _extensionContext.globalState.get<[TestRunner, ParsedTestSuite][]>(
+        "cachedTests"
+      )
+    );
+
+    // TBD - Is it a good idea to fire off refreshes when files change? Seems
+    // like there could be lots of failed attempts to list tests as files are
+    // saved in-progress and in a state which can't list out tests. The
+    // cost-benefit trade-off doesn't seem great, since the TypeScript
+    // compilation of listing tests is non-trivial. For now make the user
+    // manually refresh the tests when they know it is an acceptable time to
+    // do so. However, we should handle tests popping into existance inside
+    // an existing test suite and splice them in once we're aware of them.
+    //
+    // const watcher = vscode.workspace.createFileSystemWatcher(
+    //   new vscode.RelativePattern(_electronRoot.fsPath, "{spec,spec-main}/")
+    // );
+  }
+
+  async _getTests(runner: TestRunner) {
+    const testSuites = await withBusyState(() => {
+      return getElectronTests(
+        this._extensionContext,
+        this._electronRoot,
+        runner
+      ) as Promise<ParsedTestSuite>;
+    }, "loadingTests");
+
+    // Store for future use
+    this._testSuites.set(runner, testSuites);
+    await this._extensionContext.globalState.update(
+      "cachedTests",
+      Array.from(this._testSuites)
+    );
+
+    this._initialRefreshDone.set(runner, true);
+
+    return testSuites;
+  }
+
+  _refreshRunner(runner: TestRunner) {
+    this._onDidStartRefreshing.fire({
+      runner,
+      refreshFinished: this._getTests(runner).then(() => {}),
+    });
+  }
+
+  async refreshTestSuites(): Promise<void> {
+    // Only refresh runners which have already had their initial refresh
+    for (const [runner, hasRefreshed] of this._initialRefreshDone.entries()) {
+      if (hasRefreshed) {
+        this._refreshRunner(runner);
+      }
+    }
+  }
+
+  async getTestSuites(runner: TestRunner): Promise<ParsedTestSuite> {
+    let testSuites = this._testSuites.get(runner);
+
+    if (testSuites === undefined) {
+      // Nothing stored so we have to wait
+      testSuites = await this._getTests(runner);
+    } else if (!this._initialRefreshDone.get(runner)!) {
+      // We've got stored results, but they haven't been refreshed since
+      // they were loaded from storage, so go fetch a fresh listing, but
+      // don't block waiting for fresh results, return what was stored
+      this._refreshRunner(runner);
+    }
+
+    return testSuites;
+  }
+}
+
 export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
   private _onDidChangeTreeData = new EventEmitter<
     TreeItem | undefined | void
   >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
-  private readonly mainProcessRunner: TestRunnerTreeItem;
-  private readonly rendererRunner: TestRunnerTreeItem;
 
-  constructor(
-    private readonly context: vscode.ExtensionContext,
-    private readonly electronRoot: vscode.Uri
-  ) {
-    this.mainProcessRunner = new TestRunnerTreeItem(
-      "Main Process",
-      new ThemeIcon("device-desktop"),
-      TestRunner.MAIN
+  private readonly _testRunnerTreeItems = new Map<
+    TestRunner,
+    TestRunnerTreeItem
+  >();
+
+  constructor(private readonly _testCollector: TestCollector) {
+    this._testRunnerTreeItems.set(
+      TestRunner.MAIN,
+      new TestRunnerTreeItem(
+        "Main Process",
+        new ThemeIcon("device-desktop"),
+        TestRunner.MAIN
+      )
     );
-    this.rendererRunner = new TestRunnerTreeItem(
-      "Renderer",
-      new ThemeIcon("browser"),
-      TestRunner.REMOTE
+    this._testRunnerTreeItems.set(
+      TestRunner.REMOTE,
+      new TestRunnerTreeItem(
+        "Renderer",
+        new ThemeIcon("browser"),
+        TestRunner.REMOTE
+      )
+    );
+
+    this._testCollector.onDidStartRefreshing(
+      async ({ runner, refreshFinished }) => {
+        await refreshFinished;
+        this.refresh(this._testRunnerTreeItems.get(runner));
+      }
     );
   }
 
@@ -87,32 +198,16 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
     filename: vscode.Uri,
     test: string
   ): Test | undefined {
-    if (this.mainProcessRunner.suite) {
-      const testPaths = findFullPathForTest(
-        this.mainProcessRunner.suite,
-        filename,
-        test
-      );
+    for (const treeItem of this._testRunnerTreeItems.values()) {
+      if (treeItem.suite) {
+        const testPaths = findFullPathForTest(treeItem.suite, filename, test);
 
-      if (testPaths.length === 1) {
-        return {
-          runner: this.mainProcessRunner.runner,
-          test: testPaths[0].join(" ").trim(),
-        };
-      }
-    }
-    if (this.rendererRunner.suite) {
-      const testPaths = findFullPathForTest(
-        this.rendererRunner.suite,
-        filename,
-        test
-      );
-
-      if (testPaths.length === 1) {
-        return {
-          runner: this.rendererRunner.runner,
-          test: testPaths[0].join(" ").trim(),
-        };
+        if (testPaths.length === 1) {
+          return {
+            runner: treeItem.runner,
+            test: testPaths[0].join(" ").trim(),
+          };
+        }
       }
     }
   }
@@ -125,9 +220,19 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
     return element;
   }
 
+  getParent(element: TreeItem): TreeItem | null {
+    if (element instanceof TestBaseTreeItem) {
+      return element.parent!;
+    } else if (element instanceof TestRunnerTreeItem) {
+      return null;
+    }
+
+    throw new Error("Not implemented");
+  }
+
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
     if (!element) {
-      return [this.mainProcessRunner, this.rendererRunner];
+      return Array.from(this._testRunnerTreeItems.values());
     } else if (element instanceof TestSuiteTreeItem) {
       return [
         ...alphabetizeByLabel(
@@ -143,18 +248,10 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
       ];
     } else if (element instanceof TestRunnerTreeItem) {
       try {
-        const tests = await withBusyState(() => {
-          return getElectronTests(
-            this.context,
-            this.electronRoot,
-            element.runner
-          ) as Promise<ParsedTestSuite>;
-        }, "loadingTests");
-
-        element.suite = tests;
+        element.suite = await this._testCollector.getTestSuites(element.runner);
 
         return alphabetizeByLabel(
-          tests.suites.map(
+          element.suite.suites.map(
             (suite) => new TestSuiteTreeItem(suite, element.runner)
           )
         );

@@ -32,7 +32,11 @@ import { DocsTreeDataProvider } from "./views/docs";
 import { ElectronViewProvider } from "./views/electron";
 import { ElectronPatchesProvider } from "./views/patches";
 import { HelpTreeDataProvider } from "./views/help";
-import { TestsTreeDataProvider } from "./views/tests";
+import {
+  ElectronTestCollector,
+  TestCollector,
+  TestsTreeDataProvider,
+} from "./views/tests";
 import { ElectronPullRequestFileSystemProvider } from "./pullRequestFileSystemProvider";
 import { registerTestCommands } from "./commands/tests";
 import { registerHelperCommands } from "./commands/helpers";
@@ -49,10 +53,11 @@ function registerElectronBuildToolsCommands(
   patchesProvider: ElectronPatchesProvider,
   patchesView: vscode.TreeView<vscode.TreeItem>,
   testsProvider: TestsTreeDataProvider,
+  testsCollector: TestCollector,
   pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
 ) {
   registerConfigsCommands(context, configsProvider);
-  registerTestCommands(context, electronRoot, testsProvider);
+  registerTestCommands(context, electronRoot, testsProvider, testsCollector);
   registerPatchesCommands(
     context,
     electronRoot,
@@ -321,7 +326,21 @@ export async function activate(context: vscode.ExtensionContext) {
         electronRoot,
         patchesConfig
       );
-      const testsProvider = new TestsTreeDataProvider(context, electronRoot);
+      const testsCollector = new ElectronTestCollector(context, electronRoot);
+
+      // Show progress on the tests view while the collector is working. This
+      // lets us immediately show the list of tests from extension storage,
+      // while refreshing them in the background and showing that it's working
+      testsCollector.onDidStartRefreshing(({ refreshFinished }) => {
+        vscode.window.withProgress(
+          { location: { viewId: "electron-build-tools:tests" } },
+          async () => {
+            await refreshFinished;
+          }
+        );
+      });
+
+      const testsProvider = new TestsTreeDataProvider(testsCollector);
       context.subscriptions.push(
         vscode.languages.registerCodeLensProvider(
           "typescript",
@@ -362,6 +381,7 @@ export async function activate(context: vscode.ExtensionContext) {
         patchesProvider,
         patchesView,
         testsProvider,
+        testsCollector,
         pullRequestFileSystemProvider
       );
       registerHelperCommands(context);
