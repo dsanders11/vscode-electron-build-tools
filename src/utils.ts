@@ -446,7 +446,7 @@ export function registerCommandNoBusy(
 }
 
 export async function withBusyState<T>(
-  workFn: () => T,
+  workFn: () => Promise<T> | T,
   contextName: string = "busy"
 ): Promise<T> {
   await vscode.commands.executeCommand(
