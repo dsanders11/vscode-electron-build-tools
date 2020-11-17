@@ -54,9 +54,7 @@ export function registerTestCommands(
 
           // TODO - Fix this up
           if (test instanceof TestBaseTreeItem) {
-            const testRegex = escapeStringForRegex(
-              test.getFullyQualifiedTestName()
-            );
+            const testRegex = escapeStringForRegex(test.getFullTitle());
 
             task = runAsTask({
               context,
@@ -161,9 +159,7 @@ export function registerTestCommands(
         const operationName = "Electron Build Tools - Running Tests";
         let command = `${buildToolsExecutable} test`;
 
-        const testRegex = escapeStringForRegex(
-          testSuite.getFullyQualifiedTestName()
-        );
+        const testRegex = escapeStringForRegex(testSuite.getFullTitle());
 
         // TODO - Fix this up
         runAsTask({

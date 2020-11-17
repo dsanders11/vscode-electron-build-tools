@@ -16,12 +16,16 @@ export enum TestState {
   FAILURE,
 }
 
-type ParsedTestSuite = {
+interface ParsedRunnable {
   title: string;
+  fullTitle: string;
+}
+
+interface ParsedTestSuite extends ParsedRunnable {
   file: string;
   suites: ParsedTestSuite[];
-  tests: string[];
-};
+  tests: ParsedRunnable[];
+}
 
 export type Test = {
   runner: TestRunner;
@@ -36,13 +40,12 @@ function findFullPathForTest(
   const matches: string[][] = [];
 
   if (!suite.file || suite.file === filename.fsPath) {
-    if (suite.tests.includes(test)) {
-      for (const suiteTest of suite.tests) {
-        if (suiteTest === test) {
-          matches.push([suite.title, test]);
-        }
+    for (const { title } of suite.tests) {
+      if (title === test) {
+        matches.push([suite.title, test]);
       }
     }
+
     for (const nestedSuite of suite.suites) {
       const results = findFullPathForTest(nestedSuite, filename, test);
       for (const result of results) {
@@ -59,6 +62,11 @@ export type OnDidStartRefreshing = {
   refreshFinished: Promise<void>;
 };
 
+type StoredTests = {
+  version: number;
+  tests: [TestRunner, ParsedTestSuite][];
+};
+
 export interface TestCollector {
   onDidStartRefreshing: vscode.Event<OnDidStartRefreshing>;
 
@@ -67,6 +75,9 @@ export interface TestCollector {
 }
 
 export class ElectronTestCollector implements TestCollector {
+  private static readonly storedTestsVersion = 1;
+  private static readonly storageKey = "cachedTests";
+
   private _onDidStartRefreshing = new EventEmitter<OnDidStartRefreshing>();
   readonly onDidStartRefreshing = this._onDidStartRefreshing.event;
 
@@ -80,11 +91,23 @@ export class ElectronTestCollector implements TestCollector {
     private readonly _extensionContext: vscode.ExtensionContext,
     private readonly _electronRoot: vscode.Uri
   ) {
-    this._testSuites = new Map<TestRunner, ParsedTestSuite>(
-      _extensionContext.globalState.get<[TestRunner, ParsedTestSuite][]>(
-        "cachedTests"
-      )
+    let storedTests = _extensionContext.globalState.get<StoredTests>(
+      ElectronTestCollector.storageKey
     );
+
+    if (
+      storedTests &&
+      storedTests.version !== ElectronTestCollector.storedTestsVersion
+    ) {
+      // Out-of-date stored tests, delete it
+      _extensionContext.globalState.update(
+        ElectronTestCollector.storageKey,
+        undefined
+      );
+      storedTests = undefined;
+    }
+
+    this._testSuites = new Map<TestRunner, ParsedTestSuite>(storedTests?.tests);
 
     // TBD - Is it a good idea to fire off refreshes when files change? Seems
     // like there could be lots of failed attempts to list tests as files are
@@ -112,8 +135,11 @@ export class ElectronTestCollector implements TestCollector {
     // Store for future use
     this._testSuites.set(runner, testSuites);
     await this._extensionContext.globalState.update(
-      "cachedTests",
-      Array.from(this._testSuites)
+      ElectronTestCollector.storageKey,
+      {
+        version: ElectronTestCollector.storedTestsVersion,
+        tests: Array.from(this._testSuites),
+      }
     );
 
     this._initialRefreshDone.set(runner, true);
@@ -276,7 +302,7 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
   }
 }
 
-export class TestBaseTreeItem extends TreeItem {
+export abstract class TestBaseTreeItem extends TreeItem {
   public readonly parent?: TestBaseTreeItem;
   private _state: TestState;
 
@@ -292,17 +318,7 @@ export class TestBaseTreeItem extends TreeItem {
     this._state = TestState.NONE;
   }
 
-  getFullyQualifiedTestName() {
-    let fullName = this.fullName;
-    let parent: TestBaseTreeItem | undefined = this.parent;
-
-    while (parent) {
-      fullName = `${parent.fullName} ${fullName}`;
-      parent = parent.parent;
-    }
-
-    return fullName;
-  }
+  abstract getFullTitle(): string;
 
   getState() {
     return this._state;
@@ -360,6 +376,10 @@ class TestSuiteTreeItem extends TestBaseTreeItem {
     // this.resourceUri = vscode.Uri.file(suite.file);
   }
 
+  getFullTitle() {
+    return this.suite.fullTitle;
+  }
+
   setState(state: TestState) {
     if (state === TestState.NONE) {
       this.iconPath = new ThemeIcon("library");
@@ -371,21 +391,25 @@ class TestSuiteTreeItem extends TestBaseTreeItem {
 
 class TestTreeItem extends TestBaseTreeItem {
   constructor(
-    public readonly testName: string,
+    public readonly test: ParsedRunnable,
     public readonly runner: TestRunner,
     public readonly parent: TestSuiteTreeItem
   ) {
     super(
       vscode.Uri.file(parent.suite.file),
-      truncateToLength(testName, 40),
+      truncateToLength(test.title, 40),
       runner,
-      testName,
+      test.title,
       vscode.TreeItemCollapsibleState.None
     );
 
     this.setState(TestState.NONE);
-    this.tooltip = testName;
+    this.tooltip = test.title;
     this.contextValue = "test";
+  }
+
+  getFullTitle() {
+    return this.test.fullTitle;
   }
 
   setState(state: TestState) {

@@ -22,9 +22,13 @@ const { app } = require("electron");
 function parseTestSuites(suite) {
   const parsedTests = {
     title: suite.title,
+    fullTitle: suite.fullTitle(),
     file: suite.file,
     suites: [],
-    tests: suite.tests.map((test) => test.title),
+    tests: suite.tests.map((test) => ({
+      title: test.title,
+      fullTitle: test.fullTitle(),
+    })),
   };
 
   for (const childSuite of suite.suites) {
