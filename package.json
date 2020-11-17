@@ -647,8 +647,8 @@
     "lint": "eslint src --ext ts && yarn prettier:check",
     "watch": "tsc -watch -p ./",
     "pretest": "yarn run compile && yarn run lint",
-    "prettier:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\"",
-    "prettier:write": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\""
+    "prettier:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"electron/**/*.js\"",
+    "prettier:write": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"electron/**/*.js\""
   },
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
