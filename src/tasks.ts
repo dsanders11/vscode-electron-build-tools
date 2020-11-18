@@ -5,6 +5,7 @@ import { PassThrough } from "stream";
 import * as vscode from "vscode";
 
 import { IpcMessage } from "./common";
+import Logger from "./logging";
 import { generateSocketName } from "./utils";
 
 export type ElectronBuildToolsTask = {
@@ -131,7 +132,7 @@ export function runAsTask({
         token.onCancellationRequested(() => {
           resolve(false);
           taskExecution.terminate();
-          console.warn(`User canceled '${command}'`);
+          Logger.warn(`User canceled '${command}'`);
         });
       }).finally(() => taskExecution.terminate());
     }

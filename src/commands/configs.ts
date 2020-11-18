@@ -4,6 +4,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import { buildToolsExecutable } from "../constants";
+import Logger from "../logging";
 import {
   getConfigs,
   getConfigsFilePath,
@@ -32,7 +33,7 @@ export function registerConfigsCommands(
           );
           await vscode.window.showTextDocument(document);
         } catch (e) {
-          console.log(e);
+          Logger.error(e);
         }
 
         return configFilePath;
