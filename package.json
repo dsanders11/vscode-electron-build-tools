@@ -23,6 +23,7 @@
     "onView:electron-build-tools:electron"
   ],
   "categories": [
+    "Extension Packs",
     "Linters",
     "Other"
   ],
@@ -640,6 +641,9 @@
       }
     ]
   },
+  "extensionPack": [
+    "npclaudiu.vscode-gn"
+  ],
   "main": "./out/src/extension.js",
   "scripts": {
     "vscode:prepublish": "yarn run compile",
