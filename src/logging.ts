@@ -6,7 +6,7 @@ export interface ILogger {
   debug(message: string): void;
   error(message: string): void;
   info(message: string): void;
-  warn(message: string): void;
+  error(errOrMessage: Error | string): void;
 }
 
 export class OutputChannelLogger extends vscode.Disposable implements ILogger {
@@ -37,8 +37,11 @@ export class OutputChannelLogger extends vscode.Disposable implements ILogger {
     this._logMessage("debug", message);
   }
 
-  error(message: string): void {
-    this._logMessage("error", message);
+  error(errOrMessage: Error | string): void {
+    this._logMessage(
+      "error",
+      errOrMessage instanceof Error ? errOrMessage.message : errOrMessage
+    );
   }
 
   info(message: string): void {
