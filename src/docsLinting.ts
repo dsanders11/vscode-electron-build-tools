@@ -153,19 +153,27 @@ export function setupDocsLinting(
     diagnosticsCollection.set(document.uri, diagnostics);
   };
 
+  const shouldLintDocument = (document: vscode.TextDocument) => {
+    if (document.languageId === "markdown") {
+      return document.uri.path.startsWith(linkableProvider.docsRoot.path);
+    }
+
+    return false;
+  };
+
   // When changing the active text document, debounce these
   // checks so they don't fire with every keystroke
   const debouncedLinkCheck = debounce(500, lintDocument);
 
   vscode.workspace.onDidChangeTextDocument((event) => {
-    if (event.document.languageId === "markdown") {
+    if (shouldLintDocument(event.document)) {
       debouncedLinkCheck(event.document);
     }
   });
 
   vscode.window.onDidChangeVisibleTextEditors((textEditors) => {
     for (const textEditor of textEditors) {
-      if (textEditor.document.languageId === "markdown") {
+      if (shouldLintDocument(textEditor.document)) {
         lintDocument(textEditor.document);
       }
     }
@@ -173,7 +181,7 @@ export function setupDocsLinting(
 
   const lintVisibleEditors = () => {
     for (const textEditor of vscode.window.visibleTextEditors) {
-      if (textEditor.document.languageId === "markdown") {
+      if (shouldLintDocument(textEditor.document)) {
         lintDocument(textEditor.document);
       }
     }
