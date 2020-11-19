@@ -17,6 +17,7 @@ import { TextDocumentContentProvider } from "./documentContentProvider";
 import { DocsHoverProvider } from "./docsHoverProvider";
 import { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { setupDocsLinting } from "./docsLinting";
+import { GnLinkProvider } from "./gnLinkProvider";
 import Logger from "./logging";
 import { runAsTask } from "./tasks";
 import { TestCodeLensProvider } from "./testCodeLens";
@@ -392,6 +393,10 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerHoverProvider(
           "markdown",
           new DocsHoverProvider()
+        ),
+        vscode.languages.registerDocumentLinkProvider(
+          { language: "gn" },
+          new GnLinkProvider(electronRoot)
         )
       );
       registerElectronBuildToolsCommands(
