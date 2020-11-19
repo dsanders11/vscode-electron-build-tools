@@ -185,11 +185,18 @@ export function truncateToLength(text: string, length: number) {
 }
 
 export function parsePatchMetadata(patchContents: string) {
+  const subjectAndDescription = /Subject: (.*?)\n\n([\s\S]*?)\s*(?=diff)/ms.exec(
+    patchContents
+  );
+
   return {
     from: /^From: ((.*)<(\S*)>)$/m.exec(patchContents)![1],
     date: /^Date: (.*)$/m.exec(patchContents)![1],
-    subject: /^Subject: (.*)$/m.exec(patchContents)![1],
-    description: /Subject.*\s+([\s\S]*?)\s+diff/.exec(patchContents)![1],
+    subject: subjectAndDescription![1]
+      .split("\n")
+      .map((text) => text.trim())
+      .join(" "),
+    description: subjectAndDescription![2],
     filenames: Array.from(patchContents.matchAll(patchedFilenameRegex)).map(
       (match) => match[1]
     ),
