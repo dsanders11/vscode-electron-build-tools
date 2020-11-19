@@ -54,11 +54,11 @@ function getRelativeLinksInDocument(document: vscode.TextDocument) {
 }
 
 async function isRelativeLinkBroken(
-  document: vscode.TextDocument,
+  uri: vscode.Uri,
   link: vscode.DocumentLink
 ) {
   const docPath = vscode.Uri.file(
-    path.join(path.dirname(document.uri.fsPath), link.target!.fsPath)
+    path.join(path.dirname(uri.fsPath), link.target!.fsPath)
   );
 
   try {
@@ -72,7 +72,7 @@ async function isRelativeLinkBroken(
 function isRelativeLinkUrlFragmentBroken(
   docsPath: vscode.Uri,
   docsLinkables: DocsLinkable[],
-  document: vscode.TextDocument,
+  uri: vscode.Uri,
   link: vscode.DocumentLink
 ) {
   if (!link.target!.fragment) {
@@ -83,10 +83,10 @@ function isRelativeLinkUrlFragmentBroken(
 
   if (link.target!.path) {
     docPath = ensurePosixSeparators(
-      path.join(path.dirname(document.uri.fsPath), link.target!.path)
+      path.join(path.dirname(uri.fsPath), link.target!.path)
     );
   } else {
-    docPath = ensurePosixSeparators(document.uri.fsPath);
+    docPath = ensurePosixSeparators(uri.fsPath);
   }
 
   const targetFilename = ensurePosixSeparators(
@@ -122,7 +122,7 @@ export function setupDocsLinting(
     const diagnostics: vscode.Diagnostic[] = [];
 
     for (const link of links) {
-      if (await isRelativeLinkBroken(document, link)) {
+      if (await isRelativeLinkBroken(document.uri, link)) {
         const diagnostic = new vscode.Diagnostic(
           link.range,
           "Relative link is broken",
@@ -135,7 +135,7 @@ export function setupDocsLinting(
         isRelativeLinkUrlFragmentBroken(
           linkableProvider.docsRoot,
           linkables,
-          document,
+          document.uri,
           link
         )
       ) {
