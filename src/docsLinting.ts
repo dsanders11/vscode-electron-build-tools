@@ -47,7 +47,9 @@ function getLinksInDocument(document: vscode.TextDocument) {
 
 function getRelativeLinksInDocument(document: vscode.TextDocument) {
   return getLinksInDocument(document).filter(
-    (link) => link.target!.scheme === "electron-docs"
+    (link) =>
+      link.target!.scheme === "electron-docs" &&
+      !link.target!.path.startsWith("/")
   );
 }
 
