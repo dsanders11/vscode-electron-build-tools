@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { parseMarkdownHeader } from "./utils";
+import { makeCommandUri, parseMarkdownHeader } from "./utils";
 
 export class DocsHoverProvider implements vscode.HoverProvider {
   provideHover(
@@ -9,14 +9,21 @@ export class DocsHoverProvider implements vscode.HoverProvider {
     token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Hover> {
     const line = document.lineAt(position);
-    const header = parseMarkdownHeader(line.text);
+    const urlFragment = parseMarkdownHeader(line.text)?.urlFragment;
 
-    if (header !== undefined) {
+    if (urlFragment !== undefined) {
       const content = new vscode.MarkdownString(undefined, true);
       content.isTrusted = true;
 
-      // TODO - Use command to add link for copying to clipboard
-      content.appendMarkdown(`$(link) #${header.urlFragment}\r\n`);
+      const commandUri = makeCommandUri(
+        "vscode.copyToClipboard",
+        `#${urlFragment}`
+      );
+      const commandText = "Copy URL Fragment to Clipboard";
+      content.appendMarkdown(`$(link) #${urlFragment}\r\n\r\n`);
+      content.appendMarkdown(
+        `[${commandText}](${commandUri} "${commandText}")`
+      );
 
       return new vscode.Hover(content, line.range);
     }

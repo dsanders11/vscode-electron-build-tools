@@ -556,3 +556,8 @@ export async function findElectronRoot(
     }
   }
 }
+
+export function makeCommandUri(command: string, ...args: any[]) {
+  const commandArgs = encodeURIComponent(JSON.stringify(args));
+  return vscode.Uri.parse(`command:${command}?${commandArgs}`);
+}
