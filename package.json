@@ -252,6 +252,12 @@
             "e"
           ],
           "default": "electron-build-tools"
+        },
+        "electronBuildTools.docs.lintRelativeLinks": {
+          "type": "boolean",
+          "default": true,
+          "title": "Lint Relative Links",
+          "description": "Lint relative links in the docs and mark broken links as problems."
         }
       }
     },

@@ -110,7 +110,7 @@ function isRelativeLinkUrlFragmentBroken(
 export function setupDocsLinting(
   linkableProvider: DocsLinkablesProvider,
   diagnosticsCollection: vscode.DiagnosticCollection
-) {
+): vscode.Disposable {
   const lintDocument = async (document: vscode.TextDocument) => {
     if (document.languageId !== "markdown") {
       throw new Error("Can only lint Markdown documents");
@@ -161,24 +161,6 @@ export function setupDocsLinting(
     return false;
   };
 
-  // When changing the active text document, debounce these
-  // checks so they don't fire with every keystroke
-  const debouncedLinkCheck = debounce(500, lintDocument);
-
-  vscode.workspace.onDidChangeTextDocument((event) => {
-    if (shouldLintDocument(event.document)) {
-      debouncedLinkCheck(event.document);
-    }
-  });
-
-  vscode.window.onDidChangeVisibleTextEditors((textEditors) => {
-    for (const textEditor of textEditors) {
-      if (shouldLintDocument(textEditor.document)) {
-        lintDocument(textEditor.document);
-      }
-    }
-  });
-
   const lintVisibleEditors = () => {
     for (const textEditor of vscode.window.visibleTextEditors) {
       if (shouldLintDocument(textEditor.document)) {
@@ -187,11 +169,30 @@ export function setupDocsLinting(
     }
   };
 
+  // When changing the active text document, debounce these
+  // checks so they don't fire with every keystroke
+  const debouncedLinkCheck = debounce(500, lintDocument);
+
+  // Do an initial linting of any visible editors
   lintVisibleEditors();
 
-  // TODO - Should we just lint all documents and let it show in
-  // the problems output panel?
-  // TODO - If we don't re-lint documents with problems, the problem
-  // remains in the output panel even after the linkable is fixed
-  linkableProvider.onDidChangeLinkables(() => lintVisibleEditors());
+  return vscode.Disposable.from(
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      if (shouldLintDocument(event.document)) {
+        debouncedLinkCheck(event.document);
+      }
+    }),
+    vscode.window.onDidChangeVisibleTextEditors((textEditors) => {
+      for (const textEditor of textEditors) {
+        if (shouldLintDocument(textEditor.document)) {
+          lintDocument(textEditor.document);
+        }
+      }
+    }),
+    // TODO - Should we just lint all documents and let it show in
+    // the problems output panel?
+    // TODO - If we don't re-lint documents with problems, the problem
+    // remains in the output panel even after the linkable is fixed
+    linkableProvider.onDidChangeLinkables(() => lintVisibleEditors())
+  );
 }

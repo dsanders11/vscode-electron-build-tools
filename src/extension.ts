@@ -17,6 +17,7 @@ import { TextDocumentContentProvider } from "./documentContentProvider";
 import { DocsHoverProvider } from "./docsHoverProvider";
 import { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { setupDocsLinting } from "./docsLinting";
+import Logger from "./logging";
 import { runAsTask } from "./tasks";
 import { TestCodeLensProvider } from "./testCodeLens";
 import { ExtensionConfig } from "./types";
@@ -408,7 +409,37 @@ export async function activate(context: vscode.ExtensionContext) {
       const linkableProvider = new DocsLinkablesProvider(electronRoot);
       context.subscriptions.push(linkableProvider);
 
-      setupDocsLinting(linkableProvider, diagnosticsCollection);
+      let lintDocsDisposable: vscode.Disposable | undefined;
+
+      const _setupDocsLinting = () => {
+        const shouldLintDocs =
+          vscode.workspace
+            .getConfiguration("electronBuildTools.docs")
+            .get<boolean>("lintRelativeLinks") === true;
+
+        if (shouldLintDocs) {
+          Logger.info("Docs relative link linting enabled");
+          lintDocsDisposable = setupDocsLinting(
+            linkableProvider,
+            diagnosticsCollection
+          );
+          context.subscriptions.push(lintDocsDisposable);
+        } else {
+          Logger.info("Docs relative link linting disabled");
+        }
+      };
+
+      _setupDocsLinting();
+
+      vscode.workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration("electronBuildTools.docs")) {
+          // Docs linting may have changed state, set it up again
+          lintDocsDisposable?.dispose();
+          lintDocsDisposable = undefined;
+
+          _setupDocsLinting();
+        }
+      });
 
       // Render emojis in Markdown
       result.extendMarkdownIt = (md: MarkdownIt) => md.use(MarkdownItEmoji);

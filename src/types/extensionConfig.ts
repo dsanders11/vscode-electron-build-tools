@@ -9,6 +9,10 @@
  * When building, show a list of build targets to choose from.
  */
 export type ShowTargets = boolean;
+/**
+ * Lint relative links in the docs and mark broken links as problems.
+ */
+export type LintRelativeLinks = boolean;
 
 export interface ElectronBuildTools {
   "electronBuildTools.build.buildOptions"?: BuildOptions;
@@ -29,6 +33,7 @@ export interface ElectronBuildTools {
    * Executable to use for running `build-tools` commands.
    */
   "electronBuildTools.buildTools.executable"?: "electron-build-tools" | "e";
+  "electronBuildTools.docs.lintRelativeLinks"?: LintRelativeLinks;
   [k: string]: unknown;
 }
 /**
