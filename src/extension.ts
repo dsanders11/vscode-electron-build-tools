@@ -15,6 +15,7 @@ import { TextDocumentContentProvider } from "./documentContentProvider";
 import { DocsHoverProvider } from "./docsHoverProvider";
 import { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { setupDocsLinting } from "./docsLinting";
+import { GnFormattingProvider } from "./gnFormattingProvider";
 import { GnLinkProvider } from "./gnLinkProvider";
 import Logger from "./logging";
 import { TestCodeLensProvider } from "./testCodeLens";
@@ -250,6 +251,10 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerDocumentLinkProvider(
           { language: "gn" },
           new GnLinkProvider(electronRoot)
+        ),
+        vscode.languages.registerDocumentFormattingEditProvider(
+          { language: "gn" },
+          new GnFormattingProvider(electronRoot)
         )
       );
       registerElectronBuildToolsCommands(
