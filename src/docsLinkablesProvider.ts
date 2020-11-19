@@ -4,11 +4,43 @@ import * as vscode from "vscode";
 
 import { ensurePosixSeparators, slugifyHeading } from "./utils";
 
-export type DocsLinkable = {
+export interface DocsLinkable {
   text: string;
   filename: string;
   urlFragment?: string;
-};
+}
+
+function isSameLinkable(a: DocsLinkable, b: DocsLinkable) {
+  return (
+    a.text === b.text &&
+    a.filename === b.filename &&
+    a.urlFragment === b.urlFragment
+  );
+}
+
+function sortLinkables(linkables: DocsLinkable[]) {
+  return linkables.sort((a, b) => {
+    if (a.text.toLowerCase() < b.text.toLowerCase()) {
+      return -1;
+    } else if (a.text.toLowerCase() > b.text.toLowerCase()) {
+      return 1;
+    }
+    return 0;
+  });
+}
+
+function linkablesAreEqual(a: DocsLinkable[], b: DocsLinkable[]) {
+  if (a.length === b.length) {
+    const sortedA = sortLinkables(a);
+    const sortedB = sortLinkables(b);
+
+    return sortedA.every((linkable, idx) =>
+      isSameLinkable(linkable, sortedB[idx])
+    );
+  }
+
+  return false;
+}
 
 export class DocsLinkablesProvider extends vscode.Disposable {
   private _onDidChangeLinkables = new vscode.EventEmitter<DocsLinkable[]>();
@@ -81,12 +113,14 @@ export class DocsLinkablesProvider extends vscode.Disposable {
         docsGlobPattern
       );
       const onDocsChanged = async (uri: vscode.Uri) => {
-        // TODO - Deep equality check to only fire if links changed
+        const currentLinkables = this._linkables.get(uri.path);
         const linkables = await this._extractLinkables(uri);
-        const changed = this._linkables.get(uri.path) !== linkables;
         this._linkables.set(uri.path, linkables);
 
-        if (changed) {
+        if (
+          currentLinkables === undefined ||
+          !linkablesAreEqual(currentLinkables, linkables)
+        ) {
           this._onDidChangeLinkables.fire(_getLinkables());
         }
       };
