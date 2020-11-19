@@ -214,9 +214,12 @@ export async function patchTooltipMarkdown(patch: vscode.Uri) {
     day: "numeric",
     month: "short",
     year: "numeric",
-  })}  \n`;
-  tooltip += `${patchMetadata.subject} \n`;
-  tooltip += truncateToLength(patchMetadata.description, 100);
+  })}\r\n`;
+  tooltip += `${patchMetadata.subject}`;
+
+  if (patchMetadata.description) {
+    tooltip += `\r\n${truncateToLength(patchMetadata.description, 100)}`;
+  }
 
   return tooltip;
 }
