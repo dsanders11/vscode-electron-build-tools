@@ -10,6 +10,9 @@ enum MarkdownTableColumnAlignment {
 
 export function registerHelperCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
+    vscode.commands.registerCommand("vscode.copyToClipboard", (value: string) =>
+      vscode.env.clipboard.writeText(value)
+    ),
     vscode.commands.registerCommand(
       "vscode.window.showOpenDialog",
       async (options: vscode.OpenDialogOptions | undefined) => {
