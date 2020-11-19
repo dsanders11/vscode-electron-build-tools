@@ -481,6 +481,15 @@ export const slugifyHeading = (heading: string): string => {
     .toLowerCase();
 };
 
+export function parseMarkdownHeader(line: string) {
+  if (/^#+\s+/.test(line)) {
+    const header = line.split(" ").slice(1).join(" ").trim();
+    const urlFragment = slugifyHeading(header);
+
+    return { text: header.replace(/`/g, ""), urlFragment };
+  }
+}
+
 export async function getContentForFileIndex(
   fileIndex: string,
   checkoutPath: string

@@ -14,6 +14,7 @@ import {
   virtualDocumentScheme,
 } from "./constants";
 import { TextDocumentContentProvider } from "./documentContentProvider";
+import { DocsHoverProvider } from "./docsHoverProvider";
 import { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { setupDocsLinting } from "./docsLinting";
 import { runAsTask } from "./tasks";
@@ -386,6 +387,10 @@ export async function activate(context: vscode.ExtensionContext) {
           pullRequestScheme,
           pullRequestFileSystemProvider,
           { isReadonly: true }
+        ),
+        vscode.languages.registerHoverProvider(
+          "markdown",
+          new DocsHoverProvider()
         )
       );
       registerElectronBuildToolsCommands(

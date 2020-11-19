@@ -2,7 +2,7 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import { ensurePosixSeparators, slugifyHeading } from "./utils";
+import { ensurePosixSeparators, parseMarkdownHeader } from "./utils";
 
 export interface DocsLinkable {
   text: string;
@@ -70,22 +70,17 @@ export class DocsLinkablesProvider extends vscode.Disposable {
       .split("\n");
 
     for (const [idx, line] of fileLines.entries()) {
-      if (/^#+\s+/.test(line)) {
-        const header = line
-          .split(" ")
-          .slice(1)
-          .join(" ")
-          .replace(/`/g, "")
-          .trim();
+      const parsedHeader = parseMarkdownHeader(line);
+
+      if (parsedHeader !== undefined) {
+        const { text, urlFragment } = parsedHeader;
 
         if (idx === 0) {
-          linkables.push({ text: header, filename });
+          linkables.push({ text, filename });
         } else {
-          const urlFragment = slugifyHeading(header);
-
           // Only the top-level header can have an empty urlFragment
           if (urlFragment.length > 0) {
-            linkables.push({ text: header, filename, urlFragment });
+            linkables.push({ text, filename, urlFragment });
           }
         }
       }
