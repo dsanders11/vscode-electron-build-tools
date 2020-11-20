@@ -28,6 +28,35 @@ class ExtensionStateTracker {
     );
   }
 
+  private _updateContexts() {
+    return Promise.all([
+      this._setContext(
+        "canBuild",
+        this.canRunOperation(ExtensionOperation.BUILD)
+      ),
+      this._setContext(
+        "canChangeConfig",
+        this.canRunOperation(ExtensionOperation.CHANGE_CONFIG)
+      ),
+      this._setContext(
+        "canLoadTests",
+        this.canRunOperation(ExtensionOperation.LOAD_TESTS)
+      ),
+      this._setContext(
+        "canRefreshPatches",
+        this.canRunOperation(ExtensionOperation.REFRESH_PATCHES)
+      ),
+      this._setContext(
+        "canRunTests",
+        this.canRunOperation(ExtensionOperation.RUN_TESTS)
+      ),
+      this._setContext(
+        "canSync",
+        this.canRunOperation(ExtensionOperation.SYNC)
+      ),
+    ]);
+  }
+
   private _isOpRunning(...ops: ExtensionOperation[]) {
     return ops.some((op: ExtensionOperation) =>
       this._runningOperations.has(op)
@@ -39,27 +68,12 @@ class ExtensionStateTracker {
     running ? ops.add(operation) : ops.delete(operation);
 
     // Update contexts for use in UI
-    this._setContext(
-      "canBuild",
-      this.canRunOperation(ExtensionOperation.BUILD)
-    );
-    this._setContext(
-      "canChangeConfig",
-      this.canRunOperation(ExtensionOperation.CHANGE_CONFIG)
-    );
-    this._setContext(
-      "canLoadTests",
-      this.canRunOperation(ExtensionOperation.LOAD_TESTS)
-    );
-    this._setContext(
-      "canRefreshPatches",
-      this.canRunOperation(ExtensionOperation.REFRESH_PATCHES)
-    );
-    this._setContext(
-      "canRunTests",
-      this.canRunOperation(ExtensionOperation.RUN_TESTS)
-    );
-    this._setContext("canSync", this.canRunOperation(ExtensionOperation.SYNC));
+    await this._updateContexts();
+  }
+
+  async setInitialState() {
+    this._runningOperations.clear();
+    await this._updateContexts();
   }
 
   canRunOperation(operation: ExtensionOperation): boolean {

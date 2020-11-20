@@ -15,6 +15,7 @@ import { TextDocumentContentProvider } from "./documentContentProvider";
 import { DocsHoverProvider } from "./docsHoverProvider";
 import { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { setupDocsLinting } from "./docsLinting";
+import ExtensionState from "./extensionState";
 import { GnFormattingProvider } from "./gnFormattingProvider";
 import { GnLinkProvider } from "./gnLinkProvider";
 import Logger from "./logging";
@@ -164,6 +165,7 @@ export async function activate(context: vscode.ExtensionContext) {
         "electron-build-tools:active",
         true
       );
+      ExtensionState.setInitialState();
 
       const diagnosticsCollection = vscode.languages.createDiagnosticCollection(
         "electron-build-tools"
