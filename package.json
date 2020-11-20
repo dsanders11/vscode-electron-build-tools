@@ -73,7 +73,8 @@
     "commands": [
       {
         "command": "electron-build-tools.build",
-        "title": "Electron Build Tools: Build"
+        "title": "Electron Build Tools: Build",
+        "enablement": "electron-build-tools:canBuild"
       },
       {
         "command": "electron-build-tools.openPatch",
@@ -97,13 +98,14 @@
       {
         "command": "electron-build-tools.refreshPatches",
         "title": "Refresh Patches",
-        "icon": "$(refresh)"
+        "icon": "$(refresh)",
+        "enablement": "electron-build-tools:canRefreshPatches"
       },
       {
         "command": "electron-build-tools.refreshTests",
         "title": "Refresh Tests",
         "icon": "$(refresh)",
-        "enablement": "!electron-build-tools:loadingTests"
+        "enablement": "electron-build-tools:canLoadTests"
       },
       {
         "command": "electron-build-tools.removePullRequestPatch",
@@ -158,7 +160,8 @@
       },
       {
         "command": "electron-build-tools.sync",
-        "title": "Electron Build Tools: Sync"
+        "title": "Electron Build Tools: Sync",
+        "enablement": "electron-build-tools:canSync"
       },
       {
         "command": "electron-build-tools.sync.force",
@@ -177,7 +180,8 @@
       },
       {
         "command": "electron-build-tools.use-config.quick-pick",
-        "title": "Electron Build Tools: Use Config"
+        "title": "Electron Build Tools: Use Config",
+        "enablement": "electron-build-tools:canChangeConfig"
       },
       {
         "command": "electron-build-tools.viewPullRequestPatch",
