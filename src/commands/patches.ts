@@ -7,8 +7,12 @@ import * as vscode from "vscode";
 import { Octokit } from "@octokit/rest";
 
 import { buildToolsExecutable, virtualDocumentScheme } from "../constants";
+import {
+  default as ExtensionState,
+  ExtensionOperation,
+} from "../extensionState";
 import { ElectronPullRequestFileSystemProvider } from "../pullRequestFileSystemProvider";
-import { FileInPatch, registerCommandNoBusy, withBusyState } from "../utils";
+import { FileInPatch } from "../utils";
 import {
   ElectronPatchesProvider,
   Patch,
@@ -30,7 +34,8 @@ export function registerPatchesCommands(
         return vscode.commands.executeCommand("vscode.open", patchTreeItem.uri);
       }
     ),
-    registerCommandNoBusy(
+    ExtensionState.registerExtensionOperationCommand(
+      ExtensionOperation.REFRESH_PATCHES,
       "electron-build-tools.refreshPatches",
       () => {
         vscode.window.showErrorMessage(
@@ -38,25 +43,23 @@ export function registerPatchesCommands(
         );
       },
       (arg: PatchDirectory | string) => {
-        return withBusyState(() => {
-          const target = arg instanceof PatchDirectory ? arg.name : arg;
+        const target = arg instanceof PatchDirectory ? arg.name : arg;
 
-          return new Promise((resolve, reject) => {
-            const cp = childProcess.exec(
-              `${buildToolsExecutable} patches ${target || "all"}`
-            );
+        return new Promise((resolve, reject) => {
+          const cp = childProcess.exec(
+            `${buildToolsExecutable} patches ${target || "all"}`
+          );
 
-            cp.once("error", (err) => reject(err));
-            cp.once("exit", (code) => {
-              if (code !== 0) {
-                vscode.window.showErrorMessage("Failed to refresh patches");
-              } else {
-                // TBD - This isn't very noticeable
-                vscode.window.setStatusBarMessage("Refreshed patches");
-                patchesProvider.refresh();
-                resolve();
-              }
-            });
+          cp.once("error", (err) => reject(err));
+          cp.once("exit", (code) => {
+            if (code !== 0) {
+              vscode.window.showErrorMessage("Failed to refresh patches");
+            } else {
+              // TBD - This isn't very noticeable
+              vscode.window.setStatusBarMessage("Refreshed patches");
+              patchesProvider.refresh();
+              resolve();
+            }
           });
         });
       }

@@ -1,8 +1,11 @@
 import * as vscode from "vscode";
 
 import { buildToolsExecutable } from "../constants";
+import {
+  default as ExtensionState,
+  ExtensionOperation,
+} from "../extensionState";
 import { runAsTask } from "../tasks";
-import { registerCommandNoBusy, withBusyState } from "../utils";
 import { embeddedReferenceRun } from "./syncReferenceRun";
 
 type IncrementalProgress = vscode.Progress<{
@@ -125,61 +128,60 @@ class SyncProgressWatcher {
 
 export function registerSyncCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
-    registerCommandNoBusy(
+    ExtensionState.registerExtensionOperationCommand(
+      ExtensionOperation.SYNC,
       "electron-build-tools.sync",
       () => {
         vscode.window.showErrorMessage("Can't sync, other work in-progress");
       },
       async (force?: boolean) => {
-        return withBusyState(async () => {
-          const command = `${buildToolsExecutable} sync${
-            force ? " --force" : ""
-          }`;
-          const operationName = `Electron Build Tools - ${
-            force ? "Force " : ""
-          }Syncing`;
-          const progressWatcher = new SyncProgressWatcher(context);
+        const command = `${buildToolsExecutable} sync${
+          force ? " --force" : ""
+        }`;
+        const operationName = `Electron Build Tools - ${
+          force ? "Force " : ""
+        }Syncing`;
+        const progressWatcher = new SyncProgressWatcher(context);
 
-          const task = runAsTask({
-            context,
-            operationName,
-            taskName: "sync",
-            command,
-            cancellable: false,
-            exitCodeHandler: (exitCode) => {
-              if (exitCode === 1 && !force) {
-                const confirm = "Force";
+        const task = runAsTask({
+          context,
+          operationName,
+          taskName: "sync",
+          command,
+          cancellable: false,
+          exitCodeHandler: (exitCode) => {
+            if (exitCode === 1 && !force) {
+              const confirm = "Force";
 
-                vscode.window
-                  .showErrorMessage("Sync failed. Try force sync?", confirm)
-                  .then((value) => {
-                    if (value && value === confirm) {
-                      vscode.commands.executeCommand(
-                        "electron-build-tools.sync",
-                        true
-                      );
-                    }
-                  });
+              vscode.window
+                .showErrorMessage("Sync failed. Try force sync?", confirm)
+                .then((value) => {
+                  if (value && value === confirm) {
+                    vscode.commands.executeCommand(
+                      "electron-build-tools.sync",
+                      true
+                    );
+                  }
+                });
 
-                return true;
-              }
-            },
-          });
-
-          progressWatcher.startRun();
-
-          task.onDidWriteLine(({ progress, line }) => {
-            progressWatcher.updateProgress(progress, line);
-          });
-
-          // Only update reference run on successful completion
-          if (await task.finished) {
-            // Don't update reference run on a force sync
-            if (!force) {
-              await progressWatcher.finishRun();
+              return true;
             }
-          }
+          },
         });
+
+        progressWatcher.startRun();
+
+        task.onDidWriteLine(({ progress, line }) => {
+          progressWatcher.updateProgress(progress, line);
+        });
+
+        // Only update reference run on successful completion
+        if (await task.finished) {
+          // Don't update reference run on a force sync
+          if (!force) {
+            await progressWatcher.finishRun();
+          }
+        }
       }
     ),
     vscode.commands.registerCommand("electron-build-tools.sync.force", () => {

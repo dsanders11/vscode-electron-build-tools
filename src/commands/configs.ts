@@ -1,19 +1,22 @@
 import * as childProcess from "child_process";
 import * as path from "path";
+import { promisify } from "util";
 
 import * as vscode from "vscode";
 
 import { buildToolsExecutable } from "../constants";
-import Logger from "../logging";
 import {
-  getConfigs,
-  getConfigsFilePath,
-  registerCommandNoBusy,
-} from "../utils";
+  default as ExtensionState,
+  ExtensionOperation,
+} from "../extensionState";
+import Logger from "../logging";
+import { getConfigs, getConfigsFilePath } from "../utils";
 import {
   ConfigTreeItem,
   ElectronBuildToolsConfigsProvider,
 } from "../views/configs";
+
+const exec = promisify(childProcess.exec);
 
 export function registerConfigsCommands(
   context: vscode.ExtensionContext,
@@ -113,32 +116,40 @@ export function registerConfigsCommands(
         );
       }
     ),
-    registerCommandNoBusy(
+    ExtensionState.registerExtensionOperationCommand(
+      ExtensionOperation.CHANGE_CONFIG,
       "electron-build-tools.use-config",
       () => {
         vscode.window.showErrorMessage(
           "Can't change configs, other work in-progress"
         );
       },
-      (config: ConfigTreeItem) => {
+      async (config: ConfigTreeItem) => {
         // Do an optimistic update for snappier UI
         configsProvider.setActive(config.label);
 
-        childProcess.exec(
-          `${buildToolsExecutable} use ${config.label}`,
-          {
-            encoding: "utf8",
-          },
-          (error, stdout) => {
-            if (error ?? stdout.trim() !== `Now using config ${config.label}`) {
-              vscode.window.showErrorMessage(
-                "Failed to set active Electron build-tools config"
-              );
-              configsProvider.setActive(null);
-              configsProvider.refresh();
+        let result: Error | boolean;
+
+        try {
+          const { stdout } = await exec(
+            `${buildToolsExecutable} use ${config.label}`,
+            {
+              encoding: "utf8",
             }
-          }
-        );
+          );
+
+          result = stdout.trim() === `Now using config ${config.label}`;
+        } catch (err) {
+          result = err;
+        }
+
+        if (result !== true) {
+          vscode.window.showErrorMessage(
+            "Failed to set active Electron build-tools config"
+          );
+          configsProvider.setActive(null);
+          configsProvider.refresh();
+        }
       }
     )
   );

@@ -40,3 +40,5 @@ export const repositoryUrl =
   "https://github.com/dsanders11/vscode-electron-build-tools";
 
 export const outputChannelName = "Electron Build Tools";
+
+export const contextKeyPrefix = "electron-build-tools";

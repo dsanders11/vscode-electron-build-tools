@@ -438,48 +438,6 @@ export function escapeStringForRegex(str: string) {
   return str.replace("(", "\\(").replace(")", "\\)").replace(".", "\\.");
 }
 
-let globalBusy = false;
-
-// This is an unfortunate work-around to the `enablement` key for
-// commands in vscode being buggy, so it can't be relied on.
-export function registerCommandNoBusy(
-  command: string,
-  busyGuard: () => any,
-  callback: (...args: any[]) => any,
-  thisArg?: any
-): vscode.Disposable {
-  return vscode.commands.registerCommand(
-    command,
-    (...args: any[]): any => {
-      return globalBusy ? busyGuard() : callback(...args);
-    },
-    thisArg
-  );
-}
-
-export async function withBusyState<T>(
-  workFn: () => Promise<T> | T,
-  contextName: string = "busy"
-): Promise<T> {
-  await vscode.commands.executeCommand(
-    "setContext",
-    `electron-build-tools:${contextName}`,
-    true
-  );
-  globalBusy = true;
-
-  try {
-    return await workFn();
-  } finally {
-    vscode.commands.executeCommand(
-      "setContext",
-      `electron-build-tools:${contextName}`,
-      false
-    );
-    globalBusy = false;
-  }
-}
-
 export function ensurePosixSeparators(filePath: string) {
   return filePath.split(path.sep).join(path.posix.sep);
 }

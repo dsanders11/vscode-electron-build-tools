@@ -2,11 +2,14 @@ import * as vscode from "vscode";
 import { EventEmitter, ThemeIcon, TreeItem, TreeDataProvider } from "vscode";
 
 import {
+  default as ExtensionState,
+  ExtensionOperation,
+} from "../extensionState";
+import {
   alphabetizeByLabel,
   getElectronTests,
   truncateToLength,
   TestRunner,
-  withBusyState,
 } from "../utils";
 
 export enum TestState {
@@ -124,13 +127,16 @@ export class ElectronTestCollector implements TestCollector {
   }
 
   async _getTests(runner: TestRunner) {
-    const testSuites = await withBusyState(() => {
-      return getElectronTests(
-        this._extensionContext,
-        this._electronRoot,
-        runner
-      ) as Promise<ParsedTestSuite>;
-    }, "loadingTests");
+    const testSuites = await ExtensionState.runOperation(
+      ExtensionOperation.LOAD_TESTS,
+      () => {
+        return getElectronTests(
+          this._extensionContext,
+          this._electronRoot,
+          runner
+        ) as Promise<ParsedTestSuite>;
+      }
+    );
 
     // Store for future use
     this._testSuites.set(runner, testSuites);
