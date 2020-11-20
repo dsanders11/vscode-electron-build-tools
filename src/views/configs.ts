@@ -29,9 +29,6 @@ export class BuildToolsConfigCollector implements ConfigCollector {
       "cachedConfigs"
     );
 
-    // Fire off an initial refresh for a better UX
-    this.refreshConfigs();
-
     const watcher = chokidar.watch(getConfigsFilePath(), {
       ignoreInitial: true,
     });
@@ -82,6 +79,9 @@ export class ElectronBuildToolsConfigsProvider
       await refreshFinished;
       this.refresh();
     });
+
+    // Fire off an initial refresh for a better UX
+    this._configCollector.refreshConfigs();
   }
 
   setActive(configName: string | null): ConfigTreeItem | undefined {
