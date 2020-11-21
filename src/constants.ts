@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+
 import * as vscode from "vscode";
 
 import { ElectronPatchesConfig } from "./types";
@@ -26,7 +28,6 @@ export const patchDirectoryPrettyNames = Object.freeze<ElectronPatchesConfig>({
   "src/electron/patches/node": "Node",
   "src/electron/patches/squirrel.mac": "squirrel.mac",
   "src/electron/patches/ReactiveObjC": "ReactiveObjC",
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   "src/electron/patches/depot_tools": "depot_tools",
 });
 
@@ -44,3 +45,14 @@ export const outputChannelName = "Electron Build Tools";
 export const contextKeyPrefix = "electron-build-tools";
 
 export const commandPrefix = "electron-build-tools";
+
+export const viewIdPrefix = "electron-build-tools";
+
+export const viewIds = Object.freeze({
+  CONFIGS: `${viewIdPrefix}:configs`,
+  DOCS: `${viewIdPrefix}:docs`,
+  ELECTRON: `${viewIdPrefix}:electron`,
+  HELP: `${viewIdPrefix}:help`,
+  PATCHES: `${viewIdPrefix}:patches`,
+  TESTS: `${viewIdPrefix}:tests`,
+});

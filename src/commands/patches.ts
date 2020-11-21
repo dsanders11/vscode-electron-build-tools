@@ -10,6 +10,7 @@ import { Octokit } from "@octokit/rest";
 import {
   buildToolsExecutable,
   commandPrefix,
+  viewIds,
   virtualDocumentScheme,
 } from "../constants";
 import {
@@ -54,7 +55,7 @@ export function registerPatchesCommands(
         const target = arg !== undefined ? (arg as any).name ?? arg : "all";
 
         const endProgress = startProgress({
-          location: { viewId: "electron-build-tools:patches" },
+          location: { viewId: viewIds.PATCHES },
         });
 
         try {

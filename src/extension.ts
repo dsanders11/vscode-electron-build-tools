@@ -10,6 +10,7 @@ import {
   buildToolsExecutable,
   commandPrefix,
   pullRequestScheme,
+  viewIds,
   virtualDocumentScheme,
 } from "./constants";
 import { TextDocumentContentProvider } from "./documentContentProvider";
@@ -114,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // Always show the help view
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(
-      "electron-build-tools:help",
+      viewIds.HELP,
       new HelpTreeDataProvider()
     )
   );
@@ -150,13 +151,10 @@ export async function activate(context: vscode.ExtensionContext) {
         electronRoot,
         patchesConfig
       );
-      const patchesView = vscode.window.createTreeView(
-        "electron-build-tools:patches",
-        {
-          showCollapseAll: true,
-          treeDataProvider: patchesProvider,
-        }
-      );
+      const patchesView = vscode.window.createTreeView(viewIds.PATCHES, {
+        showCollapseAll: true,
+        treeDataProvider: patchesProvider,
+      });
       const pullRequestFileSystemProvider = new ElectronPullRequestFileSystemProvider(
         electronRoot,
         patchesConfig
@@ -168,13 +166,13 @@ export async function activate(context: vscode.ExtensionContext) {
       // refreshing them in the background and showing that it's working
       configsCollector.onDidStartRefreshing(({ refreshFinished }) => {
         vscode.window.withProgress(
-          { location: { viewId: "electron-build-tools:configs" } },
+          { location: { viewId: viewIds.CONFIGS } },
           () => refreshFinished
         );
       });
       testsCollector.onDidStartRefreshing(({ refreshFinished }) => {
         vscode.window.withProgress(
-          { location: { viewId: "electron-build-tools:tests" } },
+          { location: { viewId: viewIds.TESTS } },
           () => refreshFinished
         );
       });
@@ -187,19 +185,19 @@ export async function activate(context: vscode.ExtensionContext) {
         ),
         diagnosticsCollection,
         vscode.window.registerTreeDataProvider(
-          "electron-build-tools:configs",
+          viewIds.CONFIGS,
           configsProvider
         ),
         patchesView,
-        vscode.window.createTreeView("electron-build-tools:docs", {
+        vscode.window.createTreeView(viewIds.DOCS, {
           showCollapseAll: true,
           treeDataProvider: new DocsTreeDataProvider(electronRoot),
         }),
         vscode.window.registerTreeDataProvider(
-          "electron-build-tools:electron",
+          viewIds.ELECTRON,
           new ElectronViewProvider(electronRoot)
         ),
-        vscode.window.createTreeView("electron-build-tools:tests", {
+        vscode.window.createTreeView(viewIds.TESTS, {
           showCollapseAll: true,
           treeDataProvider: testsProvider,
         }),
