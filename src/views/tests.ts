@@ -5,11 +5,11 @@ import {
   default as ExtensionState,
   ExtensionOperation,
 } from "../extensionState";
+import { ParsedRunnable, ParsedTestSuite, Test, TestRunner } from "../common";
 import {
   alphabetizeByLabel,
   getElectronTests,
   truncateToLength,
-  TestRunner,
 } from "../utils";
 
 export enum TestState {
@@ -18,22 +18,6 @@ export enum TestState {
   SUCCESS,
   FAILURE,
 }
-
-interface ParsedRunnable {
-  title: string;
-  fullTitle: string;
-}
-
-interface ParsedTestSuite extends ParsedRunnable {
-  file: string;
-  suites: ParsedTestSuite[];
-  tests: ParsedRunnable[];
-}
-
-export type Test = {
-  runner: TestRunner;
-  test: string;
-};
 
 function findFullPathForTest(
   suite: ParsedTestSuite,

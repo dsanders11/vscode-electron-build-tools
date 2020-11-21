@@ -2,6 +2,7 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
+import { Test } from "../common";
 import { buildToolsExecutable, commandPrefix } from "../constants";
 import {
   default as ExtensionState,
@@ -10,7 +11,6 @@ import {
 import { ElectronBuildToolsTask, runAsTask } from "../tasks";
 import { escapeStringForRegex } from "../utils";
 import {
-  Test,
   TestBaseTreeItem,
   TestCollector,
   TestRunnerTreeItem,

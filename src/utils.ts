@@ -16,6 +16,7 @@ import MarkdownIt from "markdown-it";
 import MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
 
+import { ParsedTestSuite, TestRunner } from "./common";
 import {
   buildToolsExecutable,
   commandPrefix,
@@ -42,11 +43,6 @@ export type DocSection = {
   sections: DocSection[];
   links: DocLink[];
 };
-
-export enum TestRunner {
-  MAIN = "main",
-  REMOTE = "remote",
-}
 
 export type FileInPatch = {
   file: vscode.Uri;
@@ -351,7 +347,7 @@ export async function getElectronTests(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   runner: TestRunner
-) {
+): Promise<ParsedTestSuite> {
   let debug = false; // Toggle this in debugger to debug child process
   const debuggerOption = debug ? "--inspect-brk" : "";
 
