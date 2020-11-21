@@ -135,10 +135,7 @@ export class ElectronPullRequestFileSystemProvider
     this.pullRequestFiles.set(prNumber, allFiles);
   }
 
-  watch(
-    uri: vscode.Uri,
-    options: { recursive: boolean; excludes: string[] }
-  ): vscode.Disposable {
+  watch(): vscode.Disposable {
     throw new Error("Method not implemented.");
   }
 
@@ -187,23 +184,15 @@ export class ElectronPullRequestFileSystemProvider
     }
   }
 
-  writeFile(
-    uri: vscode.Uri,
-    content: Uint8Array,
-    options: { create: boolean; overwrite: boolean }
-  ): void {
+  writeFile(): void {
     throw new Error("Method not implemented.");
   }
 
-  delete(uri: vscode.Uri, options: { recursive: boolean }): void {
+  delete(): void {
     throw new Error("Method not implemented.");
   }
 
-  rename(
-    oldUri: vscode.Uri,
-    newUri: vscode.Uri,
-    options: { overwrite: boolean }
-  ): void {
+  rename(): void {
     throw new Error("Method not implemented.");
   }
 }

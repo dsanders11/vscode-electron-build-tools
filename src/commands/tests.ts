@@ -189,7 +189,7 @@ export function registerTestCommands(
       }
     ),
     vscode.commands.registerCommand(`${commandPrefix}.showTestsDocs`, () => {
-      vscode.commands.executeCommand(
+      return vscode.commands.executeCommand(
         "markdown.showPreview",
         vscode.Uri.joinPath(electronRoot, "docs", "development", "testing.md")
       );

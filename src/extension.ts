@@ -124,7 +124,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   await Promise.all([
     setContext("ready", false),
-    setContext("build-tools-installed", await buildToolsIsInstalled),
+    setContext("build-tools-installed", buildToolsIsInstalled),
     setContext("is-electron-workspace", false),
   ]);
 

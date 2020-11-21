@@ -53,7 +53,7 @@ export type FileInPatch = {
   fileIndexB: string;
 };
 
-export async function isBuildToolsInstalled() {
+export async function isBuildToolsInstalled(): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const cp = childProcess.spawn(
       os.platform() === "win32" ? "where" : "which",
@@ -534,13 +534,10 @@ export function makeCommandUri(command: string, ...args: any[]) {
   return vscode.Uri.parse(`command:${command}?${commandArgs}`);
 }
 
-export async function setContext(
-  contextKey: string,
-  contextValue: any
-): Promise<any> {
+export async function setContext(key: string, value: any): Promise<any> {
   return await vscode.commands.executeCommand(
     "setContext",
-    `${contextKeyPrefix}:${contextKey}`,
-    contextValue
+    `${contextKeyPrefix}:${key}`,
+    value
   );
 }

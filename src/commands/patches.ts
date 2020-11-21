@@ -70,13 +70,13 @@ export function registerPatchesCommands(
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.removePullRequestPatch`,
-      async (treeItem: PullRequestTreeItem) => {
+      (treeItem: PullRequestTreeItem) => {
         patchesProvider.removePr(treeItem.pullRequest);
       }
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.showPatchedFileDiff`,
-      async (
+      (
         checkoutDirectory: vscode.Uri,
         patch: vscode.Uri,
         metadata: FileInPatch,
@@ -101,7 +101,7 @@ export function registerPatchesCommands(
           }),
         });
 
-        vscode.commands.executeCommand(
+        return vscode.commands.executeCommand(
           "vscode.diff",
           originalFile,
           patchedFile,
@@ -110,7 +110,7 @@ export function registerPatchesCommands(
       }
     ),
     vscode.commands.registerCommand(`${commandPrefix}.showPatchesDocs`, () => {
-      vscode.commands.executeCommand(
+      return vscode.commands.executeCommand(
         "markdown.showPreview",
         vscode.Uri.joinPath(electronRoot, "docs", "development", "patches.md")
       );
