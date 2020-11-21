@@ -180,7 +180,12 @@ export async function activate(context: vscode.ExtensionContext) {
       const testsProvider = new TestsTreeDataProvider(testsCollector);
       context.subscriptions.push(
         vscode.languages.registerCodeLensProvider(
-          "typescript",
+          {
+            pattern: new vscode.RelativePattern(
+              electronRoot.fsPath,
+              "{spec,spec-main}/**/*-spec.{js,ts}"
+            ),
+          },
           new TestCodeLensProvider(testsProvider)
         ),
         diagnosticsCollection,
@@ -211,7 +216,13 @@ export async function activate(context: vscode.ExtensionContext) {
           { isReadonly: true }
         ),
         vscode.languages.registerHoverProvider(
-          "markdown",
+          {
+            language: "markdown",
+            pattern: new vscode.RelativePattern(
+              electronRoot.fsPath,
+              "docs/**/*.md"
+            ),
+          },
           new DocsHoverProvider()
         ),
         vscode.languages.registerDocumentLinkProvider(
