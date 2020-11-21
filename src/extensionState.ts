@@ -40,12 +40,6 @@ class ExtensionStateTracker {
     ]);
   }
 
-  private _isOpRunning(...ops: ExtensionOperation[]) {
-    return ops.some((op: ExtensionOperation) =>
-      this._runningOperations.has(op)
-    );
-  }
-
   private async _updateState(operation: ExtensionOperation, running: boolean) {
     const ops = this._runningOperations;
     running ? ops.add(operation) : ops.delete(operation);
@@ -59,6 +53,12 @@ class ExtensionStateTracker {
     await this._updateContexts();
   }
 
+  isOperationRunning(...ops: ExtensionOperation[]) {
+    return ops.some((op: ExtensionOperation) =>
+      this._runningOperations.has(op)
+    );
+  }
+
   canRunOperation(operation: ExtensionOperation): boolean {
     // Destructure the enum so it's not so wordy in here
     const {
@@ -69,13 +69,14 @@ class ExtensionStateTracker {
       RUN_TESTS,
       SYNC,
     } = ExtensionOperation;
+    const isOpRunning = this.isOperationRunning.bind(this);
 
     switch (operation) {
       case BUILD:
-        return !this._isOpRunning(BUILD, CHANGE_CONFIG, RUN_TESTS, SYNC);
+        return !isOpRunning(BUILD, CHANGE_CONFIG, RUN_TESTS, SYNC);
 
       case CHANGE_CONFIG:
-        return !this._isOpRunning(
+        return !isOpRunning(
           BUILD,
           CHANGE_CONFIG,
           LOAD_TESTS,
@@ -85,7 +86,7 @@ class ExtensionStateTracker {
         );
 
       case LOAD_TESTS:
-        return !this._isOpRunning(
+        return !isOpRunning(
           BUILD,
           CHANGE_CONFIG,
           LOAD_TESTS,
@@ -95,13 +96,13 @@ class ExtensionStateTracker {
         );
 
       case REFRESH_PATCHES:
-        return !this._isOpRunning(CHANGE_CONFIG, REFRESH_PATCHES, SYNC);
+        return !isOpRunning(CHANGE_CONFIG, REFRESH_PATCHES, SYNC);
 
       case RUN_TESTS:
-        return !this._isOpRunning(BUILD, CHANGE_CONFIG, LOAD_TESTS, RUN_TESTS);
+        return !isOpRunning(BUILD, CHANGE_CONFIG, LOAD_TESTS, RUN_TESTS);
 
       case SYNC:
-        return !this._isOpRunning(BUILD, CHANGE_CONFIG, SYNC);
+        return !isOpRunning(BUILD, CHANGE_CONFIG, SYNC);
 
       // No default, let TypeScript error if we miss a case
     }
