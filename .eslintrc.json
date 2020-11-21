@@ -13,12 +13,8 @@
       "warn",
       {
         "selector": "property",
-        "format": ["strictCamelCase"],
-        "leadingUnderscore": "allow",
-        "filter": {
-          "regex": "^(FORCE_COLOR|NINJA_STATUS|TS_NODE_.*|ELECTRON_.*)$",
-          "match": false
-        }
+        "format": ["strictCamelCase", "UPPER_CASE"],
+        "leadingUnderscore": "allow"
       }
     ],
     "@typescript-eslint/semi": "warn",
