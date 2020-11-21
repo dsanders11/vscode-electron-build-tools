@@ -21,6 +21,7 @@ import {
   commandPrefix,
   contextKeyPrefix,
 } from "./constants";
+import Logger from "./logging";
 import { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const exec = promisify(childProcess.exec);
@@ -54,14 +55,17 @@ export type FileInPatch = {
 };
 
 export async function isBuildToolsInstalled(): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    const cp = childProcess.spawn(
-      os.platform() === "win32" ? "where" : "which",
-      [buildToolsExecutable]
-    );
-    cp.once("error", reject);
-    cp.once("close", (exitCode) => resolve(exitCode === 0));
-  });
+  const command = os.platform() === "win32" ? "where" : "which";
+  try {
+    await exec(`${command} ${buildToolsExecutable}`);
+    return true;
+  } catch (err) {
+    if (err.code === undefined) {
+      Logger.error(err);
+    }
+
+    return false;
+  }
 }
 
 export function generateSocketName() {
@@ -371,7 +375,7 @@ export async function getElectronTests(
   const scriptName = context.asAbsolutePath("out/electron/listMochaTests.js");
   const socketName = generateSocketName();
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     let result = "";
 
     const socketServer = net.createServer().listen(socketName);
@@ -390,37 +394,38 @@ export async function getElectronTests(
     });
     socketServer.once("error", reject);
 
-    const cp = childProcess.exec(
-      `${electronExe} ${debuggerOption} ${scriptName} ${socketName}`,
-      {
-        encoding: "utf8",
-        cwd: electronRoot.fsPath,
-        env: {
-          // *DO NOT* inherit process.env, it includes stuff vscode has set like ELECTRON_RUN_AS_NODE
-          TS_NODE_PROJECT: vscode.Uri.joinPath(
-            electronRoot,
-            "tsconfig.spec.json"
-          ).fsPath,
-          TS_NODE_FILES: "true", // Without this compilation fails
-          TS_NODE_TRANSPILE_ONLY: "true", // Faster
-          TS_NODE_COMPILER: "typescript-cached-transpile",
-          ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
-        },
-      }
-    );
-
-    cp.once("error", reject);
-    cp.once("exit", (exitCode) => {
-      if (exitCode !== 0) {
-        reject("Non-zero exit code");
-      } else {
-        try {
-          resolve(JSON.parse(result));
-        } catch (err) {
-          reject(err);
+    try {
+      await exec(
+        `${electronExe} ${debuggerOption} ${scriptName} ${socketName}`,
+        {
+          encoding: "utf8",
+          cwd: electronRoot.fsPath,
+          env: {
+            // *DO NOT* inherit process.env, it includes stuff vscode has set like ELECTRON_RUN_AS_NODE
+            TS_NODE_PROJECT: vscode.Uri.joinPath(
+              electronRoot,
+              "tsconfig.spec.json"
+            ).fsPath,
+            TS_NODE_FILES: "true", // Without this compilation fails
+            TS_NODE_TRANSPILE_ONLY: "true", // Faster
+            TS_NODE_COMPILER: "typescript-cached-transpile",
+            ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
+          },
         }
+      );
+
+      try {
+        resolve(JSON.parse(result));
+      } catch (err) {
+        Logger.error(err);
+        reject(err);
       }
-    });
+    } catch (err) {
+      Logger.error(err);
+      reject(err);
+    } finally {
+      socketServer.close();
+    }
   });
 }
 
