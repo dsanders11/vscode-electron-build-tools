@@ -153,20 +153,28 @@ export class ElectronTestCollector implements TestCollector {
     return testSuites;
   }
 
-  _refreshRunner(runner: TestRunner) {
+  _refreshRunner(runner: TestRunner): Promise<void> {
+    const promise = this._getTests(runner).then(() => {});
+
     this._onDidStartRefreshing.fire({
       runner,
-      refreshFinished: this._getTests(runner).then(() => {}),
+      refreshFinished: promise,
     });
+
+    return promise;
   }
 
   async refreshTestSuites(): Promise<void> {
+    const promises = [];
+
     // Only refresh runners which have already had their initial refresh
     for (const [runner, hasRefreshed] of this._initialRefreshDone.entries()) {
       if (hasRefreshed) {
-        this._refreshRunner(runner);
+        promises.push(this._refreshRunner(runner));
       }
     }
+
+    return Promise.all(promises).then(() => {});
   }
 
   async getTestSuites(runner: TestRunner): Promise<ParsedTestSuite> {
