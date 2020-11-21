@@ -170,7 +170,8 @@
       {
         "command": "electron-build-tools.test",
         "title": "Electron Build Tools: Run Tests",
-        "icon": "$(run-all)"
+        "icon": "$(run-all)",
+        "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.use-config",
