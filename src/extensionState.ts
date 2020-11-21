@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
-import { contextKeyPrefix } from "./constants";
 import Logger from "./logging";
+import { setContext } from "./utils";
 
 export enum ExtensionOperation {
   BUILD,
@@ -17,43 +17,26 @@ class ExtensionStateTracker {
   //       such as running tests. So Set() may by overly constricting here
   private readonly _runningOperations = new Set<ExtensionOperation>();
 
-  private async _setContext(
-    contextKey: string,
-    contextValue: any
-  ): Promise<any> {
-    return await vscode.commands.executeCommand(
-      "setContext",
-      `${contextKeyPrefix}:${contextKey}`,
-      contextValue
-    );
-  }
-
   private _updateContexts() {
     return Promise.all([
-      this._setContext(
-        "canBuild",
-        this.canRunOperation(ExtensionOperation.BUILD)
-      ),
-      this._setContext(
+      setContext("canBuild", this.canRunOperation(ExtensionOperation.BUILD)),
+      setContext(
         "canChangeConfig",
         this.canRunOperation(ExtensionOperation.CHANGE_CONFIG)
       ),
-      this._setContext(
+      setContext(
         "canLoadTests",
         this.canRunOperation(ExtensionOperation.LOAD_TESTS)
       ),
-      this._setContext(
+      setContext(
         "canRefreshPatches",
         this.canRunOperation(ExtensionOperation.REFRESH_PATCHES)
       ),
-      this._setContext(
+      setContext(
         "canRunTests",
         this.canRunOperation(ExtensionOperation.RUN_TESTS)
       ),
-      this._setContext(
-        "canSync",
-        this.canRunOperation(ExtensionOperation.SYNC)
-      ),
+      setContext("canSync", this.canRunOperation(ExtensionOperation.SYNC)),
     ]);
   }
 

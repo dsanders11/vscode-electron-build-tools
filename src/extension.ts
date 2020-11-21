@@ -25,6 +25,7 @@ import {
   findElectronRoot,
   getPatchesConfigFile,
   isBuildToolsInstalled,
+  setContext,
 } from "./utils";
 import {
   BuildToolsConfigCollector,
@@ -122,38 +123,18 @@ export async function activate(context: vscode.ExtensionContext) {
   const buildToolsIsInstalled = await isBuildToolsInstalled();
 
   await Promise.all([
-    vscode.commands.executeCommand(
-      "setContext",
-      "electron-build-tools:ready",
-      false
-    ),
-    vscode.commands.executeCommand(
-      "setContext",
-      "electron-build-tools:build-tools-installed",
-      await buildToolsIsInstalled
-    ),
-    vscode.commands.executeCommand(
-      "setContext",
-      "electron-build-tools:is-electron-workspace",
-      false
-    ),
+    setContext("ready", false),
+    setContext("build-tools-installed", await buildToolsIsInstalled),
+    setContext("is-electron-workspace", false),
   ]);
 
   if (buildToolsIsInstalled && workspaceFolders) {
     const electronRoot = await findElectronRoot(workspaceFolders[0]);
 
-    await vscode.commands.executeCommand(
-      "setContext",
-      "electron-build-tools:is-electron-workspace",
-      electronRoot !== undefined
-    );
+    setContext("is-electron-workspace", electronRoot !== undefined);
 
     if (electronRoot !== undefined) {
-      vscode.commands.executeCommand(
-        "setContext",
-        "electron-build-tools:active",
-        true
-      );
+      setContext("active", true);
       ExtensionState.setInitialState();
 
       const diagnosticsCollection = vscode.languages.createDiagnosticCollection(
@@ -300,11 +281,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   }
 
-  vscode.commands.executeCommand(
-    "setContext",
-    "electron-build-tools:ready",
-    true
-  );
+  setContext("ready", true);
 
   return result;
 }

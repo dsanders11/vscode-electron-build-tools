@@ -16,7 +16,11 @@ import MarkdownIt from "markdown-it";
 import MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
 
-import { buildToolsExecutable, commandPrefix } from "./constants";
+import {
+  buildToolsExecutable,
+  commandPrefix,
+  contextKeyPrefix,
+} from "./constants";
 import { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const exec = promisify(childProcess.exec);
@@ -528,4 +532,15 @@ export async function findElectronRoot(
 export function makeCommandUri(command: string, ...args: any[]) {
   const commandArgs = encodeURIComponent(JSON.stringify(args));
   return vscode.Uri.parse(`command:${command}?${commandArgs}`);
+}
+
+export async function setContext(
+  contextKey: string,
+  contextValue: any
+): Promise<any> {
+  return await vscode.commands.executeCommand(
+    "setContext",
+    `${contextKeyPrefix}:${contextKey}`,
+    contextValue
+  );
 }
