@@ -49,71 +49,44 @@ export function registerConfigsCommands(
         const selected = await vscode.window.showQuickPick(configs);
 
         if (selected) {
-          // Do an optimistic update for snappier UI
-          configsProvider.setActive(selected);
-
-          childProcess.exec(
-            `${buildToolsExecutable} use ${selected}`,
-            {
-              encoding: "utf8",
-            },
-            (error, stdout) => {
-              if (error ?? stdout.trim() !== `Now using config ${selected}`) {
-                vscode.window.showErrorMessage(
-                  "Failed to set active Electron build-tools config"
-                );
-                configsProvider.setActive(null);
-                configsProvider.refresh();
-              }
-            }
+          await vscode.commands.executeCommand(
+            `${commandPrefix}.use-config`,
+            selected
           );
         }
       }
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.remove-config`,
-      (config: ConfigTreeItem) => {
-        childProcess.exec(
-          `${buildToolsExecutable} remove ${config.label}`,
-          {
-            encoding: "utf8",
-          },
-          (error, stdout, stderr) => {
-            if (error ?? stdout.trim() !== `Removed config ${config.label}`) {
-              vscode.window.showErrorMessage(
-                `Failed to remove config: ${stderr.trim()}`
-              );
-            } else {
-              // TBD - This isn't very noticeable
-              vscode.window.setStatusBarMessage("Removed config");
-              configsProvider.refresh();
-            }
-          }
-        );
+      async (config: ConfigTreeItem) => {
+        try {
+          await exec(`${buildToolsExecutable} remove ${config.label}`);
+
+          // TBD - This isn't very noticeable
+          vscode.window.setStatusBarMessage("Removed config");
+        } catch (err) {
+          Logger.error(err);
+          vscode.window.showErrorMessage(
+            `Failed to remove config: ${err.stderr.trim()}`
+          );
+          configsProvider.refresh();
+        }
       }
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.sanitize-config`,
-      (config: ConfigTreeItem) => {
-        childProcess.exec(
-          `${buildToolsExecutable} sanitize-config ${config.label}`,
-          {
-            encoding: "utf8",
-          },
-          (error, stdout, stderr) => {
-            if (
-              error ||
-              stdout.trim() !== `SUCCESS Sanitized contents of ${config.label}`
-            ) {
-              vscode.window.showErrorMessage(
-                `Failed to sanitize config: ${stderr.trim()}`
-              );
-            } else {
-              // TBD - This isn't very noticeable
-              vscode.window.setStatusBarMessage("Sanitized config");
-            }
-          }
-        );
+      async (config: ConfigTreeItem) => {
+        try {
+          await exec(`${buildToolsExecutable} sanitize-config ${config.label}`);
+
+          // TBD - This isn't very noticeable
+          vscode.window.setStatusBarMessage("Sanitized config");
+        } catch (err) {
+          Logger.error(err);
+          vscode.window.showErrorMessage(
+            `Failed to sanitize config: ${err.stderr.trim()}`
+          );
+        }
       }
     ),
     ExtensionState.registerExtensionOperationCommand(
@@ -124,26 +97,16 @@ export function registerConfigsCommands(
           "Can't change configs, other work in-progress"
         );
       },
-      async (config: ConfigTreeItem) => {
-        // Do an optimistic update for snappier UI
-        configsProvider.setActive(config.label);
+      async (treeItemOrName: ConfigTreeItem | string) => {
+        const configName = (treeItemOrName as any).label ?? treeItemOrName;
 
-        let result: Error | boolean;
+        // Do an optimistic update for snappier UI
+        configsProvider.setActive(configName);
 
         try {
-          const { stdout } = await exec(
-            `${buildToolsExecutable} use ${config.label}`,
-            {
-              encoding: "utf8",
-            }
-          );
-
-          result = stdout.trim() === `Now using config ${config.label}`;
+          await exec(`${buildToolsExecutable} use ${configName}`);
         } catch (err) {
-          result = err;
-        }
-
-        if (result !== true) {
+          Logger.error(err);
           vscode.window.showErrorMessage(
             "Failed to set active Electron build-tools config"
           );
