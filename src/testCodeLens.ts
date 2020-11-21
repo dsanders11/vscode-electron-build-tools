@@ -11,7 +11,7 @@ export class TestCodeLensProvider implements vscode.CodeLensProvider {
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[]> {
     const codeLenses = [];
-    const regex = /^.*\.?it\(.*['"](.+)['"],.*$/gm;
+    const regex = /^.*\.?(?:describe|it)\(\s*['"](.+)['"]\s*,.*$/gm;
 
     for (const match of document.getText().matchAll(regex)) {
       const line = document.lineAt(document.positionAt(match.index!).line);
