@@ -1,6 +1,7 @@
 import * as childProcess from "child_process";
 import * as path from "path";
 import * as querystring from "querystring";
+import { promisify } from "util";
 
 import * as vscode from "vscode";
 
@@ -15,14 +16,17 @@ import {
   default as ExtensionState,
   ExtensionOperation,
 } from "../extensionState";
+import Logger from "../logging";
 import { ElectronPullRequestFileSystemProvider } from "../pullRequestFileSystemProvider";
-import { FileInPatch } from "../utils";
+import { FileInPatch, startProgress } from "../utils";
 import {
   ElectronPatchesProvider,
   Patch,
   PatchDirectory,
   PullRequestTreeItem,
 } from "../views/patches";
+
+const exec = promisify(childProcess.exec);
 
 export function registerPatchesCommands(
   context: vscode.ExtensionContext,
@@ -46,26 +50,25 @@ export function registerPatchesCommands(
           "Can't refresh patches, other work in-progress"
         );
       },
-      (arg: PatchDirectory | string) => {
-        const target = arg instanceof PatchDirectory ? arg.name : arg;
+      async (arg: PatchDirectory | string | undefined) => {
+        const target = arg !== undefined ? (arg as any).name ?? arg : "all";
 
-        return new Promise((resolve, reject) => {
-          const cp = childProcess.exec(
-            `${buildToolsExecutable} patches ${target || "all"}`
-          );
-
-          cp.once("error", (err) => reject(err));
-          cp.once("exit", (code) => {
-            if (code !== 0) {
-              vscode.window.showErrorMessage("Failed to refresh patches");
-            } else {
-              // TBD - This isn't very noticeable
-              vscode.window.setStatusBarMessage("Refreshed patches");
-              patchesProvider.refresh();
-              resolve();
-            }
-          });
+        const endProgress = startProgress({
+          location: { viewId: "electron-build-tools:patches" },
         });
+
+        try {
+          await exec(`${buildToolsExecutable} patches ${target}`);
+
+          // TBD - This isn't very noticeable
+          vscode.window.setStatusBarMessage("Refreshed patches");
+          patchesProvider.refresh();
+        } catch (err) {
+          Logger.error(err);
+          vscode.window.showErrorMessage("Failed to refresh patches");
+        } finally {
+          endProgress();
+        }
       }
     ),
     vscode.commands.registerCommand(

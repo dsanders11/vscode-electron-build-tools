@@ -541,3 +541,15 @@ export async function setContext(key: string, value: any): Promise<any> {
     value
   );
 }
+
+export function startProgress(options: vscode.ProgressOptions) {
+  let resolver: (value?: unknown) => void;
+
+  const promise = new Promise((resolve) => {
+    resolver = resolve;
+  });
+
+  vscode.window.withProgress(options, () => promise);
+
+  return () => resolver();
+}
