@@ -128,7 +128,7 @@ class ExtensionStateTracker {
   registerExtensionOperationCommand(
     operation: ExtensionOperation,
     command: string,
-    operationDeniedGuard: () => void,
+    operationDeniedCallback: () => void,
     callback: (...args: any[]) => any,
     thisArg?: any
   ): vscode.Disposable {
@@ -136,7 +136,7 @@ class ExtensionStateTracker {
       command,
       (...args: any[]): any => {
         if (!this.canRunOperation(operation)) {
-          return operationDeniedGuard();
+          return operationDeniedCallback();
         }
 
         return this.runOperation(operation, () => callback(...args));
