@@ -110,19 +110,29 @@ class ExtensionStateTracker {
 
   async runOperation<T>(
     operation: ExtensionOperation,
-    workFn: () => Promise<T> | T
+    workFn: () => Promise<T> | T,
+    runOnlyWorkFn: boolean = false
   ): Promise<T> {
-    if (!this.canRunOperation(operation)) {
-      Logger.error(`ExtensionState.runOperation denied operation ${operation}`);
-      throw new Error("Can't run operation");
-    }
-
-    await this._updateState(operation, true);
-
-    try {
+    // TODO - This is a short-circuit to get around reentrancy issues.
+    //        In future VS Code versions, AsyncLocalStorage should be
+    //        available, consider using that to allow for reentrancy
+    if (runOnlyWorkFn) {
       return await workFn();
-    } finally {
-      await this._updateState(operation, false);
+    } else {
+      if (!this.canRunOperation(operation)) {
+        Logger.error(
+          `ExtensionState.runOperation denied operation ${operation}`
+        );
+        throw new Error("Can't run operation");
+      }
+
+      await this._updateState(operation, true);
+
+      try {
+        return await workFn();
+      } finally {
+        await this._updateState(operation, false);
+      }
     }
   }
 

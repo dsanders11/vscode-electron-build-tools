@@ -113,13 +113,9 @@ export class ElectronTestCollector implements TestCollector {
   async _getTests(runner: TestRunner) {
     const testSuites = await ExtensionState.runOperation(
       ExtensionOperation.LOAD_TESTS,
-      () => {
-        return getElectronTests(
-          this._extensionContext,
-          this._electronRoot,
-          runner
-        ) as Promise<ParsedTestSuite>;
-      }
+      () =>
+        getElectronTests(this._extensionContext, this._electronRoot, runner),
+      ExtensionState.isOperationRunning(ExtensionOperation.LOAD_TESTS)
     );
 
     // Store for future use
