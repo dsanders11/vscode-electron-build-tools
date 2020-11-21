@@ -169,17 +169,13 @@ export async function activate(context: vscode.ExtensionContext) {
       configsCollector.onDidStartRefreshing(({ refreshFinished }) => {
         vscode.window.withProgress(
           { location: { viewId: "electron-build-tools:configs" } },
-          async () => {
-            await refreshFinished;
-          }
+          () => refreshFinished
         );
       });
       testsCollector.onDidStartRefreshing(({ refreshFinished }) => {
         vscode.window.withProgress(
           { location: { viewId: "electron-build-tools:tests" } },
-          async () => {
-            await refreshFinished;
-          }
+          () => refreshFinished
         );
       });
 
