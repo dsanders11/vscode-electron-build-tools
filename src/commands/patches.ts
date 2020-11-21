@@ -6,7 +6,11 @@ import * as vscode from "vscode";
 
 import { Octokit } from "@octokit/rest";
 
-import { buildToolsExecutable, virtualDocumentScheme } from "../constants";
+import {
+  buildToolsExecutable,
+  commandPrefix,
+  virtualDocumentScheme,
+} from "../constants";
 import {
   default as ExtensionState,
   ExtensionOperation,
@@ -29,14 +33,14 @@ export function registerPatchesCommands(
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "electron-build-tools.openPatch",
+      `${commandPrefix}.openPatch`,
       (patchTreeItem: Patch) => {
         return vscode.commands.executeCommand("vscode.open", patchTreeItem.uri);
       }
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.REFRESH_PATCHES,
-      "electron-build-tools.refreshPatches",
+      `${commandPrefix}.refreshPatches`,
       () => {
         vscode.window.showErrorMessage(
           "Can't refresh patches, other work in-progress"
@@ -65,13 +69,13 @@ export function registerPatchesCommands(
       }
     ),
     vscode.commands.registerCommand(
-      "electron-build-tools.removePullRequestPatch",
+      `${commandPrefix}.removePullRequestPatch`,
       async (treeItem: PullRequestTreeItem) => {
         patchesProvider.removePr(treeItem.pullRequest);
       }
     ),
     vscode.commands.registerCommand(
-      "electron-build-tools.showPatchedFileDiff",
+      `${commandPrefix}.showPatchedFileDiff`,
       async (
         checkoutDirectory: vscode.Uri,
         patch: vscode.Uri,
@@ -105,17 +109,14 @@ export function registerPatchesCommands(
         );
       }
     ),
+    vscode.commands.registerCommand(`${commandPrefix}.showPatchesDocs`, () => {
+      vscode.commands.executeCommand(
+        "markdown.showPreview",
+        vscode.Uri.joinPath(electronRoot, "docs", "development", "patches.md")
+      );
+    }),
     vscode.commands.registerCommand(
-      "electron-build-tools.showPatchesDocs",
-      () => {
-        vscode.commands.executeCommand(
-          "markdown.showPreview",
-          vscode.Uri.joinPath(electronRoot, "docs", "development", "patches.md")
-        );
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.showPatchOverview",
+      `${commandPrefix}.showPatchOverview`,
       (patch: vscode.Uri) => {
         return vscode.commands.executeCommand(
           "markdown.showPreview",
@@ -130,7 +131,7 @@ export function registerPatchesCommands(
       }
     ),
     vscode.commands.registerCommand(
-      "electron-build-tools.viewPullRequestPatch",
+      `${commandPrefix}.viewPullRequestPatch`,
       async () => {
         const prNumber = await vscode.window.showInputBox({
           prompt: "Enter the pull request number",

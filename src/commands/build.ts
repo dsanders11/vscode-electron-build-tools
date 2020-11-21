@@ -4,6 +4,7 @@ import {
   blankConfigEnumValue,
   buildTargets,
   buildToolsExecutable,
+  commandPrefix,
 } from "../constants";
 import {
   default as ExtensionState,
@@ -17,7 +18,7 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.BUILD,
-      "electron-build-tools.build",
+      `${commandPrefix}.build`,
       () => {
         vscode.window.showErrorMessage("Can't build, other work in-progress");
       },

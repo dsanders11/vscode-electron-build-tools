@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 import * as chokidar from "chokidar";
 
+import { commandPrefix } from "../constants";
 import { getConfigs, getConfigsFilePath } from "../utils";
 
 export type OnDidStartRefreshing = {
@@ -158,7 +159,7 @@ export class ConfigTreeItem extends vscode.TreeItem {
 
     this.iconPath = new vscode.ThemeIcon("file-code");
     this.command = {
-      command: "electron-build-tools.openConfig",
+      command: `${commandPrefix}.openConfig`,
       arguments: [label],
       title: "Open Config",
     };

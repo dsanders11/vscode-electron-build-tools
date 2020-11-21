@@ -2,7 +2,7 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import { buildToolsExecutable } from "../constants";
+import { buildToolsExecutable, commandPrefix } from "../constants";
 import {
   default as ExtensionState,
   ExtensionOperation,
@@ -26,14 +26,14 @@ export function registerTestCommands(
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "electron-build-tools.openTestFile",
+      `${commandPrefix}.openTestFile`,
       (testOrSuite: TestBaseTreeItem) => {
         return vscode.commands.executeCommand("vscode.open", testOrSuite.uri);
       }
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.LOAD_TESTS,
-      "electron-build-tools.refreshTests",
+      `${commandPrefix}.refreshTests`,
       () => {
         vscode.window.showErrorMessage(
           "Can't refresh tests, other work in-progress"
@@ -43,7 +43,7 @@ export function registerTestCommands(
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.RUN_TESTS,
-      "electron-build-tools.runTest",
+      `${commandPrefix}.runTest`,
       () => {
         vscode.window.showErrorMessage(
           "Can't run test, other work in-progress"
@@ -96,7 +96,7 @@ export function registerTestCommands(
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.RUN_TESTS,
-      "electron-build-tools.runTestFile",
+      `${commandPrefix}.runTestFile`,
       () => {
         vscode.window.showErrorMessage(
           "Can't run tests, other work in-progress"
@@ -132,7 +132,7 @@ export function registerTestCommands(
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.RUN_TESTS,
-      "electron-build-tools.runTestRunner",
+      `${commandPrefix}.runTestRunner`,
       () => {
         vscode.window.showErrorMessage(
           "Can't run tests, other work in-progress"
@@ -154,7 +154,7 @@ export function registerTestCommands(
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.RUN_TESTS,
-      "electron-build-tools.runTestSuite",
+      `${commandPrefix}.runTestSuite`,
       () => {
         vscode.window.showErrorMessage(
           "Can't run tests, other work in-progress"
@@ -188,18 +188,15 @@ export function registerTestCommands(
         await task.finished;
       }
     ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.showTestsDocs",
-      () => {
-        vscode.commands.executeCommand(
-          "markdown.showPreview",
-          vscode.Uri.joinPath(electronRoot, "docs", "development", "testing.md")
-        );
-      }
-    ),
+    vscode.commands.registerCommand(`${commandPrefix}.showTestsDocs`, () => {
+      vscode.commands.executeCommand(
+        "markdown.showPreview",
+        vscode.Uri.joinPath(electronRoot, "docs", "development", "testing.md")
+      );
+    }),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.RUN_TESTS,
-      "electron-build-tools.test",
+      `${commandPrefix}.test`,
       () => {
         vscode.window.showErrorMessage(
           "Can't run tests, other work in-progress"

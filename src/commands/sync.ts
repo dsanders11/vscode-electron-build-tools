@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { buildToolsExecutable } from "../constants";
+import { buildToolsExecutable, commandPrefix } from "../constants";
 import {
   default as ExtensionState,
   ExtensionOperation,
@@ -130,7 +130,7 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.SYNC,
-      "electron-build-tools.sync",
+      `${commandPrefix}.sync`,
       () => {
         vscode.window.showErrorMessage("Can't sync, other work in-progress");
       },
@@ -158,7 +158,7 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
                 .then((value) => {
                   if (value && value === confirm) {
                     vscode.commands.executeCommand(
-                      "electron-build-tools.sync",
+                      `${commandPrefix}.sync`,
                       true
                     );
                   }
@@ -184,8 +184,8 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
         }
       }
     ),
-    vscode.commands.registerCommand("electron-build-tools.sync.force", () => {
-      return vscode.commands.executeCommand("electron-build-tools.sync", true);
+    vscode.commands.registerCommand(`${commandPrefix}.sync.force`, () => {
+      return vscode.commands.executeCommand(`${commandPrefix}.sync`, true);
     })
   );
 }

@@ -2,7 +2,11 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import { patchDirectoryPrettyNames, pullRequestScheme } from "../constants";
+import {
+  commandPrefix,
+  patchDirectoryPrettyNames,
+  pullRequestScheme,
+} from "../constants";
 import { ElectronPatchesConfig } from "../types";
 import {
   ensurePosixSeparators,
@@ -199,7 +203,7 @@ class PatchOverview extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon("preview");
 
     this.command = {
-      command: "electron-build-tools.showPatchOverview",
+      command: `${commandPrefix}.showPatchOverview`,
       arguments: [uri],
       title: "Show Patch Overview",
     };
@@ -221,7 +225,7 @@ class FileInPatchTreeItem extends vscode.TreeItem {
     this.tooltip = this.label;
 
     this.command = {
-      command: "electron-build-tools.showPatchedFileDiff",
+      command: `${commandPrefix}.showPatchedFileDiff`,
       arguments: [checkoutDirectory, patch, metadata, this.label],
       title: "Show Patched File Diff",
     };

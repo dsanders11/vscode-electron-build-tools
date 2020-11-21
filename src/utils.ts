@@ -16,7 +16,7 @@ import MarkdownIt from "markdown-it";
 import MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
 
-import { buildToolsExecutable } from "./constants";
+import { buildToolsExecutable, commandPrefix } from "./constants";
 import { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const exec = promisify(childProcess.exec);
@@ -362,7 +362,7 @@ export async function getElectronTests(
   );
 
   const electronExe = await vscode.commands.executeCommand<string>(
-    "electron-build-tools.show.exe"
+    `${commandPrefix}.show.exe`
   )!;
   const scriptName = context.asAbsolutePath("out/electron/listMochaTests.js");
   const socketName = generateSocketName();

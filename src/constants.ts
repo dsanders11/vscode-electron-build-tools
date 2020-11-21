@@ -42,3 +42,5 @@ export const repositoryUrl =
 export const outputChannelName = "Electron Build Tools";
 
 export const contextKeyPrefix = "electron-build-tools";
+
+export const commandPrefix = "electron-build-tools";

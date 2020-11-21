@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import { commandPrefix } from "./constants";
 import { TestsTreeDataProvider } from "./views/tests";
 
 export class TestCodeLensProvider implements vscode.CodeLensProvider {
@@ -29,7 +30,7 @@ export class TestCodeLensProvider implements vscode.CodeLensProvider {
             new vscode.CodeLens(range, {
               title: "Electron Build Tools: Run Test",
               tooltip: "Run only this test",
-              command: "electron-build-tools.runTest",
+              command: `${commandPrefix}.runTest`,
               arguments: [testName],
             })
           );

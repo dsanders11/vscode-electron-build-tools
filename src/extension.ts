@@ -8,6 +8,7 @@ import MarkdownItEmoji from "markdown-it-emoji";
 
 import {
   buildToolsExecutable,
+  commandPrefix,
   pullRequestScheme,
   virtualDocumentScheme,
 } from "./constants";
@@ -71,23 +72,17 @@ function registerElectronBuildToolsCommands(
   registerSyncCommands(context);
 
   context.subscriptions.push(
+    vscode.commands.registerCommand(`${commandPrefix}.show.exe`, async () => {
+      const { stdout } = await exec(`${buildToolsExecutable} show exe`, {
+        encoding: "utf8",
+      });
+      return stdout.trim();
+    }),
+    vscode.commands.registerCommand(`${commandPrefix}.show.goma`, async () => {
+      await exec(`${buildToolsExecutable} show goma`);
+    }),
     vscode.commands.registerCommand(
-      "electron-build-tools.show.exe",
-      async () => {
-        const { stdout } = await exec(`${buildToolsExecutable} show exe`, {
-          encoding: "utf8",
-        });
-        return stdout.trim();
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.show.goma",
-      async () => {
-        await exec(`${buildToolsExecutable} show goma`);
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.show.outdir",
+      `${commandPrefix}.show.outdir`,
       async () => {
         const { stdout } = await exec(`${buildToolsExecutable} show outdir`, {
           encoding: "utf8",
@@ -95,24 +90,18 @@ function registerElectronBuildToolsCommands(
         return stdout.trim();
       }
     ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.show.root",
-      async () => {
-        const { stdout } = await exec(`${buildToolsExecutable} show root`, {
-          encoding: "utf8",
-        });
-        return stdout.trim();
-      }
-    ),
-    vscode.commands.registerCommand(
-      "electron-build-tools.show.src",
-      async () => {
-        const { stdout } = await exec(`${buildToolsExecutable} show src`, {
-          encoding: "utf8",
-        });
-        return stdout.trim();
-      }
-    )
+    vscode.commands.registerCommand(`${commandPrefix}.show.root`, async () => {
+      const { stdout } = await exec(`${buildToolsExecutable} show root`, {
+        encoding: "utf8",
+      });
+      return stdout.trim();
+    }),
+    vscode.commands.registerCommand(`${commandPrefix}.show.src`, async () => {
+      const { stdout } = await exec(`${buildToolsExecutable} show src`, {
+        encoding: "utf8",
+      });
+      return stdout.trim();
+    })
   );
 }
 

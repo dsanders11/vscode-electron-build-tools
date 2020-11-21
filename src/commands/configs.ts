@@ -4,7 +4,7 @@ import { promisify } from "util";
 
 import * as vscode from "vscode";
 
-import { buildToolsExecutable } from "../constants";
+import { buildToolsExecutable, commandPrefix } from "../constants";
 import {
   default as ExtensionState,
   ExtensionOperation,
@@ -24,7 +24,7 @@ export function registerConfigsCommands(
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "electron-build-tools.openConfig",
+      `${commandPrefix}.openConfig`,
       async (configName: string) => {
         const configFilePath = path.join(
           getConfigsFilePath(),
@@ -43,7 +43,7 @@ export function registerConfigsCommands(
       }
     ),
     vscode.commands.registerCommand(
-      "electron-build-tools.use-config.quick-pick",
+      `${commandPrefix}.use-config.quick-pick`,
       async () => {
         const { configs } = await getConfigs();
         const selected = await vscode.window.showQuickPick(configs);
@@ -71,7 +71,7 @@ export function registerConfigsCommands(
       }
     ),
     vscode.commands.registerCommand(
-      "electron-build-tools.remove-config",
+      `${commandPrefix}.remove-config`,
       (config: ConfigTreeItem) => {
         childProcess.exec(
           `${buildToolsExecutable} remove ${config.label}`,
@@ -93,7 +93,7 @@ export function registerConfigsCommands(
       }
     ),
     vscode.commands.registerCommand(
-      "electron-build-tools.sanitize-config",
+      `${commandPrefix}.sanitize-config`,
       (config: ConfigTreeItem) => {
         childProcess.exec(
           `${buildToolsExecutable} sanitize-config ${config.label}`,
@@ -118,7 +118,7 @@ export function registerConfigsCommands(
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.CHANGE_CONFIG,
-      "electron-build-tools.use-config",
+      `${commandPrefix}.use-config`,
       () => {
         vscode.window.showErrorMessage(
           "Can't change configs, other work in-progress"
