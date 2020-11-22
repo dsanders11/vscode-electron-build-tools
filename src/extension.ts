@@ -51,6 +51,7 @@ import { registerPatchesCommands } from "./commands/patches";
 import { registerSyncCommands } from "./commands/sync";
 import { registerBuildCommands } from "./commands/build";
 import { DocsLinkCompletionProvider } from "./docsLinkCompletionProvider";
+import { registerDocsCommands } from "./commands/docs";
 
 const exec = promisify(childProcess.exec);
 
@@ -256,6 +257,7 @@ export async function activate(context: vscode.ExtensionContext) {
         testsCollector,
         pullRequestFileSystemProvider
       );
+      registerDocsCommands(context, linkableProvider);
       registerHelperCommands(context);
 
       context.subscriptions.push(

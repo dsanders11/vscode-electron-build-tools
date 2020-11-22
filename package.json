@@ -137,6 +137,17 @@
         "title": "Sanitize Config"
       },
       {
+        "command": "electron-build-tools.searchDocs",
+        "title": "Electron Build Tools: Search Docs",
+        "enablement": "electron-build-tools:ready"
+      },
+      {
+        "command": "electron-build-tools.searchDocs-icon",
+        "title": "Search Docs",
+        "icon": "$(search)",
+        "enablement": "electron-build-tools:ready"
+      },
+      {
         "command": "electron-build-tools.showPatchedFileDiff",
         "title": "Show Patched File Diff"
       },
@@ -377,6 +388,14 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.searchDocs",
+          "when": "electron-build-tools:active"
+        },
+        {
+          "command": "electron-build-tools.searchDocs-icon",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.show.goma",
           "when": "electron-build-tools:build-tools-installed"
         },
@@ -529,6 +548,11 @@
         {
           "command": "electron-build-tools.showTestsDocs",
           "when": "view == electron-build-tools:tests",
+          "group": "navigation"
+        },
+        {
+          "command": "electron-build-tools.searchDocs-icon",
+          "when": "view == electron-build-tools:docs",
           "group": "navigation"
         }
       ]
