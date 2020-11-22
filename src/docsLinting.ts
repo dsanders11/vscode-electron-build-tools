@@ -27,19 +27,22 @@ function getLinksInDocument(document: vscode.TextDocument) {
 
   for (const [matchType, match] of matches) {
     const linkUri = match[matchType === "inline" ? 5 : 3].trim();
-    const matchIdx = match.index || 0;
-    const linkRange = new vscode.Range(
-      document.positionAt(matchIdx + match[1].length),
-      document.positionAt(matchIdx + match[1].length + linkUri.length)
-    );
-    let uri = vscode.Uri.parse(linkUri);
 
-    if (uri.scheme === "file") {
-      // Use a fake scheme
-      uri = vscode.Uri.parse(`electron-docs:${linkUri}`);
+    if (linkUri) {
+      const matchIdx = match.index || 0;
+      const linkRange = new vscode.Range(
+        document.positionAt(matchIdx + match[1].length),
+        document.positionAt(matchIdx + match[1].length + linkUri.length)
+      );
+      let uri = vscode.Uri.parse(linkUri);
+
+      if (uri.scheme === "file") {
+        // Use a fake scheme
+        uri = vscode.Uri.parse(`electron-docs:${linkUri}`);
+      }
+
+      links.push(new vscode.DocumentLink(linkRange, uri));
     }
-
-    links.push(new vscode.DocumentLink(linkRange, uri));
   }
 
   return links;
