@@ -554,3 +554,25 @@ export function startProgress(options: vscode.ProgressOptions) {
 
   return () => resolver();
 }
+
+export class OptionalFeature extends vscode.Disposable {
+  private _disposable: vscode.Disposable | undefined;
+
+  constructor(
+    configSection: string,
+    setupFeature: () => vscode.Disposable | undefined
+  ) {
+    super(() => {
+      this._disposable?.dispose();
+    });
+
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration(configSection)) {
+        this._disposable?.dispose();
+        this._disposable = setupFeature();
+      }
+    });
+
+    this._disposable = setupFeature(); // Initial setup of the feature
+  }
+}

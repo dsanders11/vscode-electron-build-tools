@@ -26,6 +26,7 @@ import {
   findElectronRoot,
   getPatchesConfigFile,
   isBuildToolsInstalled,
+  OptionalFeature,
   setContext,
 } from "./utils";
 import {
@@ -249,37 +250,22 @@ export async function activate(context: vscode.ExtensionContext) {
       const linkableProvider = new DocsLinkablesProvider(electronRoot);
       context.subscriptions.push(linkableProvider);
 
-      let lintDocsDisposable: vscode.Disposable | undefined;
+      context.subscriptions.push(
+        new OptionalFeature("electronBuildTools.docs", () => {
+          const shouldLintDocs =
+            vscode.workspace
+              .getConfiguration("electronBuildTools.docs")
+              .get<boolean>("lintRelativeLinks") === true;
 
-      const _setupDocsLinting = () => {
-        const shouldLintDocs =
-          vscode.workspace
-            .getConfiguration("electronBuildTools.docs")
-            .get<boolean>("lintRelativeLinks") === true;
-
-        if (shouldLintDocs) {
-          Logger.info("Docs relative link linting enabled");
-          lintDocsDisposable = setupDocsLinting(
-            linkableProvider,
-            diagnosticsCollection
-          );
-          context.subscriptions.push(lintDocsDisposable);
-        } else {
-          Logger.info("Docs relative link linting disabled");
-        }
-      };
-
-      _setupDocsLinting();
-
-      vscode.workspace.onDidChangeConfiguration((event) => {
-        if (event.affectsConfiguration("electronBuildTools.docs")) {
-          // Docs linting may have changed state, set it up again
-          lintDocsDisposable?.dispose();
-          lintDocsDisposable = undefined;
-
-          _setupDocsLinting();
-        }
-      });
+          if (shouldLintDocs) {
+            Logger.info("Docs relative link linting enabled");
+            return setupDocsLinting(linkableProvider, diagnosticsCollection);
+          } else {
+            // TODO - Clear existing diagnostics so they don't linger
+            Logger.info("Docs relative link linting disabled");
+          }
+        })
+      );
 
       // Render emojis in Markdown
       result.extendMarkdownIt = (md: MarkdownIt) => md.use(MarkdownItEmoji);
