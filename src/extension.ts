@@ -21,6 +21,7 @@ import ExtensionState from "./extensionState";
 import { GnFormattingProvider } from "./gnFormattingProvider";
 import { GnLinkProvider } from "./gnLinkProvider";
 import Logger from "./logging";
+import { SnippetProvider } from "./snippetProvider";
 import { TestCodeLensProvider } from "./testCodeLens";
 import {
   findElectronRoot,
@@ -224,6 +225,11 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerDocumentFormattingEditProvider(
           { language: "gn" },
           new GnFormattingProvider(electronRoot)
+        ),
+        vscode.languages.registerCompletionItemProvider(
+          SnippetProvider.DOCUMENT_SELECTOR,
+          new SnippetProvider(),
+          ...SnippetProvider.TRIGGER_CHARACTERS
         )
       );
       registerElectronBuildToolsCommands(
