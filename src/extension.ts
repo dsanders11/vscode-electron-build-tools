@@ -239,47 +239,45 @@ export async function activate(context: vscode.ExtensionContext) {
       registerHelperCommands(context);
 
       context.subscriptions.push(
-        new OptionalFeature("electronBuildTools.tests", () => {
-          const codeLensEnabled =
-            vscode.workspace
-              .getConfiguration("electronBuildTools.tests")
-              .get<boolean>("runTestCodeLens") === true;
-
-          if (codeLensEnabled) {
-            Logger.info("Tests code lens enabled");
-            return vscode.languages.registerCodeLensProvider(
-              {
-                pattern: new vscode.RelativePattern(
-                  electronRoot.fsPath,
-                  "{spec,spec-main}/**/*-spec.{js,ts}"
-                ),
-              },
-              new TestCodeLensProvider(testsProvider)
-            );
-          } else {
-            Logger.info("Tests code lens disabled");
+        new OptionalFeature(
+          "electronBuildTools.tests",
+          "runTestCodeLens",
+          (codeLensEnabled: boolean) => {
+            if (codeLensEnabled) {
+              Logger.info("Tests code lens enabled");
+              return vscode.languages.registerCodeLensProvider(
+                {
+                  pattern: new vscode.RelativePattern(
+                    electronRoot.fsPath,
+                    "{spec,spec-main}/**/*-spec.{js,ts}"
+                  ),
+                },
+                new TestCodeLensProvider(testsProvider)
+              );
+            } else {
+              Logger.info("Tests code lens disabled");
+            }
           }
-        })
+        )
       );
 
       const linkableProvider = new DocsLinkablesProvider(electronRoot);
       context.subscriptions.push(linkableProvider);
 
       context.subscriptions.push(
-        new OptionalFeature("electronBuildTools.docs", () => {
-          const shouldLintDocs =
-            vscode.workspace
-              .getConfiguration("electronBuildTools.docs")
-              .get<boolean>("lintRelativeLinks") === true;
-
-          if (shouldLintDocs) {
-            Logger.info("Docs relative link linting enabled");
-            return setupDocsLinting(linkableProvider, diagnosticsCollection);
-          } else {
-            // TODO - Clear existing diagnostics so they don't linger
-            Logger.info("Docs relative link linting disabled");
+        new OptionalFeature(
+          "electronBuildTools.docs",
+          "lintRelativeLinks",
+          (shouldLintDocs: boolean) => {
+            if (shouldLintDocs) {
+              Logger.info("Docs relative link linting enabled");
+              return setupDocsLinting(linkableProvider, diagnosticsCollection);
+            } else {
+              // TODO - Clear existing diagnostics so they don't linger
+              Logger.info("Docs relative link linting disabled");
+            }
           }
-        })
+        )
       );
 
       // Render emojis in Markdown

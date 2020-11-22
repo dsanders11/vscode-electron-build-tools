@@ -555,24 +555,41 @@ export function startProgress(options: vscode.ProgressOptions) {
   return () => resolver();
 }
 
-export class OptionalFeature extends vscode.Disposable {
+export class OptionalFeature<T> extends vscode.Disposable {
   private _disposable: vscode.Disposable | undefined;
 
   constructor(
     configSection: string,
-    setupFeature: () => vscode.Disposable | undefined
+    settingName: string,
+    setupFeature: (settingValue: T) => vscode.Disposable | undefined
   ) {
     super(() => {
       this._disposable?.dispose();
     });
 
+    const getSettingValue = (): T => {
+      const settingValue = vscode.workspace
+        .getConfiguration(configSection)
+        .get<T>(settingName);
+
+      if (settingValue === undefined) {
+        Logger.error(
+          `Failed to read setting value for "${configSection}.${settingName}"`
+        );
+        throw new Error("Setting could not be read");
+      }
+
+      return settingValue;
+    };
+
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration(configSection)) {
         this._disposable?.dispose();
-        this._disposable = setupFeature();
+        this._disposable = setupFeature(getSettingValue());
       }
     });
 
-    this._disposable = setupFeature(); // Initial setup of the feature
+    // Initial setup of the feature
+    this._disposable = setupFeature(getSettingValue());
   }
 }
