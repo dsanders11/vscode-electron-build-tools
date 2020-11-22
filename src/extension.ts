@@ -180,15 +180,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
       const testsProvider = new TestsTreeDataProvider(testsCollector);
       context.subscriptions.push(
-        vscode.languages.registerCodeLensProvider(
-          {
-            pattern: new vscode.RelativePattern(
-              electronRoot.fsPath,
-              "{spec,spec-main}/**/*-spec.{js,ts}"
-            ),
-          },
-          new TestCodeLensProvider(testsProvider)
-        ),
         diagnosticsCollection,
         vscode.window.registerTreeDataProvider(
           viewIds.CONFIGS,
@@ -246,6 +237,30 @@ export async function activate(context: vscode.ExtensionContext) {
         pullRequestFileSystemProvider
       );
       registerHelperCommands(context);
+
+      context.subscriptions.push(
+        new OptionalFeature("electronBuildTools.tests", () => {
+          const codeLensEnabled =
+            vscode.workspace
+              .getConfiguration("electronBuildTools.tests")
+              .get<boolean>("runTestCodeLens") === true;
+
+          if (codeLensEnabled) {
+            Logger.info("Tests code lens enabled");
+            return vscode.languages.registerCodeLensProvider(
+              {
+                pattern: new vscode.RelativePattern(
+                  electronRoot.fsPath,
+                  "{spec,spec-main}/**/*-spec.{js,ts}"
+                ),
+              },
+              new TestCodeLensProvider(testsProvider)
+            );
+          } else {
+            Logger.info("Tests code lens disabled");
+          }
+        })
+      );
 
       const linkableProvider = new DocsLinkablesProvider(electronRoot);
       context.subscriptions.push(linkableProvider);

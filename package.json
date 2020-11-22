@@ -263,6 +263,12 @@
           "default": true,
           "title": "Lint Relative Links",
           "description": "Lint relative links in the docs and mark broken links as problems."
+        },
+        "electronBuildTools.tests.runTestCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "title": "Run Test Code Lens",
+          "description": "Show 'Run Test' in editor above Electron tests."
         }
       }
     },
