@@ -87,10 +87,11 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
           const userQuit = await new Promise((resolve) => {
             quickPick!.onDidAccept(() => {
               target = quickPick!.selectedItems[0].label ?? target;
-              quickPick!.hide();
+              quickPick!.dispose();
               resolve();
             });
             quickPick!.onDidHide(() => {
+              quickPick!.dispose();
               resolve(true);
             });
             quickPick!.show();
