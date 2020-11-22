@@ -50,6 +50,7 @@ import { registerConfigsCommands } from "./commands/configs";
 import { registerPatchesCommands } from "./commands/patches";
 import { registerSyncCommands } from "./commands/sync";
 import { registerBuildCommands } from "./commands/build";
+import { DocsLinkCompletionProvider } from "./docsLinkCompletionProvider";
 
 const exec = promisify(childProcess.exec);
 
@@ -162,6 +163,7 @@ export async function activate(context: vscode.ExtensionContext) {
         patchesConfig
       );
       const testsCollector = new ElectronTestCollector(context, electronRoot);
+      const linkableProvider = new DocsLinkablesProvider(electronRoot);
 
       // Show progress on views while the collector is working. This lets us
       // immediately show the cached data from extension storage, while
@@ -182,6 +184,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const testsProvider = new TestsTreeDataProvider(testsCollector);
       context.subscriptions.push(
         diagnosticsCollection,
+        linkableProvider,
         vscode.window.registerTreeDataProvider(
           viewIds.CONFIGS,
           configsProvider
@@ -230,6 +233,17 @@ export async function activate(context: vscode.ExtensionContext) {
           SnippetProvider.DOCUMENT_SELECTOR,
           new SnippetProvider(),
           ...SnippetProvider.TRIGGER_CHARACTERS
+        ),
+        vscode.languages.registerCompletionItemProvider(
+          {
+            language: "markdown",
+            pattern: new vscode.RelativePattern(
+              electronRoot.fsPath,
+              "docs/**/*.md"
+            ),
+          },
+          new DocsLinkCompletionProvider(linkableProvider),
+          ...DocsLinkCompletionProvider.TRIGGER_CHARACTERS
         )
       );
       registerElectronBuildToolsCommands(
@@ -264,13 +278,7 @@ export async function activate(context: vscode.ExtensionContext) {
               Logger.info("Tests code lens disabled");
             }
           }
-        )
-      );
-
-      const linkableProvider = new DocsLinkablesProvider(electronRoot);
-      context.subscriptions.push(linkableProvider);
-
-      context.subscriptions.push(
+        ),
         new OptionalFeature(
           "electronBuildTools.docs",
           "lintRelativeLinks",

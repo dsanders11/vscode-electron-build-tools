@@ -4,21 +4,18 @@ import * as vscode from "vscode";
 
 import { debounce } from "throttle-debounce";
 
+import { Markdown } from "./common";
 import { DocsLinkable, DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { ensurePosixSeparators } from "./utils";
-
-// From vscode's source
-const linkPattern = /(\[((!\[[^\]]*?\]\(\s*)([^\s\(\)]+?)\s*\)\]|(?:\\\]|[^\]])*\])\(\s*)(([^\s\(\)]|\(\S*?\))*)\s*(".*?")?\)/g;
-const definitionPattern = /^([\t ]*\[((?:\\\]|[^\]])+)\]:\s*)(\S+)/gm;
 
 function getLinksInDocument(document: vscode.TextDocument) {
   const links = [];
 
   const inlineLinkMatches = Array.from(
-    document.getText().matchAll(linkPattern)
+    document.getText().matchAll(Markdown.linkPattern)
   ).map((match) => ["inline", match]) as [string, RegExpMatchArray][];
   const referenceLinkDefinitionMatches = Array.from(
-    document.getText().matchAll(definitionPattern)
+    document.getText().matchAll(Markdown.definitionPattern)
   ).map((match) => ["reference-definition", match]) as [
     string,
     RegExpMatchArray
