@@ -278,7 +278,7 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
 
         return alphabetizeByLabel(
           element.suite.suites.map(
-            (suite) => new TestSuiteTreeItem(suite, element.runner)
+            (suite) => new TestSuiteTreeItem(suite, element.runner, element)
           )
         );
       } catch (err) {
@@ -297,7 +297,7 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
 }
 
 export abstract class TestBaseTreeItem extends TreeItem {
-  public readonly parent?: TestBaseTreeItem;
+  public readonly parent?: TreeItem;
   private _state: TestState;
 
   constructor(
@@ -351,11 +351,11 @@ export class TestRunnerTreeItem extends TreeItem {
   }
 }
 
-class TestSuiteTreeItem extends TestBaseTreeItem {
+export class TestSuiteTreeItem extends TestBaseTreeItem {
   constructor(
     public readonly suite: ParsedTestSuite,
     public readonly runner: TestRunner,
-    public readonly parent?: TestSuiteTreeItem
+    public readonly parent: TreeItem
   ) {
     super(
       vscode.Uri.file(suite.file),
