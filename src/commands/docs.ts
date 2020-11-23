@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { commandPrefix } from "../constants";
-import { DocsLinkablesProvider } from "../docsLinkablesProvider";
+import type { DocsLinkablesProvider } from "../docsLinkablesProvider";
 
 interface DocsQuickPickItem extends vscode.QuickPickItem {
   filename: string;

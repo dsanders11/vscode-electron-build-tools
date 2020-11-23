@@ -11,7 +11,7 @@ import {
 } from "../extensionState";
 import Logger from "../logging";
 import { getConfigs, getConfigsFilePath } from "../utils";
-import {
+import type {
   ConfigTreeItem,
   ElectronBuildToolsConfigsProvider,
 } from "../views/configs";

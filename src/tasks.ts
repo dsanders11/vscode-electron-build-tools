@@ -4,7 +4,7 @@ import { PassThrough } from "stream";
 
 import * as vscode from "vscode";
 
-import { IpcMessage } from "./common";
+import type { IpcMessage } from "./common";
 import Logger from "./logging";
 import { generateSocketName } from "./utils";
 

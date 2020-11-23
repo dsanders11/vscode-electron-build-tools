@@ -13,7 +13,7 @@ import {
   HeadingContent,
 } from "@electron/docs-parser/dist/markdown-helpers";
 import MarkdownIt from "markdown-it";
-import MarkdownToken from "markdown-it/lib/token";
+import type MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
 
 import { ParsedTestSuite, TestRunner } from "./common";
@@ -23,7 +23,7 @@ import {
   contextKeyPrefix,
 } from "./constants";
 import Logger from "./logging";
-import { ElectronPatchesConfig, EVMConfig } from "./types";
+import type { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const exec = promisify(childProcess.exec);
 const fsReadFile = promisify(fs.readFile);

@@ -18,9 +18,9 @@ import {
   ExtensionOperation,
 } from "../extensionState";
 import Logger from "../logging";
-import { ElectronPullRequestFileSystemProvider } from "../pullRequestFileSystemProvider";
+import type { ElectronPullRequestFileSystemProvider } from "../pullRequestFileSystemProvider";
 import { FileInPatch, startProgress } from "../utils";
-import {
+import type {
   ElectronPatchesProvider,
   Patch,
   PatchDirectory,

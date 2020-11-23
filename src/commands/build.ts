@@ -11,7 +11,7 @@ import {
   ExtensionOperation,
 } from "../extensionState";
 import { runAsTask } from "../tasks";
-import { ExtensionConfig } from "../types";
+import type { ExtensionConfig } from "../types";
 import { getConfigDefaultTarget } from "../utils";
 
 export function registerBuildCommands(context: vscode.ExtensionContext) {

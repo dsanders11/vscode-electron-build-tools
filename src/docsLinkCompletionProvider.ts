@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import { Markdown } from "./common";
-import { DocsLinkablesProvider } from "./docsLinkablesProvider";
+import type { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { ensurePosixSeparators } from "./utils";
 
 export class DocsLinkCompletionProvider

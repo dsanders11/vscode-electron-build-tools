@@ -7,7 +7,7 @@ import {
   patchDirectoryPrettyNames,
   pullRequestScheme,
 } from "../constants";
-import { ElectronPatchesConfig } from "../types";
+import type { ElectronPatchesConfig } from "../types";
 import {
   ensurePosixSeparators,
   FileInPatch,

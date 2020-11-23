@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import * as Diff from "diff";
-import { PullsListFilesResponseData } from "@octokit/types";
+import type { PullsListFilesResponseData } from "@octokit/types";
 
 import {
   ensurePosixSeparators,
@@ -13,7 +13,7 @@ import {
   patchedFilenameRegex,
   querystringParse,
 } from "./utils";
-import { ElectronPatchesConfig } from "./types";
+import type { ElectronPatchesConfig } from "./types";
 
 type PullRequestFileStatus = "added" | "deleted" | "modified";
 

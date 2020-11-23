@@ -5,7 +5,10 @@ import * as vscode from "vscode";
 import { debounce } from "throttle-debounce";
 
 import { Markdown } from "./common";
-import { DocsLinkable, DocsLinkablesProvider } from "./docsLinkablesProvider";
+import type {
+  DocsLinkable,
+  DocsLinkablesProvider,
+} from "./docsLinkablesProvider";
 import { ensurePosixSeparators } from "./utils";
 
 function getLinksInDocument(document: vscode.TextDocument) {

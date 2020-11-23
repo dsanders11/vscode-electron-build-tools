@@ -2,7 +2,7 @@
 
 import * as vscode from "vscode";
 
-import { ElectronPatchesConfig } from "./types";
+import type { ElectronPatchesConfig } from "./types";
 
 export const extensionId = "dsanders11.vscode-electron-build-tools";
 
