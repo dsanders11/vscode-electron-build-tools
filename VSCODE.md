@@ -20,10 +20,6 @@
 * No color in theme icon references: [Issue][Issue-6]
 * Snippets are global, could use a `when`/`enablement` clause so that
   you don't pollute the global namespace with extension-specific snippets
-* `TreeView.reveal` doesn't work if the tree items aren't all created,
-  which would be the case when the user hasn't explored the tree yet,
-  making the function substantially less useful since you can't jump to
-  arbitrary tree items
 
 [Issue-1]: https://github.com/microsoft/vscode/issues/110421
 [Issue-2]: https://github.com/microsoft/vscode/issues/110420
