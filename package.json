@@ -113,6 +113,11 @@
         "icon": "$(x)"
       },
       {
+        "command": "electron-build-tools.revealInElectronSidebar",
+        "title": "Reveal in Electron Side Bar",
+        "enablement": "electron-build-tools:active"
+      },
+      {
         "command": "electron-build-tools.runTest",
         "title": "Run Test",
         "icon": "$(run)"
@@ -370,6 +375,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.revealInElectronSidebar",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.runTest",
           "when": "false"
         },
@@ -458,6 +467,13 @@
           "command": "electron-build-tools.runTestFile",
           "group": "navigation",
           "when": "resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "electron-build-tools.revealInElectronSidebar",
+          "group": "navigation",
+          "when": "electron-build-tools:ready && resourceDirname =~ /.*electron(?:\\\\|\\/)patches(?:\\\\|\\/).*$/ && resourceExtname == .patch"
         }
       ],
       "view/item/context": [

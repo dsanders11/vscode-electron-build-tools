@@ -35,8 +35,11 @@ export class ElectronPatchesProvider
   private readonly rootDirectory: vscode.Uri;
   private readonly viewPullRequestTreeItem: ViewPullRequestPatchTreeItem;
 
-  constructor(electronRoot: vscode.Uri, patchesConfig: vscode.Uri) {
-    this.rootDirectory = vscode.Uri.joinPath(electronRoot, "..", "..");
+  constructor(
+    private readonly _electronRoot: vscode.Uri,
+    patchesConfig: vscode.Uri
+  ) {
+    this.rootDirectory = vscode.Uri.joinPath(_electronRoot, "..", "..");
     this.patchesConfig = parsePatchConfig(patchesConfig);
 
     this.viewPullRequestTreeItem = new ViewPullRequestPatchTreeItem();
@@ -91,9 +94,47 @@ export class ElectronPatchesProvider
       return this.viewPullRequestTreeItem;
     } else if (element === this.viewPullRequestTreeItem) {
       return null;
+    } else if (element instanceof Patch) {
+      return element.parent;
+    } else if (element instanceof PatchDirectory) {
+      return null;
     } else {
       throw new Error("Not implemented");
     }
+  }
+
+  async getPatchTreeItemForUri(uri: vscode.Uri): Promise<Patch> {
+    const patchesRoot = vscode.Uri.joinPath(this._electronRoot, "patches");
+
+    if (!uri.path.startsWith(patchesRoot.path)) {
+      throw new Error("Uri not in patches directory");
+    }
+
+    const patchDir = path.relative(patchesRoot.path, path.dirname(uri.path));
+
+    const walkTree = async (element?: vscode.TreeItem): Promise<Patch> => {
+      if (!element) {
+        const children = (await this.getChildren()) as PatchDirectory[];
+        const child = children.find((child) => child.name === patchDir);
+
+        if (child) {
+          return await walkTree(child);
+        } else {
+          throw new Error("Couldn't find patch directory tree item");
+        }
+      } else {
+        const children = (await this.getChildren(element)) as Patch[];
+        const child = children.find((child) => child.uri.fsPath === uri.fsPath);
+
+        if (child) {
+          return child;
+        } else {
+          throw new Error("Couldn't find patch tree item");
+        }
+      }
+    };
+
+    return walkTree();
   }
 
   async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
@@ -123,7 +164,9 @@ export class ElectronPatchesProvider
           const label =
             (await getPatchSubjectLine(filename)) ||
             path.basename(filename.fsPath);
-          children.push(new Patch(truncateToLength(label, 50), filename));
+          children.push(
+            new Patch(truncateToLength(label, 50), filename, element)
+          );
         }
       } else if (element instanceof Patch) {
         children.push(new PatchOverview(element.uri));
@@ -187,7 +230,11 @@ export class PatchDirectory extends vscode.TreeItem {
 }
 
 export class Patch extends vscode.TreeItem {
-  constructor(label: string, public uri: vscode.Uri) {
+  constructor(
+    label: string,
+    public uri: vscode.Uri,
+    public readonly parent: PatchDirectory
+  ) {
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
     this.uri = uri; // BUG - resourceUri doesn't play nice with advanced hover

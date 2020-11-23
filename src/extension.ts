@@ -78,6 +78,20 @@ function registerElectronBuildToolsCommands(
   registerSyncCommands(context);
 
   context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "electron-build-tools.revealInElectronSidebar",
+      async (file: vscode.Uri) => {
+        if (/.*\/electron\/patches\/.*\.patch$/.test(file.path)) {
+          try {
+            const treeItem = await patchesProvider.getPatchTreeItemForUri(file);
+            patchesView.reveal(treeItem, { expand: true, focus: true });
+          } catch (err) {
+            Logger.error(err);
+            vscode.window.showErrorMessage("Couldn't reveal patch in sidebar");
+          }
+        }
+      }
+    ),
     vscode.commands.registerCommand(`${commandPrefix}.show.exe`, async () => {
       const { stdout } = await exec(`${buildToolsExecutable} show exe`, {
         encoding: "utf8",
