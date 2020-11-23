@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 (11-23-2020)
+
+* feat: quick search for docs
+* feat: autocomplete for relative links in docs
+* fix: don't try to lint empty links
+* fix: ensure the active config is marked
+* feat: formatter for GN files
+* feat: provide links in GN files
+* feat: setting to enable/disable docs linting
+* feat: copy URL fragment to clipboard for Markdown header
+* feat: show URL fragment on hover for Markdown header
+
 ## 0.3.0 (11-18-2020)
 
 * fix: don't lint absolute links in docs for now
