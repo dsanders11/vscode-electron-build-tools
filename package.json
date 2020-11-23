@@ -158,7 +158,8 @@
       {
         "command": "electron-build-tools.showPatchesDocs",
         "title": "Show Patches Documentation",
-        "icon": "$(remote-explorer-documentation)"
+        "icon": "$(remote-explorer-documentation)",
+        "enablement": "electron-build-tools:ready"
       },
       {
         "command": "electron-build-tools.showPatchOverview",
@@ -167,7 +168,8 @@
       {
         "command": "electron-build-tools.showTestsDocs",
         "title": "Show Tests Documentation",
-        "icon": "$(remote-explorer-documentation)"
+        "icon": "$(remote-explorer-documentation)",
+        "enablement": "electron-build-tools:ready"
       },
       {
         "command": "electron-build-tools.sync",
