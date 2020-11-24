@@ -475,7 +475,7 @@
       "editor/title": [
         {
           "command": "electron-build-tools.runTestFile",
-          "group": "navigation",
+          "group": "1_run",
           "when": "resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
         }
       ],
