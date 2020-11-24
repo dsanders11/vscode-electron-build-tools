@@ -34,6 +34,7 @@ import {
 } from "./utils";
 import {
   BuildToolsConfigCollector,
+  ConfigCollector,
   ElectronBuildToolsConfigsProvider,
 } from "./views/configs";
 import { DocsTreeDataProvider } from "./views/docs";
@@ -65,6 +66,7 @@ function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   configsProvider: ElectronBuildToolsConfigsProvider,
+  configsCollector: ConfigCollector,
   patchesProvider: ElectronPatchesProvider,
   patchesView: vscode.TreeView<vscode.TreeItem>,
   testsProvider: TestsTreeDataProvider,
@@ -72,7 +74,7 @@ function registerElectronBuildToolsCommands(
   pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
 ) {
   registerBuildCommands(context);
-  registerConfigsCommands(context, configsProvider);
+  registerConfigsCommands(context, configsCollector, configsProvider);
   registerTestCommands(context, electronRoot, testsProvider, testsCollector);
   registerPatchesCommands(
     context,
@@ -311,6 +313,7 @@ export async function activate(context: vscode.ExtensionContext) {
         context,
         electronRoot,
         configsProvider,
+        configsCollector,
         patchesProvider,
         patchesView,
         testsProvider,

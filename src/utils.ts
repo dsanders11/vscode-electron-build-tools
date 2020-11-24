@@ -647,3 +647,7 @@ export async function drillDown(
 
   throw new Error("Drill down tried to continue, but no children of item");
 }
+
+export function sleep(timeMs: number) {
+  return new Promise((resolve) => setTimeout(resolve, timeMs));
+}

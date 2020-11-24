@@ -10,8 +10,9 @@ import {
   ExtensionOperation,
 } from "../extensionState";
 import Logger from "../logging";
-import { getConfigs, getConfigsFilePath } from "../utils";
+import { getConfigsFilePath, sleep } from "../utils";
 import type {
+  ConfigCollector,
   ConfigTreeItem,
   ElectronBuildToolsConfigsProvider,
 } from "../views/configs";
@@ -20,6 +21,7 @@ const exec = promisify(childProcess.exec);
 
 export function registerConfigsCommands(
   context: vscode.ExtensionContext,
+  confisCollector: ConfigCollector,
   configsProvider: ElectronBuildToolsConfigsProvider
 ) {
   context.subscriptions.push(
@@ -44,17 +46,7 @@ export function registerConfigsCommands(
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.use-config.quick-pick`,
-      async () => {
-        const { configs } = await getConfigs();
-        const selected = await vscode.window.showQuickPick(configs);
-
-        if (selected) {
-          await vscode.commands.executeCommand(
-            `${commandPrefix}.use-config`,
-            selected
-          );
-        }
-      }
+      () => vscode.commands.executeCommand(`${commandPrefix}.use-config`)
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.remove-config`,
@@ -97,8 +89,23 @@ export function registerConfigsCommands(
           "Can't change configs, other work in-progress"
         );
       },
-      async (treeItemOrName: ConfigTreeItem | string) => {
-        const configName = (treeItemOrName as any).label ?? treeItemOrName;
+      async (value: { label: string } | string | undefined) => {
+        if (value === undefined) {
+          await sleep(50); // If this is too fast it has an ugly flash in VS Code
+          const { configs, activeConfig } = await confisCollector.getConfigs();
+          value = await vscode.window.showQuickPick<vscode.QuickPickItem>(
+            configs.map((config) => ({
+              label: config,
+              description: config === activeConfig ? "Active" : undefined,
+            }))
+          );
+
+          if (value === undefined || value.label === activeConfig) {
+            return;
+          }
+        }
+
+        const configName = (value as any).label ?? value;
 
         // Do an optimistic update for snappier UI
         configsProvider.setActive(configName);
