@@ -160,10 +160,6 @@
         "enablement": "electron-build-tools:ready"
       },
       {
-        "command": "electron-build-tools.showPatchedFileDiff",
-        "title": "Show Patched File Diff"
-      },
-      {
         "command": "electron-build-tools.show.goma",
         "title": "Show Goma",
         "category": "Electron Build Tools"
@@ -173,10 +169,6 @@
         "title": "Show Patches Documentation",
         "icon": "$(remote-explorer-documentation)",
         "enablement": "electron-build-tools:ready"
-      },
-      {
-        "command": "electron-build-tools.showPatchOverview",
-        "title": "Show Patch Overview"
       },
       {
         "command": "electron-build-tools.showTestsDocs",
@@ -419,15 +411,7 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
-          "command": "electron-build-tools.showPatchedFileDiff",
-          "when": "false"
-        },
-        {
           "command": "electron-build-tools.showPatchesDocs",
-          "when": "false"
-        },
-        {
-          "command": "electron-build-tools.showPatchOverview",
           "when": "false"
         },
         {
