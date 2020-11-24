@@ -70,9 +70,6 @@ export function registerDocsCommands(
         ];
       });
       quickPick.show();
-    }),
-    vscode.commands.registerCommand(`${commandPrefix}.searchDocs-icon`, () =>
-      vscode.commands.executeCommand(`${commandPrefix}.searchDocs`)
-    )
+    })
   );
 }

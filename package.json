@@ -156,11 +156,6 @@
         "command": "electron-build-tools.searchDocs",
         "title": "Search Docs",
         "category": "Electron Build Tools",
-        "enablement": "electron-build-tools:ready"
-      },
-      {
-        "command": "electron-build-tools.searchDocs-icon",
-        "title": "Search Docs",
         "icon": "$(search)",
         "enablement": "electron-build-tools:ready"
       },
@@ -420,10 +415,6 @@
           "when": "electron-build-tools:active"
         },
         {
-          "command": "electron-build-tools.searchDocs-icon",
-          "when": "false"
-        },
-        {
           "command": "electron-build-tools.show.goma",
           "when": "electron-build-tools:build-tools-installed"
         },
@@ -604,7 +595,7 @@
           "group": "navigation"
         },
         {
-          "command": "electron-build-tools.searchDocs-icon",
+          "command": "electron-build-tools.searchDocs",
           "when": "view == electron-build-tools:docs",
           "group": "navigation"
         }
