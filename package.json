@@ -102,7 +102,7 @@
         "enablement": "electron-build-tools:canLoadTests"
       },
       {
-        "command": "electron-build-tools.remove-config",
+        "command": "electron-build-tools.removeConfig",
         "title": "Remove Config",
         "category": "Electron Build Tools",
         "icon": "$(trash)",
@@ -149,7 +149,7 @@
         "enablement": "electron-build-tools:canRunTests"
       },
       {
-        "command": "electron-build-tools.sanitize-config",
+        "command": "electron-build-tools.sanitizeConfig",
         "title": "Sanitize Config",
         "category": "Electron Build Tools"
       },
@@ -200,14 +200,14 @@
         "enablement": "electron-build-tools:canRunTests"
       },
       {
-        "command": "electron-build-tools.use-config",
+        "command": "electron-build-tools.useConfig",
         "title": "Use Config",
         "category": "Electron Build Tools",
         "icon": "$(check)",
         "enablement": "electron-build-tools:canChangeConfig && viewItem == config"
       },
       {
-        "command": "electron-build-tools.use-config.quick-pick",
+        "command": "electron-build-tools.useConfig.quickPick",
         "title": "Use Config",
         "category": "Electron Build Tools",
         "enablement": "electron-build-tools:canChangeConfig"
@@ -385,7 +385,7 @@
           "when": "false"
         },
         {
-          "command": "electron-build-tools.remove-config",
+          "command": "electron-build-tools.removeConfig",
           "when": "false"
         },
         {
@@ -421,7 +421,7 @@
           "when": "false"
         },
         {
-          "command": "electron-build-tools.sanitize-config",
+          "command": "electron-build-tools.sanitizeConfig",
           "when": "false"
         },
         {
@@ -453,11 +453,11 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
-          "command": "electron-build-tools.use-config",
+          "command": "electron-build-tools.useConfig",
           "when": "false"
         },
         {
-          "command": "electron-build-tools.use-config.quick-pick",
+          "command": "electron-build-tools.useConfig.quickPick",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
@@ -523,11 +523,11 @@
           "group": "inline"
         },
         {
-          "command": "electron-build-tools.remove-config",
+          "command": "electron-build-tools.removeConfig",
           "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
-          "command": "electron-build-tools.remove-config",
+          "command": "electron-build-tools.removeConfig",
           "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
           "group": "inline"
         },
@@ -556,15 +556,15 @@
           "group": "inline"
         },
         {
-          "command": "electron-build-tools.sanitize-config",
+          "command": "electron-build-tools.sanitizeConfig",
           "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
-          "command": "electron-build-tools.use-config",
+          "command": "electron-build-tools.useConfig",
           "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
-          "command": "electron-build-tools.use-config",
+          "command": "electron-build-tools.useConfig",
           "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
           "group": "inline"
         },

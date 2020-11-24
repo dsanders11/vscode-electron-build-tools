@@ -45,11 +45,11 @@ export function registerConfigsCommands(
       }
     ),
     vscode.commands.registerCommand(
-      `${commandPrefix}.use-config.quick-pick`,
-      () => vscode.commands.executeCommand(`${commandPrefix}.use-config`)
+      `${commandPrefix}.useConfig.quickPick`,
+      () => vscode.commands.executeCommand(`${commandPrefix}.useConfig`)
     ),
     vscode.commands.registerCommand(
-      `${commandPrefix}.remove-config`,
+      `${commandPrefix}.removeConfig`,
       async (config: ConfigTreeItem) => {
         try {
           await exec(`${buildToolsExecutable} remove ${config.label}`);
@@ -66,7 +66,7 @@ export function registerConfigsCommands(
       }
     ),
     vscode.commands.registerCommand(
-      `${commandPrefix}.sanitize-config`,
+      `${commandPrefix}.sanitizeConfig`,
       async (config: ConfigTreeItem) => {
         try {
           await exec(`${buildToolsExecutable} sanitize-config ${config.label}`);
@@ -83,7 +83,7 @@ export function registerConfigsCommands(
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.CHANGE_CONFIG,
-      `${commandPrefix}.use-config`,
+      `${commandPrefix}.useConfig`,
       () => {
         vscode.window.showErrorMessage(
           "Can't change configs, other work in-progress"
