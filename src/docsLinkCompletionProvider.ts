@@ -50,7 +50,7 @@ export class DocsLinkCompletionProvider
             context.triggerCharacter === "#" ||
             (hashIdx !== -1 && positionWithinLink >= hashIdx)
           ) {
-            // Provide completions to linkables within the file
+            // Provide completions to linkables within the linked file
             const filename = linkText.split("#")[0];
             const linkedFilePath = vscode.Uri.file(
               path.join(baseDir, filename)
@@ -84,13 +84,17 @@ export class DocsLinkCompletionProvider
               }
             }
           } else {
-            // Provide completions to files, relative to this file
+            // Provide completions to files within the docs, relative to this
+            // file. Exclude fiddles, there's too much noise-to-signal there
             const files = await vscode.workspace.findFiles(
               new vscode.RelativePattern(
                 this._linkablesProvider.docsRoot.fsPath,
-                "**/*.md"
+                "**/*"
               ),
-              undefined,
+              new vscode.RelativePattern(
+                this._linkablesProvider.docsRoot.fsPath,
+                "fiddles"
+              ),
               undefined,
               token
             );
