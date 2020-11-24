@@ -79,67 +79,79 @@
       },
       {
         "command": "electron-build-tools.openPatch",
-        "title": "Open Patch"
+        "title": "Open Patch",
+        "category": "Electron Build Tools"
       },
       {
         "command": "electron-build-tools.openTestFile",
-        "title": "Open Test File"
+        "title": "Open Test File",
+        "category": "Electron Build Tools"
       },
       {
         "command": "electron-build-tools.refreshPatches",
         "title": "Refresh Patches",
+        "category": "Electron Build Tools",
         "icon": "$(refresh)",
         "enablement": "electron-build-tools:canRefreshPatches"
       },
       {
         "command": "electron-build-tools.refreshTests",
         "title": "Refresh Tests",
+        "category": "Electron Build Tools",
         "icon": "$(refresh)",
         "enablement": "electron-build-tools:canLoadTests"
       },
       {
         "command": "electron-build-tools.remove-config",
         "title": "Remove Config",
+        "category": "Electron Build Tools",
         "icon": "$(trash)",
         "enablement": "viewItem == config"
       },
       {
         "command": "electron-build-tools.removePullRequestPatch",
         "title": "Remove Pull Request",
+        "category": "Electron Build Tools",
         "icon": "$(x)"
       },
       {
         "command": "electron-build-tools.revealInElectronSidebar",
         "title": "Reveal in Electron Side Bar",
+        "category": "Electron Build Tools",
         "enablement": "electron-build-tools:active"
       },
       {
         "command": "electron-build-tools.runTest",
         "title": "Run Test",
+        "category": "Electron Build Tools",
         "icon": "$(run)",
         "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.runTestFile",
         "title": "Run Test File",
+        "category": "Electron Build Tools",
         "icon": "$(run-all)",
         "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.runTestRunner",
         "title": "Run Test Runner",
+        "category": "Electron Build Tools",
         "icon": "$(run-all)",
         "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.runTestSuite",
         "title": "Run Test Suite",
+        "category": "Electron Build Tools",
         "icon": "$(run-all)",
         "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.sanitize-config",
-        "title": "Sanitize Config"
+        "title": "Sanitize Config",
+        "category": "Electron Build Tools"
       },
       {
         "command": "electron-build-tools.searchDocs",
@@ -157,12 +169,14 @@
       {
         "command": "electron-build-tools.showPatchesDocs",
         "title": "Show Patches Documentation",
+        "category": "Electron Build Tools",
         "icon": "$(remote-explorer-documentation)",
         "enablement": "electron-build-tools:active"
       },
       {
         "command": "electron-build-tools.showTestsDocs",
         "title": "Show Tests Documentation",
+        "category": "Electron Build Tools",
         "icon": "$(remote-explorer-documentation)",
         "enablement": "electron-build-tools:active"
       },
@@ -188,6 +202,7 @@
       {
         "command": "electron-build-tools.use-config",
         "title": "Use Config",
+        "category": "Electron Build Tools",
         "icon": "$(check)",
         "enablement": "electron-build-tools:canChangeConfig && viewItem == config"
       },
@@ -200,6 +215,7 @@
       {
         "command": "electron-build-tools.viewPullRequestPatch",
         "title": "Find Pull Request",
+        "category": "Electron Build Tools",
         "icon": "$(search)"
       },
       {
