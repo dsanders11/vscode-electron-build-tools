@@ -73,7 +73,8 @@
     "commands": [
       {
         "command": "electron-build-tools.build",
-        "title": "Electron Build Tools: Build",
+        "title": "Build",
+        "category": "Electron Build Tools",
         "enablement": "electron-build-tools:canBuild"
       },
       {
@@ -153,7 +154,8 @@
       },
       {
         "command": "electron-build-tools.searchDocs",
-        "title": "Electron Build Tools: Search Docs",
+        "title": "Search Docs",
+        "category": "Electron Build Tools",
         "enablement": "electron-build-tools:ready"
       },
       {
@@ -168,7 +170,8 @@
       },
       {
         "command": "electron-build-tools.show.goma",
-        "title": "Electron Build Tools: Show Goma"
+        "title": "Show Goma",
+        "category": "Electron Build Tools"
       },
       {
         "command": "electron-build-tools.showPatchesDocs",
@@ -188,16 +191,19 @@
       },
       {
         "command": "electron-build-tools.sync",
-        "title": "Electron Build Tools: Sync",
+        "title": "Sync",
+        "category": "Electron Build Tools",
         "enablement": "electron-build-tools:canSync"
       },
       {
         "command": "electron-build-tools.sync.force",
-        "title": "Electron Build Tools: Force Sync"
+        "title": "Force Sync",
+        "category": "Electron Build Tools"
       },
       {
         "command": "electron-build-tools.test",
-        "title": "Electron Build Tools: Run Tests",
+        "title": "Run Tests",
+        "category": "Electron Build Tools",
         "icon": "$(run-all)",
         "enablement": "electron-build-tools:canRunTests"
       },
@@ -209,7 +215,8 @@
       },
       {
         "command": "electron-build-tools.use-config.quick-pick",
-        "title": "Electron Build Tools: Use Config",
+        "title": "Use Config",
+        "category": "Electron Build Tools",
         "enablement": "electron-build-tools:canChangeConfig"
       },
       {
