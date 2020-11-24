@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 (11-24-2020)
+
+* chore: include images in docs relative link completions
+* feat: markdown commands to wrap lines and rewrap selections
+* feat: reveal patch in Electron sidebar
+
 ## 0.4.0 (11-23-2020)
 
 * feat: quick search for docs
