@@ -116,22 +116,26 @@
       {
         "command": "electron-build-tools.runTest",
         "title": "Run Test",
-        "icon": "$(run)"
+        "icon": "$(run)",
+        "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.runTestFile",
         "title": "Run Test File",
-        "icon": "$(run-all)"
+        "icon": "$(run-all)",
+        "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.runTestRunner",
         "title": "Run Test Runner",
-        "icon": "$(run-all)"
+        "icon": "$(run-all)",
+        "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.runTestSuite",
         "title": "Run Test Suite",
-        "icon": "$(run-all)"
+        "icon": "$(run-all)",
+        "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.sanitize-config",
@@ -142,24 +146,25 @@
         "title": "Search Docs",
         "category": "Electron Build Tools",
         "icon": "$(search)",
-        "enablement": "electron-build-tools:ready"
+        "enablement": "electron-build-tools:active"
       },
       {
         "command": "electron-build-tools.show.goma",
         "title": "Show Goma",
-        "category": "Electron Build Tools"
+        "category": "Electron Build Tools",
+        "enablement": "electron-build-tools:build-tools-installed"
       },
       {
         "command": "electron-build-tools.showPatchesDocs",
         "title": "Show Patches Documentation",
         "icon": "$(remote-explorer-documentation)",
-        "enablement": "electron-build-tools:ready"
+        "enablement": "electron-build-tools:active"
       },
       {
         "command": "electron-build-tools.showTestsDocs",
         "title": "Show Tests Documentation",
         "icon": "$(remote-explorer-documentation)",
-        "enablement": "electron-build-tools:ready"
+        "enablement": "electron-build-tools:active"
       },
       {
         "command": "electron-build-tools.sync",
@@ -170,7 +175,8 @@
       {
         "command": "electron-build-tools.sync.force",
         "title": "Force Sync",
-        "category": "Electron Build Tools"
+        "category": "Electron Build Tools",
+        "enablement": "electron-build-tools:canSync"
       },
       {
         "command": "electron-build-tools.test",
@@ -183,7 +189,7 @@
         "command": "electron-build-tools.use-config",
         "title": "Use Config",
         "icon": "$(check)",
-        "enablement": "viewItem == config"
+        "enablement": "electron-build-tools:canChangeConfig && viewItem == config"
       },
       {
         "command": "electron-build-tools.use-config.quick-pick",
@@ -199,17 +205,17 @@
       {
         "command": "markdown.prettifyTable",
         "title": "Prettify Table",
-        "enablement": "editorHasSelection"
+        "enablement": "electron-build-tools:active && editorHasSelection"
       },
       {
         "command": "markdown.rewrapSelections",
         "title": "Rewrap Selections(s)",
-        "enablement": "editorHasSelection"
+        "enablement": "electron-build-tools:active && editorHasSelection"
       },
       {
         "command": "markdown.wrapLines",
         "title": "Wrap Line(s)",
-        "enablement": "editorTextFocus"
+        "enablement": "electron-build-tools:active && editorTextFocus"
       }
     ],
     "configuration": {
