@@ -90,6 +90,16 @@
         "enablement": "editorHasSelection"
       },
       {
+        "command": "markdown.rewrapSelections",
+        "title": "Rewrap Selections(s)",
+        "enablement": "editorHasSelection"
+      },
+      {
+        "command": "markdown.wrapLines",
+        "title": "Wrap Line(s)",
+        "enablement": "editorTextFocus"
+      },
+      {
         "command": "electron-build-tools.remove-config",
         "title": "Remove Config",
         "icon": "$(trash)",
@@ -453,11 +463,29 @@
         {
           "command": "markdown.prettifyTable",
           "when": "false"
+        },
+        {
+          "command": "markdown.rewrapSelections",
+          "when": "false"
+        },
+        {
+          "command": "markdown.wrapLines",
+          "when": "false"
         }
       ],
       "editor/context": [
         {
           "command": "markdown.prettifyTable",
+          "when": "electron-build-tools:ready && resourceLangId == markdown",
+          "group": "1_modification"
+        },
+        {
+          "command": "markdown.rewrapSelections",
+          "when": "electron-build-tools:ready && resourceLangId == markdown",
+          "group": "1_modification"
+        },
+        {
+          "command": "markdown.wrapLines",
           "when": "electron-build-tools:ready && resourceLangId == markdown",
           "group": "1_modification"
         }
@@ -737,7 +765,8 @@
     "throttle-debounce": "^3.0.1",
     "ts-node": "^9.0.0",
     "typescript-cached-transpile": "^0.0.6",
-    "uuid": "^8.3.1"
+    "uuid": "^8.3.1",
+    "word-wrap": "^1.2.3"
   },
   "lint-staged": {
     "*.ts": [
