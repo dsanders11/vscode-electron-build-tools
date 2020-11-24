@@ -86,27 +86,6 @@
         "title": "Open Test File"
       },
       {
-        "command": "markdown.prettifyTable",
-        "title": "Prettify Table",
-        "enablement": "editorHasSelection"
-      },
-      {
-        "command": "markdown.rewrapSelections",
-        "title": "Rewrap Selections(s)",
-        "enablement": "editorHasSelection"
-      },
-      {
-        "command": "markdown.wrapLines",
-        "title": "Wrap Line(s)",
-        "enablement": "editorTextFocus"
-      },
-      {
-        "command": "electron-build-tools.remove-config",
-        "title": "Remove Config",
-        "icon": "$(trash)",
-        "enablement": "viewItem == config"
-      },
-      {
         "command": "electron-build-tools.refreshPatches",
         "title": "Refresh Patches",
         "icon": "$(refresh)",
@@ -117,6 +96,12 @@
         "title": "Refresh Tests",
         "icon": "$(refresh)",
         "enablement": "electron-build-tools:canLoadTests"
+      },
+      {
+        "command": "electron-build-tools.remove-config",
+        "title": "Remove Config",
+        "icon": "$(trash)",
+        "enablement": "viewItem == config"
       },
       {
         "command": "electron-build-tools.removePullRequestPatch",
@@ -210,6 +195,21 @@
         "command": "electron-build-tools.viewPullRequestPatch",
         "title": "Find Pull Request",
         "icon": "$(search)"
+      },
+      {
+        "command": "markdown.prettifyTable",
+        "title": "Prettify Table",
+        "enablement": "editorHasSelection"
+      },
+      {
+        "command": "markdown.rewrapSelections",
+        "title": "Rewrap Selections(s)",
+        "enablement": "editorHasSelection"
+      },
+      {
+        "command": "markdown.wrapLines",
+        "title": "Wrap Line(s)",
+        "enablement": "editorTextFocus"
       }
     ],
     "configuration": {
@@ -488,30 +488,25 @@
       ],
       "view/item/context": [
         {
-          "command": "electron-build-tools.remove-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
+          "command": "electron-build-tools.openPatch",
+          "when": "view == electron-build-tools:patches && viewItem == patch"
         },
         {
-          "command": "electron-build-tools.remove-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
-          "group": "inline"
-        },
-        {
-          "command": "electron-build-tools.sanitize-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
-        },
-        {
-          "command": "electron-build-tools.use-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
-        },
-        {
-          "command": "electron-build-tools.use-config",
-          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
-          "group": "inline"
+          "command": "electron-build-tools.openTestFile",
+          "when": "view == electron-build-tools:tests && viewItem =~ /^test$|^suite$/"
         },
         {
           "command": "electron-build-tools.refreshPatches",
           "when": "view == electron-build-tools:patches && viewItem == repo",
+          "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.remove-config",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
+        },
+        {
+          "command": "electron-build-tools.remove-config",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
           "group": "inline"
         },
         {
@@ -521,11 +516,6 @@
         {
           "command": "electron-build-tools.removePullRequestPatch",
           "when": "view == electron-build-tools:patches && viewItem == pull-request",
-          "group": "inline"
-        },
-        {
-          "command": "electron-build-tools.viewPullRequestPatch",
-          "when": "view == electron-build-tools:patches && viewItem == view-pull-request-patch",
           "group": "inline"
         },
         {
@@ -544,12 +534,22 @@
           "group": "inline"
         },
         {
-          "command": "electron-build-tools.openPatch",
-          "when": "view == electron-build-tools:patches && viewItem == patch"
+          "command": "electron-build-tools.sanitize-config",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
         },
         {
-          "command": "electron-build-tools.openTestFile",
-          "when": "view == electron-build-tools:tests && viewItem =~ /^test$|^suite$/"
+          "command": "electron-build-tools.use-config",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/"
+        },
+        {
+          "command": "electron-build-tools.use-config",
+          "when": "view == electron-build-tools:configs && viewItem =~ /^active-config$|^config$/",
+          "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.viewPullRequestPatch",
+          "when": "view == electron-build-tools:patches && viewItem == view-pull-request-patch",
+          "group": "inline"
         }
       ],
       "view/title": [
@@ -564,13 +564,13 @@
           "group": "navigation"
         },
         {
-          "command": "electron-build-tools.showPatchesDocs",
-          "when": "view == electron-build-tools:patches",
+          "command": "electron-build-tools.searchDocs",
+          "when": "view == electron-build-tools:docs",
           "group": "navigation"
         },
         {
-          "command": "electron-build-tools.test",
-          "when": "view == electron-build-tools:tests",
+          "command": "electron-build-tools.showPatchesDocs",
+          "when": "view == electron-build-tools:patches",
           "group": "navigation"
         },
         {
@@ -579,8 +579,8 @@
           "group": "navigation"
         },
         {
-          "command": "electron-build-tools.searchDocs",
-          "when": "view == electron-build-tools:docs",
+          "command": "electron-build-tools.test",
+          "when": "view == electron-build-tools:tests",
           "group": "navigation"
         }
       ]
