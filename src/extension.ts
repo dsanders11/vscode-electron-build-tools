@@ -1,4 +1,5 @@
 import * as childProcess from "child_process";
+import * as path from "path";
 import { promisify } from "util";
 
 import * as vscode from "vscode";
@@ -24,6 +25,7 @@ import Logger from "./logging";
 import { SnippetProvider } from "./snippetProvider";
 import { TestCodeLensProvider } from "./testCodeLens";
 import {
+  drillDown,
   findElectronRoot,
   getPatchesConfigFile,
   isBuildToolsInstalled,
@@ -36,7 +38,11 @@ import {
 } from "./views/configs";
 import { DocsTreeDataProvider } from "./views/docs";
 import { ElectronViewProvider } from "./views/electron";
-import { ElectronPatchesProvider } from "./views/patches";
+import {
+  ElectronPatchesProvider,
+  Patch,
+  PatchDirectory,
+} from "./views/patches";
 import { HelpTreeDataProvider } from "./views/help";
 import {
   ElectronTestCollector,
@@ -82,9 +88,49 @@ function registerElectronBuildToolsCommands(
       "electron-build-tools.revealInElectronSidebar",
       async (file: vscode.Uri) => {
         if (/.*\/electron\/patches\/.*\.patch$/.test(file.path)) {
+          const patchesRoot = vscode.Uri.joinPath(electronRoot, "patches");
+
+          if (!file.path.startsWith(patchesRoot.path)) {
+            throw new Error("Uri not in patches directory");
+          }
+
+          const patchDir = path.relative(
+            patchesRoot.path,
+            path.dirname(file.path)
+          );
+
           try {
-            const treeItem = await patchesProvider.getPatchTreeItemForUri(file);
-            patchesView.reveal(treeItem, { expand: true, focus: true });
+            await drillDown(
+              patchesView,
+              patchesProvider,
+              async (
+                element: vscode.TreeItem | undefined,
+                children: vscode.TreeItem[]
+              ) => {
+                if (!element) {
+                  const item = (children as PatchDirectory[]).find(
+                    (child) => child.name === patchDir
+                  );
+
+                  if (item) {
+                    return { item, done: false };
+                  } else {
+                    throw new Error("Couldn't find patch directory tree item");
+                  }
+                } else {
+                  const item = (children as Patch[]).find(
+                    (child) => child.uri.fsPath === file.fsPath
+                  );
+
+                  if (item) {
+                    return { item, done: true };
+                  } else {
+                    throw new Error("Couldn't find patch tree item");
+                  }
+                }
+              },
+              { expand: true, focus: true }
+            );
           } catch (err) {
             Logger.error(err);
             vscode.window.showErrorMessage("Couldn't reveal patch in sidebar");

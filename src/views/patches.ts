@@ -103,40 +103,6 @@ export class ElectronPatchesProvider
     }
   }
 
-  async getPatchTreeItemForUri(uri: vscode.Uri): Promise<Patch> {
-    const patchesRoot = vscode.Uri.joinPath(this._electronRoot, "patches");
-
-    if (!uri.path.startsWith(patchesRoot.path)) {
-      throw new Error("Uri not in patches directory");
-    }
-
-    const patchDir = path.relative(patchesRoot.path, path.dirname(uri.path));
-
-    const walkTree = async (element?: vscode.TreeItem): Promise<Patch> => {
-      if (!element) {
-        const children = (await this.getChildren()) as PatchDirectory[];
-        const child = children.find((child) => child.name === patchDir);
-
-        if (child) {
-          return await walkTree(child);
-        } else {
-          throw new Error("Couldn't find patch directory tree item");
-        }
-      } else {
-        const children = (await this.getChildren(element)) as Patch[];
-        const child = children.find((child) => child.uri.fsPath === uri.fsPath);
-
-        if (child) {
-          return child;
-        } else {
-          throw new Error("Couldn't find patch tree item");
-        }
-      }
-    };
-
-    return walkTree();
-  }
-
   async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
     const children: vscode.TreeItem[] = [];
 

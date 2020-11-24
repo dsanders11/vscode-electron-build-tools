@@ -593,3 +593,57 @@ export class OptionalFeature<T> extends vscode.Disposable {
     this._disposable = setupFeature(getSettingValue());
   }
 }
+
+export async function drillDown(
+  treeView: vscode.TreeView<vscode.TreeItem>,
+  treeDataProvider: vscode.TreeDataProvider<vscode.TreeItem>,
+  callback: (
+    element: vscode.TreeItem | undefined,
+    children: vscode.TreeItem[]
+  ) =>
+    | Promise<{ item: vscode.TreeItem | undefined; done: boolean }>
+    | { item: vscode.TreeItem | undefined; done: boolean },
+  revealOptions?: {
+    select?: boolean | undefined;
+    focus?: boolean | undefined;
+    expand?: number | boolean | undefined;
+  }
+): Promise<void> {
+  let parentChain: vscode.TreeItem[] = [];
+  let children:
+    | vscode.TreeItem[]
+    | null
+    | undefined = await treeDataProvider.getChildren();
+
+  while (children && children.length > 0) {
+    const element: vscode.TreeItem | undefined =
+      parentChain[parentChain.length - 1];
+    const { item, done } = await callback(element, children);
+
+    if (item && !children.includes(item)) {
+      throw new Error("Drill down must return one of the children");
+    }
+
+    if (done) {
+      if (item) {
+        // This would use parentChain to reveal the item
+        // instead of calling treeDataProvider.getParent(...)
+        treeView.reveal(item, revealOptions);
+      }
+      return;
+    } else if (!item) {
+      throw new Error("Drill down tried to continue, but no item returned");
+    } else {
+      if (!item.collapsibleState) {
+        throw new Error(
+          "Drill down tried to continue, but returned item has no children"
+        );
+      }
+
+      parentChain.push(item);
+      children = await treeDataProvider.getChildren(item);
+    }
+  }
+
+  throw new Error("Drill down tried to continue, but no children of item");
+}
