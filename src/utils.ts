@@ -348,8 +348,9 @@ export async function getElectronTests(
   electronRoot: vscode.Uri,
   runner: TestRunner
 ): Promise<ParsedTestSuite> {
-  let debug = false; // Toggle this in debugger to debug child process
-  const debuggerOption = debug ? "--inspect-brk" : "";
+  // BUG - Env variables bleed between VS Code debug configurations
+  const debuggerOption =
+    process.env.VS_DEBUG_CHILD_PROCESSES === "true" ? "--inspect-brk" : "";
 
   const findFilesResult = await vscode.workspace.findFiles(
     new vscode.RelativePattern(

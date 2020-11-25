@@ -43,6 +43,9 @@ export function runAsTask({
   problemMatchers?: string | string[];
   exitCodeHandler?: (exitCode: number) => boolean | undefined;
 }): ElectronBuildToolsTask {
+  // BUG - Env variables bleed between VS Code debug configurations
+  const debuggerOption =
+    process.env.VS_DEBUG_CHILD_PROCESSES === "true" ? "--inspect-brk" : "";
   const socketName = generateSocketName();
 
   // base64 encode the command to get around shell quoting issues
@@ -54,7 +57,7 @@ export function runAsTask({
     taskName,
     "electron-build-tools",
     new vscode.ShellExecution(
-      `node out/scripts/echo-to-socket.js "${b64command}" ${socketName}`,
+      `node out/scripts/echo-to-socket.js ${debuggerOption} "${b64command}" ${socketName}`,
       {
         cwd: context.extensionPath,
         ...shellOptions,
