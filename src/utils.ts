@@ -348,10 +348,6 @@ export async function getElectronTests(
   electronRoot: vscode.Uri,
   runner: TestRunner
 ): Promise<ParsedTestSuite> {
-  // BUG - Env variables bleed between VS Code debug configurations
-  const debuggerOption =
-    process.env.VS_DEBUG_CHILD_PROCESSES === "true" ? "--inspect-brk" : "";
-
   const findFilesResult = await vscode.workspace.findFiles(
     new vscode.RelativePattern(
       electronRoot.fsPath,
@@ -392,24 +388,29 @@ export async function getElectronTests(
     socketServer.once("error", reject);
 
     try {
-      await exec(
-        `${electronExe} ${debuggerOption} ${scriptName} ${socketName}`,
-        {
-          encoding: "utf8",
-          cwd: electronRoot.fsPath,
-          env: {
-            // *DO NOT* inherit process.env, it includes stuff vscode has set like ELECTRON_RUN_AS_NODE
-            TS_NODE_PROJECT: vscode.Uri.joinPath(
-              electronRoot,
-              "tsconfig.spec.json"
-            ).fsPath,
-            TS_NODE_FILES: "true", // Without this compilation fails
-            TS_NODE_TRANSPILE_ONLY: "true", // Faster
-            TS_NODE_COMPILER: "typescript-cached-transpile",
-            ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
-          },
-        }
-      );
+      await exec(`${electronExe} ${scriptName} ${socketName}`, {
+        encoding: "utf8",
+        cwd: electronRoot.fsPath,
+        env: {
+          // Filter out environment variables that VS Code has set which
+          // would effect Electron, such as ELECTRON_RUN_AS_NODE, but try
+          // to pick up the other handy stuff like debugger auto-attach
+          ...Object.fromEntries(
+            Object.entries(process.env).filter(
+              ([key]) => !key.startsWith("ELECTRON_")
+            )
+          ),
+          NODE_OPTIONS: process.env.NODE_OPTIONS,
+          TS_NODE_PROJECT: vscode.Uri.joinPath(
+            electronRoot,
+            "tsconfig.spec.json"
+          ).fsPath,
+          TS_NODE_FILES: "true", // Without this compilation fails
+          TS_NODE_TRANSPILE_ONLY: "true", // Faster
+          TS_NODE_COMPILER: "typescript-cached-transpile",
+          ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
+        },
+      });
 
       try {
         resolve(JSON.parse(result));

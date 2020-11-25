@@ -15,24 +15,7 @@
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"
       ],
-      "env": {
-        "VS_DEBUG_CHILD_PROCESSES": "false"
-      },
-      "preLaunchTask": "${defaultBuildTask}"
-    },
-    {
-      "name": "Run Extension (w/ Child Process Debug)",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/out/**/*.js"
-      ],
-      "env": {
-        "VS_DEBUG_CHILD_PROCESSES": "true"
-      },
+      "autoAttachChildProcesses": true,
       "preLaunchTask": "${defaultBuildTask}"
     },
     {
