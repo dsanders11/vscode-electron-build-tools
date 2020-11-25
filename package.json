@@ -772,8 +772,11 @@
     "word-wrap": "^1.2.3"
   },
   "lint-staged": {
+    "*.js": [
+      "yarn prettier:write"
+    ],
     "*.ts": [
-      "prettier --write"
+      "yarn prettier:write"
     ]
   },
   "husky": {
