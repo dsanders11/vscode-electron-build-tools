@@ -9,6 +9,11 @@ const readline = require("readline");
 // This also gives access to Mocha, rather than including it in the extension
 Module.globalPaths.push(path.resolve(process.cwd(), "node_modules"));
 
+// However, node_modules resolution works upward from the file path, so once
+// inside code outside of this script, we lose access to the extension's
+// node_modules, so explicitly inject it in there so any module searches it
+Module.globalPaths.push(path.resolve(__dirname, "..", "..", "node_modules"));
+
 // Needed or some imports at the start of test files will fail
 Module.globalPaths.push(path.resolve(process.cwd(), "spec", "node_modules"));
 
@@ -88,7 +93,7 @@ app
       });
     });
   })
-  .catch(err => {
+  .catch((err) => {
     console.error(err);
     process.exit(1);
   });
