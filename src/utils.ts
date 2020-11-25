@@ -652,3 +652,12 @@ export async function drillDown(
 export function sleep(timeMs: number) {
   return new Promise((resolve) => setTimeout(resolve, timeMs));
 }
+
+export function positionAt(content: string, offset: number) {
+  const lines = Array.from(
+    content.slice(0, offset).matchAll(/^(.*)(?:\r\n|$)/gm)
+  );
+  const lastLine = lines.slice(-1)[0][1];
+
+  return new vscode.Position(lines.length - 1, lastLine.length);
+}

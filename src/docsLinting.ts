@@ -9,16 +9,17 @@ import type {
   DocsLinkable,
   DocsLinkablesProvider,
 } from "./docsLinkablesProvider";
-import { ensurePosixSeparators } from "./utils";
+import { ensurePosixSeparators, positionAt } from "./utils";
 
 function getLinksInDocument(document: vscode.TextDocument) {
+  const text = document.getText();
   const links = [];
 
   const inlineLinkMatches = Array.from(
-    document.getText().matchAll(Markdown.linkPattern)
+    text.matchAll(Markdown.linkPattern)
   ).map((match) => ["inline", match]) as [string, RegExpMatchArray][];
   const referenceLinkDefinitionMatches = Array.from(
-    document.getText().matchAll(Markdown.definitionPattern)
+    text.matchAll(Markdown.definitionPattern)
   ).map((match) => ["reference-definition", match]) as [
     string,
     RegExpMatchArray
@@ -31,8 +32,8 @@ function getLinksInDocument(document: vscode.TextDocument) {
     if (linkUri) {
       const matchIdx = match.index || 0;
       const linkRange = new vscode.Range(
-        document.positionAt(matchIdx + match[1].length),
-        document.positionAt(matchIdx + match[1].length + linkUri.length)
+        positionAt(text, matchIdx + match[1].length),
+        positionAt(text, matchIdx + match[1].length + linkUri.length)
       );
       let uri = vscode.Uri.parse(linkUri);
 
