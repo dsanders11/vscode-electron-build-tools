@@ -498,7 +498,7 @@
         {
           "command": "electron-build-tools.runTestFile",
           "group": "1_run",
-          "when": "resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
+          "when": "!isInDiffEditor && resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
         }
       ],
       "explorer/context": [
