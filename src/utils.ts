@@ -407,7 +407,8 @@ export async function getElectronTests(
           ).fsPath,
           TS_NODE_FILES: "true", // Without this compilation fails
           TS_NODE_TRANSPILE_ONLY: "true", // Faster
-          TS_NODE_COMPILER: "typescript-cached-transpile",
+          TS_NODE_CACHE: "false",
+          TS_NODE_COMPILER: "electron-build-tools-typescript",
           ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
         },
       });

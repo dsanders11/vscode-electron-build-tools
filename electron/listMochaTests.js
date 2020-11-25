@@ -3,6 +3,12 @@ const net = require("net");
 const path = require("path");
 const readline = require("readline");
 
+// We want to terminate on errors, not show a dialog
+process.once("uncaughtException", (err) => {
+  console.error(err);
+  process.exit(1);
+});
+
 // We need the typescript module but it would be 60 MB to bundle it with the
 // extension, which doesn't seem like the right thing to do. It's already in
 // the Electron source tree, so give access to it by adding to the global path
@@ -14,16 +20,70 @@ Module.globalPaths.push(path.resolve(process.cwd(), "node_modules"));
 // node_modules, so explicitly inject it in there so any module searches it
 Module.globalPaths.push(path.resolve(__dirname, "..", "..", "node_modules"));
 
+// Needed for our custom files
+Module.globalPaths.push(path.resolve(__dirname));
+
 // Needed or some imports at the start of test files will fail
 Module.globalPaths.push(path.resolve(process.cwd(), "spec", "node_modules"));
 
-// We want to terminate on errors, not show a dialog
-process.once("uncaughtException", (err) => {
-  console.error(err);
-  process.exit(1);
-});
-
 const { app } = require("electron");
+
+const { SourceMapConsumer } = require("source-map");
+const { retrieveSourceMap } = require("source-map-support");
+const { getFileContent } = require("electron-build-tools-typescript");
+
+const sourceMapConsumers = new Map();
+
+function positionAt(content, offset) {
+  const lines = Array.from(
+    content.slice(0, offset).matchAll(/^(.*)(?:\r\n|$)/gm)
+  );
+  const lastLine = lines.slice(-1)[0][1];
+
+  return { line: lines.length - 1, character: lastLine.length };
+}
+
+function mapFnBodyToSourceRange(file, body) {
+  if (body) {
+    let sourceMap = sourceMapConsumers.get(file);
+
+    if (!sourceMap) {
+      // This isn't that cheap - do it once per file
+      const urlAndMap = retrieveSourceMap(file);
+      if (urlAndMap && urlAndMap.map) {
+        sourceMap = new SourceMapConsumer(urlAndMap.map);
+        sourceMapConsumers.set(file, sourceMap);
+      }
+    }
+
+    if (sourceMap) {
+      const transformedContent = getFileContent(file);
+      const idx = transformedContent.indexOf(body);
+
+      if (idx !== -1) {
+        const start = positionAt(transformedContent, idx);
+        const end = positionAt(body, body.length);
+        end.line += start.line;
+
+        const sourceStart = sourceMap.originalPositionFor({
+          line: start.line + 1,
+          column: start.character,
+        });
+        const sourceEnd = sourceMap.originalPositionFor({
+          line: end.line + 1,
+          column: end.character,
+        });
+
+        return {
+          start: { line: sourceStart.line, character: sourceStart.column },
+          end: { line: sourceEnd.line, character: sourceEnd.column },
+        };
+      }
+    }
+  }
+
+  return { start: null, end: null };
+}
 
 function parseTestSuites(suite) {
   const parsedTests = {
@@ -34,6 +94,8 @@ function parseTestSuites(suite) {
     tests: suite.tests.map((test) => ({
       title: test.title,
       fullTitle: test.fullTitle(),
+      file: test.file,
+      range: mapFnBodyToSourceRange(test.file, test.body),
     })),
   };
 
@@ -77,9 +139,8 @@ app
         } else {
           try {
             await mocha.loadFiles();
-            socket.write(
-              JSON.stringify(parseTestSuites(mocha.suite), undefined, 4)
-            );
+            const parsedSuites = parseTestSuites(mocha.suite);
+            socket.write(JSON.stringify(parsedSuites, undefined, 4));
             process.exit(0);
           } catch (err) {
             process.stderr.write(err.toString());
