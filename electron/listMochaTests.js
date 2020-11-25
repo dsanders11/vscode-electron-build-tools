@@ -14,6 +14,7 @@ Module.globalPaths.push(path.resolve(process.cwd(), "spec", "node_modules"));
 
 // We want to terminate on errors, not show a dialog
 process.once("uncaughtException", (err) => {
+  console.error(err);
   process.exit(1);
 });
 
@@ -87,6 +88,7 @@ app
       });
     });
   })
-  .catch(() => {
+  .catch(err => {
+    console.error(err);
     process.exit(1);
   });
