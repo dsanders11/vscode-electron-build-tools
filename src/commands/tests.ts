@@ -28,8 +28,8 @@ export function registerTestCommands(
   context.subscriptions.push(
     vscode.commands.registerCommand(
       `${commandPrefix}.openTestFile`,
-      (testOrSuite: TestBaseTreeItem) => {
-        let options: vscode.TextDocumentShowOptions | undefined;
+      async (testOrSuite: TestBaseTreeItem) => {
+        let range: vscode.Range | undefined;
 
         if (testOrSuite instanceof TestTreeItem) {
           const test = testOrSuite.test;
@@ -37,18 +37,24 @@ export function registerTestCommands(
           if (test.range !== null) {
             const { start, end } = test.range;
 
-            options = {
-              selection: new vscode.Range(
-                start.line,
-                start.character,
-                end.line,
-                end.character
-              ),
-            };
+            range = new vscode.Range(
+              start.line,
+              start.character,
+              end.line,
+              end.character
+            );
           }
         }
 
-        return vscode.window.showTextDocument(testOrSuite.uri, options);
+        const textEditor = await vscode.window.showTextDocument(
+          testOrSuite.uri
+        );
+
+        if (range !== undefined) {
+          textEditor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+        }
+
+        return textEditor;
       }
     ),
     ExtensionState.registerExtensionOperationCommand(
