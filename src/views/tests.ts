@@ -5,7 +5,7 @@ import {
   default as ExtensionState,
   ExtensionOperation,
 } from "../extensionState";
-import { ParsedRunnable, ParsedTestSuite, Test, TestRunner } from "../common";
+import { ParsedTest, ParsedTestSuite, Test, TestRunner } from "../common";
 import {
   alphabetizeByLabel,
   getElectronTests,
@@ -62,7 +62,7 @@ export interface TestCollector {
 }
 
 export class ElectronTestCollector implements TestCollector {
-  private static readonly storedTestsVersion = 1;
+  private static readonly storedTestsVersion = 2;
   private static readonly storageKey = "cachedTests";
 
   private _onDidStartRefreshing = new EventEmitter<OnDidStartRefreshing>();
@@ -383,9 +383,9 @@ export class TestSuiteTreeItem extends TestBaseTreeItem {
   }
 }
 
-class TestTreeItem extends TestBaseTreeItem {
+export class TestTreeItem extends TestBaseTreeItem {
   constructor(
-    public readonly test: ParsedRunnable,
+    public readonly test: ParsedTest,
     public readonly runner: TestRunner,
     public readonly parent: TestSuiteTreeItem
   ) {

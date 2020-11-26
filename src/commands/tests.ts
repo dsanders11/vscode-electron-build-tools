@@ -16,6 +16,7 @@ import {
   TestRunnerTreeItem,
   TestState,
   TestsTreeDataProvider,
+  TestTreeItem,
 } from "../views/tests";
 
 export function registerTestCommands(
@@ -28,7 +29,26 @@ export function registerTestCommands(
     vscode.commands.registerCommand(
       `${commandPrefix}.openTestFile`,
       (testOrSuite: TestBaseTreeItem) => {
-        return vscode.commands.executeCommand("vscode.open", testOrSuite.uri);
+        let options: vscode.TextDocumentShowOptions | undefined;
+
+        if (testOrSuite instanceof TestTreeItem) {
+          const test = testOrSuite.test;
+
+          if (test.range !== null) {
+            const { start, end } = test.range;
+
+            options = {
+              selection: new vscode.Range(
+                start.line,
+                start.character,
+                end.line,
+                end.character
+              ),
+            };
+          }
+        }
+
+        return vscode.window.showTextDocument(testOrSuite.uri, options);
       }
     ),
     ExtensionState.registerExtensionOperationCommand(

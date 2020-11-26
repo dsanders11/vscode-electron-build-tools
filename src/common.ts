@@ -3,15 +3,27 @@ export type IpcMessage = {
   data: string;
 };
 
-export interface ParsedRunnable {
-  title: string;
-  fullTitle: string;
+interface Position {
+  line: number;
+  character: number;
 }
 
-export interface ParsedTestSuite extends ParsedRunnable {
+export interface ParsedTestData {
+  title: string;
+  fullTitle: string;
   file: string;
+}
+
+export interface ParsedTest extends ParsedTestData {
+  range: {
+    start: Position;
+    end: Position;
+  } | null;
+}
+
+export interface ParsedTestSuite extends ParsedTestData {
   suites: ParsedTestSuite[];
-  tests: ParsedRunnable[];
+  tests: ParsedTest[];
 }
 
 export enum TestRunner {

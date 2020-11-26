@@ -75,14 +75,14 @@ function mapFnBodyToSourceRange(file, body) {
         });
 
         return {
-          start: { line: sourceStart.line, character: sourceStart.column },
-          end: { line: sourceEnd.line, character: sourceEnd.column },
+          start: { line: sourceStart.line - 1, character: sourceStart.column },
+          end: { line: sourceEnd.line - 1, character: sourceEnd.column },
         };
       }
     }
   }
 
-  return { start: null, end: null };
+  return null;
 }
 
 function parseTestSuites(suite) {
