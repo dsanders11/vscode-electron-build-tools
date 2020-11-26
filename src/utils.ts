@@ -348,18 +348,12 @@ export async function getElectronTests(
   electronRoot: vscode.Uri,
   runner: TestRunner
 ): Promise<ParsedTestSuite> {
-  const findFilesResult = await vscode.workspace.findFiles(
+  const testFiles = await vscode.workspace.findFiles(
     new vscode.RelativePattern(
       electronRoot.fsPath,
       `spec${runner === TestRunner.MAIN ? "-main" : ""}/**/*-spec.{js,ts}`
-    )
-  );
-
-  // VS Code doesn't support negation in blobs and they don't seem to
-  // want to according to issues about it, so we have to filter out
-  // node_modules ourselves here or end up with files we don't want
-  const testFiles = findFilesResult.filter(
-    (filename) => !filename.path.includes("node_modules")
+    ),
+    "**​/node_modules/**"
   );
 
   const electronExe = await vscode.commands.executeCommand<string>(
