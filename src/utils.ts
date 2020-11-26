@@ -346,15 +346,18 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
 export async function getElectronTests(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
-  runner: TestRunner
+  runner: TestRunner,
+  files?: vscode.Uri[]
 ): Promise<ParsedTestSuite> {
-  const testFiles = await vscode.workspace.findFiles(
-    new vscode.RelativePattern(
-      electronRoot.fsPath,
-      `spec${runner === TestRunner.MAIN ? "-main" : ""}/**/*-spec.{js,ts}`
-    ),
-    "**​/node_modules/**"
-  );
+  if (files === undefined) {
+    files = await vscode.workspace.findFiles(
+      new vscode.RelativePattern(
+        electronRoot.fsPath,
+        `spec${runner === TestRunner.MAIN ? "-main" : ""}/**/*-spec.{js,ts}`
+      ),
+      "**​/node_modules/**"
+    );
+  }
 
   const electronExe = await vscode.commands.executeCommand<string>(
     `${commandPrefix}.show.exe`
@@ -374,7 +377,7 @@ export async function getElectronTests(
       socket.once("error", reject);
 
       // Send filenames of the tests
-      for (const uri of testFiles) {
+      for (const uri of files!) {
         socket.write(`${uri.fsPath}\n`);
       }
       socket.write("DONE\n");
