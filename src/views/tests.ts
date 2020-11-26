@@ -1,3 +1,5 @@
+import * as path from "path";
+
 import * as vscode from "vscode";
 import { EventEmitter, ThemeIcon, TreeItem, TreeDataProvider } from "vscode";
 
@@ -59,6 +61,9 @@ export interface TestCollector {
 
   refreshTestSuites(): Promise<void>;
   getTestSuites(runner: TestRunner): Promise<ParsedTestSuite>;
+  getTestsForUri(
+    uri: vscode.Uri
+  ): Promise<{ runner: TestRunner; tests: ParsedTest[] }>;
 }
 
 export class ElectronTestCollector implements TestCollector {
@@ -171,6 +176,47 @@ export class ElectronTestCollector implements TestCollector {
     }
 
     return testSuites;
+  }
+
+  async getTestsForUri(
+    uri: vscode.Uri
+  ): Promise<{ runner: TestRunner; tests: ParsedTest[] }> {
+    if (!uri.path.startsWith(this._electronRoot.path)) {
+      throw new Error("Uri is not in Electron root");
+    }
+
+    const testDirectory = path.posix
+      .relative(this._electronRoot.path, uri.path)
+      .split(path.posix.sep)[0];
+    let runner: TestRunner;
+
+    if (testDirectory === "spec-main") {
+      runner = TestRunner.MAIN;
+    } else if (testDirectory === "spec") {
+      runner = TestRunner.REMOTE;
+    } else {
+      throw new Error("Uri is not in a test directory");
+    }
+
+    const collectTests = (suite: ParsedTestSuite) => {
+      const tests: ParsedTest[] = [];
+
+      for (const test of suite.tests) {
+        if (test.file === uri.fsPath) {
+          tests.push(test);
+        }
+      }
+
+      for (const childSuite of suite.suites) {
+        tests.push(...collectTests(childSuite));
+      }
+
+      return tests;
+    };
+
+    const parsedTestSuite = await this.getTestSuites(runner);
+
+    return { runner, tests: await collectTests(parsedTestSuite) };
   }
 }
 

@@ -31,10 +31,10 @@ export enum TestRunner {
   REMOTE = "remote",
 }
 
-export type Test = {
+export interface Test {
   runner: TestRunner;
   test: string;
-};
+}
 
 export namespace Markdown {
   // From vscode's source

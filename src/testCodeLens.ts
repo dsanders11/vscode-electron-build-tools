@@ -1,40 +1,46 @@
 import * as vscode from "vscode";
 
 import { commandPrefix } from "./constants";
-import { TestsTreeDataProvider } from "./views/tests";
+import { TestCollector } from "./views/tests";
 
 export class TestCodeLensProvider implements vscode.CodeLensProvider {
-  constructor(private readonly testsProvider: TestsTreeDataProvider) {}
+  constructor(private readonly testsCollector: TestCollector) {}
 
   async provideCodeLenses(
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[]> {
-    const codeLenses = [];
-    const regex = /^.*\.?(?:describe|it)\(\s*['"](.+)['"]\s*,.*$/gm;
+    const codeLenses: vscode.CodeLens[] = [];
 
-    for (const match of document.getText().matchAll(regex)) {
-      const line = document.lineAt(document.positionAt(match.index!).line);
-      const indexOf = line.text.indexOf(match[0]);
-      const position = new vscode.Position(line.lineNumber, indexOf);
-      const range = document.getWordRangeAtPosition(position, regex);
+    // Locations of tests are based on the file on-disk, we
+    // can't provide the locations for the unsaved changes
+    if (document.isDirty) {
+      return codeLenses;
+    }
 
-      if (range) {
-        const testName = this.testsProvider.findTestFullyQualifiedName(
-          document.uri,
-          match[1]
+    // const symbols = await vscode.commands.executeCommand("vscode.executeDocumentSymbolProvider", document.uri);
+    const { runner, tests } = await this.testsCollector.getTestsForUri(
+      document.uri
+    );
+
+    for (const test of tests) {
+      if (test.range !== null) {
+        const { start, end } = test.range;
+        const range = new vscode.Range(
+          start.line,
+          start.character,
+          end.line,
+          end.character
         );
 
-        if (testName) {
-          codeLenses.push(
-            new vscode.CodeLens(range, {
-              title: "Electron Build Tools: Run Test",
-              tooltip: "Run only this test",
-              command: `${commandPrefix}.runTest`,
-              arguments: [testName],
-            })
-          );
-        }
+        codeLenses.push(
+          new vscode.CodeLens(range, {
+            title: "Electron Build Tools: Run Test",
+            tooltip: "Run only this test",
+            command: `${commandPrefix}.runTest`,
+            arguments: [{ runner, test: test.fullTitle }],
+          })
+        );
       }
     }
 

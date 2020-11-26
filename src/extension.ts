@@ -337,7 +337,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     "{spec,spec-main}/**/*-spec.{js,ts}"
                   ),
                 },
-                new TestCodeLensProvider(testsProvider)
+                new TestCodeLensProvider(testsCollector)
               );
             } else {
               Logger.info("Tests code lens disabled");
