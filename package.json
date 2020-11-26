@@ -506,6 +506,11 @@
           "command": "electron-build-tools.revealInElectronSidebar",
           "group": "navigation",
           "when": "electron-build-tools:ready && resourceDirname =~ /.*electron(?:\\\\|\\/)patches(?:\\\\|\\/).*$/ && resourceExtname == .patch"
+        },
+        {
+          "command": "electron-build-tools.runTestFile",
+          "group": "navigation",
+          "when": "resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
         }
       ],
       "view/item/context": [
