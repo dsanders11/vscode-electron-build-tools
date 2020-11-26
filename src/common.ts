@@ -12,6 +12,7 @@ export interface ParsedTestData {
   title: string;
   fullTitle: string;
   file: string;
+  pending: boolean;
 }
 
 export interface ParsedTest extends ParsedTestData {

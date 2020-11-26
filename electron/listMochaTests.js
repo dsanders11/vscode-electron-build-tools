@@ -90,11 +90,13 @@ function parseTestSuites(suite) {
     title: suite.title,
     fullTitle: suite.fullTitle(),
     file: suite.file,
+    pending: suite.pending,
     suites: [],
     tests: suite.tests.map((test) => ({
       title: test.title,
       fullTitle: test.fullTitle(),
       file: test.file,
+      pending: test.pending,
       range: mapFnBodyToSourceRange(test.file, test.body),
     })),
   };

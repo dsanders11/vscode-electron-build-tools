@@ -67,7 +67,7 @@ export interface TestCollector {
 }
 
 export class ElectronTestCollector implements TestCollector {
-  private static readonly storedTestsVersion = 2;
+  private static readonly storedTestsVersion = 3;
   private static readonly storageKey = "cachedTests";
 
   private _onDidStartRefreshing = new EventEmitter<OnDidStartRefreshing>();
