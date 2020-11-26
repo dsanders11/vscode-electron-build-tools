@@ -1,7 +1,7 @@
-export type IpcMessage = {
+export interface IpcMessage {
   stream: string;
   data: string;
-};
+}
 
 interface Position {
   line: number;

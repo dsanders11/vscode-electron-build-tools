@@ -17,19 +17,19 @@ import type { ElectronPatchesConfig } from "./types";
 
 type PullRequestFileStatus = "added" | "deleted" | "modified";
 
-type PullRequestFile = {
+interface PullRequestFile {
   uri: vscode.Uri;
   status: PullRequestFileStatus;
   patch: string;
-};
+}
 
-type PullRequestPatchedFile = {
+interface PullRequestPatchedFile {
   uri: vscode.Uri;
   patch: string;
   checkoutDirectory: vscode.Uri;
   fileIndexA: string;
   fileIndexB: string;
-};
+}
 
 type FileFromPullRequest = PullRequestFile | PullRequestPatchedFile;
 

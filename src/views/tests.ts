@@ -46,15 +46,15 @@ function findFullPathForTest(
   return matches;
 }
 
-export type OnDidStartRefreshing = {
+export interface OnDidStartRefreshing {
   runner: TestRunner;
   refreshFinished: Promise<void>;
-};
+}
 
-type StoredTests = {
+interface StoredTests {
   version: number;
   tests: [TestRunner, ParsedTestSuite][];
-};
+}
 
 export interface TestCollector {
   onDidStartRefreshing: vscode.Event<OnDidStartRefreshing>;

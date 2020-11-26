@@ -8,21 +8,21 @@ import type { IpcMessage } from "./common";
 import Logger from "./logging";
 import { generateSocketName } from "./utils";
 
-export type ElectronBuildToolsTask = {
+export interface ElectronBuildToolsTask {
   onDidWriteData: vscode.Event<OnDidWriteData>;
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
   finished: Promise<boolean>;
-};
+}
 
 type OnDidWriteData = IpcMessage;
 
-type OnDidWriteLine = {
+interface OnDidWriteLine {
   progress: vscode.Progress<{
     message?: string | undefined;
     increment?: number | undefined;
   }>;
   line: string;
-};
+}
 
 export function runAsTask({
   context,

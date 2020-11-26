@@ -13,16 +13,16 @@ type IncrementalProgress = vscode.Progress<{
   increment?: number | undefined;
 }>;
 
-type ReferenceSyncMilestone = {
+interface ReferenceSyncMilestone {
   line: string;
   progress: number;
-};
+}
 
-type SyncMilestone = {
+interface SyncMilestone {
   line: string;
   message: string;
   timestamp: number;
-};
+}
 
 type SyncRun = SyncMilestone[];
 type ReferenceSyncRun = ReferenceSyncMilestone[];

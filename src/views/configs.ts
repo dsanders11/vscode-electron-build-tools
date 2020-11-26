@@ -5,9 +5,9 @@ import * as chokidar from "chokidar";
 import { commandPrefix } from "../constants";
 import { getConfigs, getConfigsFilePath } from "../utils";
 
-export type OnDidStartRefreshing = {
+export interface OnDidStartRefreshing {
   refreshFinished: Promise<void>;
-};
+}
 
 export interface ConfigCollector {
   onDidStartRefreshing: vscode.Event<OnDidStartRefreshing>;

@@ -30,25 +30,25 @@ const fsReadFile = promisify(fs.readFile);
 
 export const patchedFilenameRegex = /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:new file mode \d+[\r\n]+)?index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|$)/gs;
 
-export type DocLink = {
+export interface DocLink {
   description: string;
   destination: vscode.Uri;
   level: number;
-};
+}
 
-export type DocSection = {
+export interface DocSection {
   heading: string;
   level: number;
   parent?: DocSection;
   sections: DocSection[];
   links: DocLink[];
-};
+}
 
-export type FileInPatch = {
+export interface FileInPatch {
   file: vscode.Uri;
   fileIndexA: string;
   fileIndexB: string;
-};
+}
 
 export async function isBuildToolsInstalled(): Promise<boolean> {
   const command = os.platform() === "win32" ? "where" : "which";

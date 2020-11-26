@@ -20,11 +20,11 @@ import {
   truncateToLength,
 } from "../utils";
 
-export type PullRequestWithPatch = {
+export interface PullRequestWithPatch {
   prNumber: string;
   title: string;
   patchDirectories: string[];
-};
+}
 
 export class ElectronPatchesProvider
   implements vscode.TreeDataProvider<vscode.TreeItem> {
