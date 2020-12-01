@@ -210,9 +210,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
       const patchesConfig = getPatchesConfigFile(electronRoot);
       const configsCollector = new BuildToolsConfigCollector(context);
-      const configsProvider = new ElectronBuildToolsConfigsProvider(
-        configsCollector
-      );
       const patchesProvider = new ElectronPatchesProvider(
         electronRoot,
         patchesConfig
@@ -234,7 +231,20 @@ export async function activate(context: vscode.ExtensionContext) {
       configsCollector.onDidStartRefreshing(({ refreshFinished }) => {
         vscode.window.withProgress(
           { location: { viewId: viewIds.CONFIGS } },
-          () => refreshFinished
+          async () => {
+            try {
+              await refreshFinished;
+              const { configs } = await configsCollector.getConfigs();
+
+              if (configs.length === 0) {
+                configsView.message = "No build configs.";
+              } else {
+                configsView.message = undefined;
+              }
+            } catch {
+              configsView.message = "Couldn't get configs.";
+            }
+          }
         );
       });
       testsCollector.onDidStartRefreshing(({ refreshFinished }) => {
@@ -244,14 +254,18 @@ export async function activate(context: vscode.ExtensionContext) {
         );
       });
 
+      const configsProvider = new ElectronBuildToolsConfigsProvider(
+        configsCollector
+      );
+      const configsView = vscode.window.createTreeView(viewIds.CONFIGS, {
+        treeDataProvider: configsProvider,
+      });
+
       const testsProvider = new TestsTreeDataProvider(testsCollector);
       context.subscriptions.push(
         diagnosticsCollection,
         linkableProvider,
-        vscode.window.registerTreeDataProvider(
-          viewIds.CONFIGS,
-          configsProvider
-        ),
+        configsView,
         patchesView,
         vscode.window.createTreeView(viewIds.DOCS, {
           showCollapseAll: true,

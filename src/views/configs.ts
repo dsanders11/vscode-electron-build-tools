@@ -136,9 +136,7 @@ export class ElectronBuildToolsConfigsProvider
         );
       }
 
-      if (configs.length === 0) {
-        configs.push(new vscode.TreeItem("There are no configs"));
-      } else {
+      if (configs.length !== 0) {
         this._treeItems = configs as ConfigTreeItem[];
       }
     }

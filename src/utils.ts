@@ -79,12 +79,14 @@ export async function getConfigs() {
   });
   const configsOutput = stdout.trim();
 
-  for (const rawConfig of configsOutput.split("\n")) {
-    const config = rawConfig.replace("*", "").trim();
-    configs.push(config);
+  if (!configsOutput.startsWith("No build configs found.")) {
+    for (const rawConfig of configsOutput.split("\n")) {
+      const config = rawConfig.replace("*", "").trim();
+      configs.push(config);
 
-    if (rawConfig.trim().startsWith("*")) {
-      activeConfig = config;
+      if (rawConfig.trim().startsWith("*")) {
+        activeConfig = config;
+      }
     }
   }
 
