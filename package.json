@@ -78,6 +78,13 @@
         "enablement": "electron-build-tools:canBuild"
       },
       {
+        "command": "electron-build-tools.newConfig",
+        "title": "New Config",
+        "category": "Electron Build Tools",
+        "icon": "$(add)",
+        "enablement": "electron-build-tools:canChangeConfig"
+      },
+      {
         "command": "electron-build-tools.openPatch",
         "title": "Open Patch",
         "category": "Electron Build Tools"
@@ -580,6 +587,11 @@
         }
       ],
       "view/title": [
+        {
+          "command": "electron-build-tools.newConfig",
+          "when": "view == electron-build-tools:configs",
+          "group": "navigation"
+        },
         {
           "command": "electron-build-tools.refreshPatches",
           "when": "view == electron-build-tools:patches",

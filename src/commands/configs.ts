@@ -4,7 +4,7 @@ import { promisify } from "util";
 
 import * as vscode from "vscode";
 
-import { buildToolsExecutable, commandPrefix } from "../constants";
+import { buildToolsExecutable, commandPrefix, viewIds } from "../constants";
 import {
   default as ExtensionState,
   ExtensionOperation,
@@ -19,12 +19,171 @@ import type {
 
 const exec = promisify(childProcess.exec);
 
+interface ConfigOptionItem extends vscode.QuickPickItem {
+  optionName?: string;
+}
+
 export function registerConfigsCommands(
   context: vscode.ExtensionContext,
   configsCollector: ConfigCollector,
   configsProvider: ElectronBuildToolsConfigsProvider
 ) {
   context.subscriptions.push(
+    ExtensionState.registerExtensionOperationCommand(
+      ExtensionOperation.CHANGE_CONFIG,
+      `${commandPrefix}.newConfig`,
+      () => {
+        vscode.window.showErrorMessage(
+          "Can't create new config, other work in-progress"
+        );
+      },
+      async () => {
+        try {
+          const configName = await new Promise<string | undefined>(
+            (resolve) => {
+              const configNameInput = vscode.window.createInputBox();
+              configNameInput.title = "New Electron Build Tools Config";
+              configNameInput.step = 1;
+              configNameInput.totalSteps = 4;
+              configNameInput.prompt = "Enter config name";
+              configNameInput.onDidHide(() => {
+                configNameInput.dispose();
+                resolve();
+              });
+              configNameInput.onDidAccept(() => {
+                resolve(configNameInput.value);
+                configNameInput.dispose();
+              });
+              configNameInput.show();
+            }
+          );
+
+          if (configName === undefined) {
+            return;
+          }
+
+          const rootPath = await vscode.window.showOpenDialog({
+            canSelectFiles: false,
+            canSelectFolders: true,
+          });
+
+          if (rootPath === undefined) {
+            return;
+          }
+
+          const options = await new Promise<
+            readonly ConfigOptionItem[] | undefined
+          >((resolve) => {
+            const configOptionsQuickPick = vscode.window.createQuickPick<
+              ConfigOptionItem
+            >();
+            configOptionsQuickPick.title = "New Electron Build Tools Config";
+            configOptionsQuickPick.placeholder = "Configuration options";
+            configOptionsQuickPick.items = [
+              {
+                label: "Add Fork",
+                detail: "Add a remote fork of Electron with the name 'fork'",
+              },
+              {
+                label: "Use HTTPS",
+                detail:
+                  "During sync, set remote origins with https://github... URLs instead of git@github...",
+                optionName: "use-https",
+              },
+              {
+                label: "Address Sanitizer",
+                detail: "When building, enable clang's address sanitizer",
+                optionName: "asan",
+              },
+              {
+                label: "Leak Sanitizer",
+                detail: "When building, enable clang's leak sanitizer",
+                optionName: "lsan",
+              },
+              {
+                label: "Memory Sanitizer",
+                detail: "When building, enable clang's memory sanitizer",
+                optionName: "msan",
+              },
+              {
+                label: "Thread Sanitizer",
+                detail: "When building, enable clang's thread sanitizer",
+                optionName: "tsan",
+              },
+            ];
+            configOptionsQuickPick.canSelectMany = true;
+            configOptionsQuickPick.step = 3;
+            configOptionsQuickPick.totalSteps = 4;
+            configOptionsQuickPick.onDidHide(() => {
+              configOptionsQuickPick.dispose();
+              resolve();
+            });
+            configOptionsQuickPick.onDidAccept(() => {
+              resolve(configOptionsQuickPick.selectedItems);
+              configOptionsQuickPick.dispose();
+            });
+            configOptionsQuickPick.show();
+          });
+
+          if (options === undefined) {
+            return;
+          }
+
+          const cliOptions = options
+            .filter((option) => option.optionName !== undefined)
+            .map((option) => `--${option.optionName}`);
+          const useFork = options.find(
+            (quickPickItem) => quickPickItem.label === "Add Fork"
+          );
+
+          if (useFork) {
+            const forkName = await new Promise<string | undefined>(
+              (resolve) => {
+                const forkNameInput = vscode.window.createInputBox();
+                forkNameInput.title = "New Electron Build Tools Config";
+                forkNameInput.placeholder = "Fork Name";
+                forkNameInput.step = 4;
+                forkNameInput.totalSteps = 4;
+                forkNameInput.prompt =
+                  "This should take the format 'username/electron'";
+                forkNameInput.onDidHide(() => {
+                  forkNameInput.dispose();
+                  resolve();
+                });
+                forkNameInput.onDidAccept(() => {
+                  resolve(forkNameInput.value);
+                  forkNameInput.dispose();
+                });
+                forkNameInput.show();
+              }
+            );
+
+            if (forkName === undefined) {
+              return;
+            }
+
+            cliOptions.push(`--fork ${forkName}`);
+          }
+
+          await vscode.window.withProgress(
+            { location: { viewId: viewIds.CONFIGS } },
+            async () => {
+              await exec(
+                `${buildToolsExecutable} init ${cliOptions.join(
+                  " "
+                )} ${configName}`
+              );
+              await configsCollector.refreshConfigs();
+            }
+          );
+        } catch (err) {
+          Logger.error(err);
+          vscode.window.showErrorMessage(
+            `Failed to create new config: ${err.stderr.trim()}`
+          );
+        }
+      }
+    ),
     vscode.commands.registerCommand(
       `${commandPrefix}.openConfig`,
       async (configName: string) => {
