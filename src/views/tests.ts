@@ -358,7 +358,7 @@ export abstract class TestBaseTreeItem extends TreeItem {
     this._state = TestState.NONE;
   }
 
-  abstract getFullTitle(): string;
+  abstract get fullTitle(): string;
 
   getState() {
     return this._state;
@@ -416,7 +416,7 @@ export class TestSuiteTreeItem extends TestBaseTreeItem {
     // this.resourceUri = vscode.Uri.file(suite.file);
   }
 
-  getFullTitle() {
+  get fullTitle() {
     return this.suite.fullTitle;
   }
 
@@ -448,7 +448,7 @@ export class TestTreeItem extends TestBaseTreeItem {
     this.contextValue = "test";
   }
 
-  getFullTitle() {
+  get fullTitle() {
     return this.test.fullTitle;
   }
 
