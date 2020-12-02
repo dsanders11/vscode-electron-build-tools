@@ -21,31 +21,6 @@ export enum TestState {
   FAILURE,
 }
 
-function findFullPathForTest(
-  suite: ParsedTestSuite,
-  filename: vscode.Uri,
-  test: string
-): string[][] {
-  const matches: string[][] = [];
-
-  if (!suite.file || suite.file === filename.fsPath) {
-    for (const { title } of suite.tests) {
-      if (title === test) {
-        matches.push([suite.title, test]);
-      }
-    }
-
-    for (const nestedSuite of suite.suites) {
-      const results = findFullPathForTest(nestedSuite, filename, test);
-      for (const result of results) {
-        matches.push([suite.title, ...result]);
-      }
-    }
-  }
-
-  return matches;
-}
-
 export interface OnDidStartRefreshing {
   runner: TestRunner;
   refreshFinished: Promise<void>;
@@ -255,27 +230,6 @@ export class TestsTreeDataProvider implements TreeDataProvider<TreeItem> {
         this.refresh(this._testRunnerTreeItems.get(runner));
       }
     );
-  }
-
-  // TODO - This doesn't work great since test names often aren't unique, so making sure
-  // it is matching the exact test is tricky, but it's also tricky to get suite names
-  // using regexes
-  findTestFullyQualifiedName(
-    filename: vscode.Uri,
-    test: string
-  ): Test | undefined {
-    for (const treeItem of this._testRunnerTreeItems.values()) {
-      if (treeItem.suite) {
-        const testPaths = findFullPathForTest(treeItem.suite, filename, test);
-
-        if (testPaths.length === 1) {
-          return {
-            runner: treeItem.runner,
-            test: testPaths[0].join(" ").trim(),
-          };
-        }
-      }
-    }
   }
 
   refresh(data: void | vscode.TreeItem | undefined): void {
