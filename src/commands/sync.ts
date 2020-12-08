@@ -108,19 +108,25 @@ class SyncProgressWatcher {
     }
 
     if (milestone) {
-      for (const [idx, referenceMilestone] of this._referenceRun.entries()) {
-        if (milestone.line === referenceMilestone.line) {
-          // Continually drop milestones we've passed to minimize searching
-          this._referenceRun.splice(0, idx + 1);
+      const idx = this._referenceRun.findIndex(
+        (referenceMilestone) => referenceMilestone.line === milestone!.line
+      );
 
-          // Report and update our progress
-          progress.report({
-            message: milestone.message,
-            increment: referenceMilestone.progress - this._currentProgress,
-          });
-          this._currentProgress = referenceMilestone.progress;
-          break;
-        }
+      if (idx !== -1) {
+        const referenceMilestone = this._referenceRun[idx];
+
+        // Continually drop milestones we've passed to minimize searching
+        this._referenceRun.splice(0, idx + 1);
+
+        // Report and update our progress
+        progress.report({
+          message: milestone.message,
+          increment: referenceMilestone.progress - this._currentProgress,
+        });
+        this._currentProgress = referenceMilestone.progress;
+      } else {
+        // No reference milestone, might be out of date, just output the message
+        progress.report({ message: milestone.message });
       }
     }
   }
