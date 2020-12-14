@@ -40,7 +40,10 @@ export function registerPatchesCommands(
     vscode.commands.registerCommand(
       `${commandPrefix}.openPatch`,
       (patchTreeItem: Patch) => {
-        return vscode.commands.executeCommand("vscode.open", patchTreeItem.uri);
+        return vscode.commands.executeCommand(
+          "vscode.open",
+          patchTreeItem.resourceUri
+        );
       }
     ),
     ExtensionState.registerExtensionOperationCommand(

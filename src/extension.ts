@@ -121,7 +121,7 @@ function registerElectronBuildToolsCommands(
                   }
                 } else {
                   const item = (children as Patch[]).find(
-                    (child) => child.uri.fsPath === file.fsPath
+                    (child) => child.resourceUri.fsPath === file.fsPath
                   );
 
                   if (item) {

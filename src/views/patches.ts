@@ -126,7 +126,7 @@ export class ElectronPatchesProvider
       element.collapsibleState !== vscode.TreeItemCollapsibleState.None
     ) {
       if (element instanceof PatchDirectory) {
-        const patchFilenames = await getPatches(element.uri);
+        const patchFilenames = await getPatches(element.resourceUri);
 
         // Use the patch subject line for a more human-friendly label
         for (const filename of patchFilenames) {
@@ -138,10 +138,10 @@ export class ElectronPatchesProvider
           );
         }
       } else if (element instanceof Patch) {
-        children.push(new PatchOverview(element.uri));
+        children.push(new PatchOverview(element.resourceUri));
 
         const patchDirectory = vscode.Uri.file(
-          path.dirname(element.uri.fsPath)
+          path.dirname(element.resourceUri.fsPath)
         );
         const checkoutDirectory = getCheckoutDirectoryForPatchDirectory(
           this.rootDirectory,
@@ -150,13 +150,17 @@ export class ElectronPatchesProvider
         );
         const patchedFilenames = await getFilesInPatch(
           checkoutDirectory,
-          element.uri
+          element.resourceUri
         );
 
         children.push(
           ...patchedFilenames.map(
             (metadata) =>
-              new FileInPatchTreeItem(element.uri, checkoutDirectory, metadata)
+              new FileInPatchTreeItem(
+                element.resourceUri,
+                checkoutDirectory,
+                metadata
+              )
           )
         );
       } else if (element instanceof ViewPullRequestPatchTreeItem) {
@@ -187,26 +191,27 @@ export class ElectronPatchesProvider
 }
 
 export class PatchDirectory extends vscode.TreeItem {
-  constructor(label: string, public uri: vscode.Uri, public name: string) {
+  constructor(
+    label: string,
+    public resourceUri: vscode.Uri,
+    public name: string
+  ) {
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
-    this.name = name;
-    this.uri = uri; // BUG - resourceUri doesn't play nice with advanced hover
     this.iconPath = new vscode.ThemeIcon("repo");
     this.contextValue =
-      uri.scheme === pullRequestScheme ? "pull-request-repo" : "repo";
+      resourceUri.scheme === pullRequestScheme ? "pull-request-repo" : "repo";
   }
 }
 
 export class Patch extends vscode.TreeItem {
   constructor(
-    label: string,
-    public uri: vscode.Uri,
+    public label: string,
+    public resourceUri: vscode.Uri,
     public readonly parent: PatchDirectory
   ) {
-    super(label, vscode.TreeItemCollapsibleState.Collapsed);
+    super(resourceUri, vscode.TreeItemCollapsibleState.Collapsed);
 
-    this.uri = uri; // BUG - resourceUri doesn't play nice with advanced hover
     this.iconPath = new vscode.ThemeIcon("file-text");
     this.contextValue = "patch";
   }
