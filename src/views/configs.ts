@@ -17,9 +17,7 @@ export interface ConfigCollector {
 }
 
 export class BuildToolsConfigCollector implements ConfigCollector {
-  private _onDidStartRefreshing = new vscode.EventEmitter<
-    OnDidStartRefreshing
-  >();
+  private _onDidStartRefreshing = new vscode.EventEmitter<OnDidStartRefreshing>();
   readonly onDidStartRefreshing = this._onDidStartRefreshing.event;
 
   private _configs?: string[];

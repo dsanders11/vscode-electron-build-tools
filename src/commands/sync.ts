@@ -62,9 +62,9 @@ class SyncProgressWatcher {
     this._currentRun = [];
 
     // Load stored reference run, otherwise fall back to the embedded one
-    const storedReferenceRun = this._extensionContext.globalState.get<
-      ReferenceSyncRun
-    >("referenceSyncRun");
+    const storedReferenceRun = this._extensionContext.globalState.get<ReferenceSyncRun>(
+      "referenceSyncRun"
+    );
     this._referenceRun = [...(storedReferenceRun || embeddedReferenceRun)];
   }
 
