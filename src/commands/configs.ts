@@ -48,7 +48,7 @@ export function registerConfigsCommands(
               configNameInput.prompt = "Enter config name";
               configNameInput.onDidHide(() => {
                 configNameInput.dispose();
-                resolve();
+                resolve(undefined);
               });
               configNameInput.onDidAccept(() => {
                 resolve(configNameInput.value);
@@ -114,7 +114,7 @@ export function registerConfigsCommands(
             configOptionsQuickPick.totalSteps = 4;
             configOptionsQuickPick.onDidHide(() => {
               configOptionsQuickPick.dispose();
-              resolve();
+              resolve(undefined);
             });
             configOptionsQuickPick.onDidAccept(() => {
               resolve(configOptionsQuickPick.selectedItems);
@@ -146,7 +146,7 @@ export function registerConfigsCommands(
                   "This should take the format 'username/electron'";
                 forkNameInput.onDidHide(() => {
                   forkNameInput.dispose();
-                  resolve();
+                  resolve(undefined);
                 });
                 forkNameInput.onDidAccept(() => {
                   resolve(forkNameInput.value);

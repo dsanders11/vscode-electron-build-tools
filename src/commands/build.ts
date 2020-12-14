@@ -88,7 +88,7 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
             quickPick!.onDidAccept(() => {
               target = quickPick!.selectedItems[0].label ?? target;
               quickPick!.dispose();
-              resolve();
+              resolve(undefined);
             });
             quickPick!.onDidHide(() => {
               quickPick!.dispose();

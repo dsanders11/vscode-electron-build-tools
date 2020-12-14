@@ -55,7 +55,7 @@ export class GnFormattingProvider
               ),
             ]);
           } else {
-            resolve();
+            resolve(undefined);
           }
         } else {
           Logger.error("gn-format exited with non-zero exit code");
