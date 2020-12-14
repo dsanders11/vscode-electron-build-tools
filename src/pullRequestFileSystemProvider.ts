@@ -3,7 +3,9 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import * as Diff from "diff";
-import type { PullsListFilesResponseData } from "@octokit/types";
+import type { RestEndpointMethodTypes } from "@octokit/rest";
+
+type PullsListFilesResponseData = RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"];
 
 import {
   ensurePosixSeparators,
@@ -20,12 +22,12 @@ type PullRequestFileStatus = "added" | "deleted" | "modified";
 interface PullRequestFile {
   uri: vscode.Uri;
   status: PullRequestFileStatus;
-  patch: string;
+  patch?: string;
 }
 
 interface PullRequestPatchedFile {
   uri: vscode.Uri;
-  patch: string;
+  patch?: string;
   checkoutDirectory: vscode.Uri;
   fileIndexA: string;
   fileIndexB: string;
@@ -111,6 +113,8 @@ export class ElectronPullRequestFileSystemProvider
     ) as PullRequestFile[]) {
       if (patchFile.status === "modified") {
         throw new Error("Not implemented");
+      } else if (patchFile.patch === undefined) {
+        throw new Error("Expected file to have patch");
       }
 
       const patchContents = getPatchAddedLines(patchFile.patch).join("\n");
@@ -162,6 +166,10 @@ export class ElectronPullRequestFileSystemProvider
 
   async readFile(uri: vscode.Uri): Promise<Uint8Array> {
     const file = this.getPullRequestFile(uri);
+
+    if (file.patch === undefined) {
+      throw new Error("Expected file to have patch");
+    }
 
     if (isPullRequestFile(file)) {
       if (path.basename(uri.path) === ".patches") {
