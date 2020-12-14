@@ -81,9 +81,12 @@ export class ElectronPatchesProvider
     return element;
   }
 
-  async resolveTreeItem(element: vscode.TreeItem, item: any): Promise<any> {
+  async resolveTreeItem(
+    element: vscode.TreeItem,
+    item: vscode.TreeItem
+  ): Promise<any> {
     if (element instanceof Patch) {
-      item.tooltip = await patchTooltipMarkdown(element.uri);
+      item.tooltip = await patchTooltipMarkdown(element.resourceUri);
     }
 
     return item;

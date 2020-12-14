@@ -213,21 +213,25 @@ export async function patchTooltipMarkdown(patch: vscode.Uri) {
   const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
   const patchMetadata = parsePatchMetadata(patchContents);
 
-  let tooltip = "";
+  const markdown = new vscode.MarkdownString(undefined, true);
 
   const date = new Date(patchMetadata.date);
-  tooltip += `${patchMetadata.from} on ${date.toLocaleString("default", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })}\r\n`;
-  tooltip += `${patchMetadata.subject}`;
+  markdown.appendMarkdown(
+    `${patchMetadata.from} on ${date.toLocaleString("default", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })}\n\n`
+  );
+  markdown.appendMarkdown(`${patchMetadata.subject}`);
 
   if (patchMetadata.description) {
-    tooltip += `\r\n${truncateToLength(patchMetadata.description, 100)}`;
+    markdown.appendMarkdown(
+      `\n\n${truncateToLength(patchMetadata.description, 100)}`
+    );
   }
 
-  return tooltip;
+  return markdown;
 }
 
 export async function patchOverviewMarkdown(patch: vscode.Uri) {
