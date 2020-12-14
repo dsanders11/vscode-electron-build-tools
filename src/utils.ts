@@ -431,13 +431,17 @@ export function alphabetizeByLabel<T extends vscode.TreeItem>(
   treeItems: T[]
 ): T[] {
   return treeItems.sort((a, b) => {
-    if (a.label!.toLowerCase() < b.label!.toLowerCase()) {
-      return -1;
+    if (typeof a.label === "string" && typeof b.label === "string") {
+      if (a.label.toLowerCase() < b.label.toLowerCase()) {
+        return -1;
+      }
+      if (a.label.toLowerCase() > b.label.toLowerCase()) {
+        return 1;
+      }
+      return 0;
+    } else {
+      throw new Error("All TreeItems must have a string label");
     }
-    if (a.label!.toLowerCase() > b.label!.toLowerCase()) {
-      return 1;
-    }
-    return 0;
   });
 }
 

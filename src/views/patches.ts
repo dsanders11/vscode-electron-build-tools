@@ -263,7 +263,7 @@ export class PullRequestTreeItem extends vscode.TreeItem {
       vscode.TreeItemCollapsibleState.Expanded
     );
 
-    this.tooltip = this.label;
+    this.tooltip = this.label as string;
     this.iconPath = new vscode.ThemeIcon("git-pull-request");
     this.contextValue = "pull-request";
   }
