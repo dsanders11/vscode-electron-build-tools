@@ -88,11 +88,11 @@ export class DocsLinkCompletionProvider
             // file. Exclude fiddles, there's too much noise-to-signal there
             const files = await vscode.workspace.findFiles(
               new vscode.RelativePattern(
-                this._linkablesProvider.docsRoot.fsPath,
+                this._linkablesProvider.docsRoot,
                 "**/*"
               ),
               new vscode.RelativePattern(
-                this._linkablesProvider.docsRoot.fsPath,
+                this._linkablesProvider.docsRoot,
                 "fiddles"
               ),
               undefined,

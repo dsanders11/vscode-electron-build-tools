@@ -95,7 +95,7 @@ export class DocsLinkablesProvider extends vscode.Disposable {
     // Lazily get the linkables the first time
     if (this._linkables.size === 0) {
       const docsGlobPattern = new vscode.RelativePattern(
-        this._electronRoot.fsPath,
+        this._electronRoot,
         "docs/**/*.md"
       );
 

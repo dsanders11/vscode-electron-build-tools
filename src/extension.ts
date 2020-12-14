@@ -291,10 +291,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerHoverProvider(
           {
             language: "markdown",
-            pattern: new vscode.RelativePattern(
-              electronRoot.fsPath,
-              "docs/**/*.md"
-            ),
+            pattern: new vscode.RelativePattern(electronRoot, "docs/**/*.md"),
           },
           new DocsHoverProvider()
         ),
@@ -314,10 +311,7 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerCompletionItemProvider(
           {
             language: "markdown",
-            pattern: new vscode.RelativePattern(
-              electronRoot.fsPath,
-              "docs/**/*.md"
-            ),
+            pattern: new vscode.RelativePattern(electronRoot, "docs/**/*.md"),
           },
           new DocsLinkCompletionProvider(linkableProvider),
           ...DocsLinkCompletionProvider.TRIGGER_CHARACTERS
@@ -347,7 +341,7 @@ export async function activate(context: vscode.ExtensionContext) {
               return vscode.languages.registerCodeLensProvider(
                 {
                   pattern: new vscode.RelativePattern(
-                    electronRoot.fsPath,
+                    electronRoot,
                     "{spec,spec-main}/**/*-spec.{js,ts}"
                   ),
                 },

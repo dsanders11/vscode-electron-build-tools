@@ -354,7 +354,7 @@ export async function getElectronTests(
   if (files === undefined) {
     files = await vscode.workspace.findFiles(
       new vscode.RelativePattern(
-        electronRoot.fsPath,
+        electronRoot,
         `spec${runner === TestRunner.MAIN ? "-main" : ""}/**/*-spec.{js,ts}`
       ),
       "**​/node_modules/**"
