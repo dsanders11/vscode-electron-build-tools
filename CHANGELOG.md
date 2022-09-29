@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0 (9-28-2022)
+
+* chore: remove `build-tools` executable setting
+* chore: remove tests support
+* feat: create new config functionality
+* fix: handle no configs case
+
 ## 0.5.0 (11-24-2020)
 
 * chore: include images in docs relative link completions
