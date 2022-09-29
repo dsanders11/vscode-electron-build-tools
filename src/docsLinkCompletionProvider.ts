@@ -7,7 +7,8 @@ import type { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { ensurePosixSeparators } from "./utils";
 
 export class DocsLinkCompletionProvider
-  implements vscode.CompletionItemProvider {
+  implements vscode.CompletionItemProvider
+{
   // Trigger often and let the regex detect if we're in a link
   public static readonly TRIGGER_CHARACTERS = [
     ..."(.-#",

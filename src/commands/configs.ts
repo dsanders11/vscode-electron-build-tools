@@ -74,7 +74,8 @@ export function registerConfigsCommands(
           const options = await new Promise<
             readonly ConfigOptionItem[] | undefined
           >((resolve) => {
-            const configOptionsQuickPick = vscode.window.createQuickPick<ConfigOptionItem>();
+            const configOptionsQuickPick =
+              vscode.window.createQuickPick<ConfigOptionItem>();
             configOptionsQuickPick.title = "New Electron Build Tools Config";
             configOptionsQuickPick.placeholder = "Configuration options";
             configOptionsQuickPick.items = [

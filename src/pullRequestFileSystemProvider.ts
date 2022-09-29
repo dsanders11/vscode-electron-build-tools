@@ -5,7 +5,8 @@ import * as vscode from "vscode";
 import * as Diff from "diff";
 import type { RestEndpointMethodTypes } from "@octokit/rest";
 
-type PullsListFilesResponseData = RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"];
+type PullsListFilesResponseData =
+  RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"];
 
 import {
   ensurePosixSeparators,
@@ -47,7 +48,8 @@ function getPatchAddedLines(patch: string) {
 }
 
 export class ElectronPullRequestFileSystemProvider
-  implements vscode.FileSystemProvider {
+  implements vscode.FileSystemProvider
+{
   private readonly _onDidChangeFile = new vscode.EventEmitter<
     vscode.FileChangeEvent[]
   >();
@@ -55,10 +57,8 @@ export class ElectronPullRequestFileSystemProvider
 
   private readonly patchesConfig: Promise<ElectronPatchesConfig>;
   private readonly rootDirectory: vscode.Uri;
-  private readonly pullRequestFiles: Map<
-    string,
-    FileFromPullRequest[]
-  > = new Map();
+  private readonly pullRequestFiles: Map<string, FileFromPullRequest[]> =
+    new Map();
 
   constructor(
     private readonly electronRoot: vscode.Uri,

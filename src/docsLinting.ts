@@ -15,9 +15,9 @@ function getLinksInDocument(document: vscode.TextDocument) {
   const text = document.getText();
   const links = [];
 
-  const inlineLinkMatches = Array.from(
-    text.matchAll(Markdown.linkPattern)
-  ).map((match) => ["inline", match]) as [string, RegExpMatchArray][];
+  const inlineLinkMatches = Array.from(text.matchAll(Markdown.linkPattern)).map(
+    (match) => ["inline", match]
+  ) as [string, RegExpMatchArray][];
   const referenceLinkDefinitionMatches = Array.from(
     text.matchAll(Markdown.definitionPattern)
   ).map((match) => ["reference-definition", match]) as [

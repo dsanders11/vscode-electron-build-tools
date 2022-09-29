@@ -16,8 +16,10 @@ export interface ConfigCollector {
 
 export class BuildToolsConfigCollector
   extends vscode.Disposable
-  implements ConfigCollector {
-  private _onDidStartRefreshing = new vscode.EventEmitter<OnDidStartRefreshing>();
+  implements ConfigCollector
+{
+  private _onDidStartRefreshing =
+    new vscode.EventEmitter<OnDidStartRefreshing>();
   readonly onDidStartRefreshing = this._onDidStartRefreshing.event;
 
   private _configs?: string[];
@@ -29,9 +31,8 @@ export class BuildToolsConfigCollector
       this._disposables.forEach((disposable) => disposable.dispose());
     });
 
-    this._configs = _extensionContext.globalState.get<string[]>(
-      "cachedConfigs"
-    );
+    this._configs =
+      _extensionContext.globalState.get<string[]>("cachedConfigs");
 
     const configWatcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(getConfigsFilePath(), "**")
@@ -77,7 +78,8 @@ export class BuildToolsConfigCollector
 }
 
 export class ElectronBuildToolsConfigsProvider
-  implements vscode.TreeDataProvider<vscode.TreeItem> {
+  implements vscode.TreeDataProvider<vscode.TreeItem>
+{
   private _onDidChangeTreeData = new vscode.EventEmitter<
     vscode.TreeItem | undefined | void
   >();
@@ -130,10 +132,8 @@ export class ElectronBuildToolsConfigsProvider
     const configs: vscode.TreeItem[] = [];
 
     if (!element) {
-      const {
-        configs: configNames,
-        activeConfig,
-      } = await this._configCollector.getConfigs();
+      const { configs: configNames, activeConfig } =
+        await this._configCollector.getConfigs();
 
       for (const configName of configNames) {
         configs.push(

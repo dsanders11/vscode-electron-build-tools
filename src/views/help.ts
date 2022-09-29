@@ -3,7 +3,8 @@ import * as vscode from "vscode";
 import { buildToolsRepository, extensionId, repositoryUrl } from "../constants";
 
 export class HelpTreeDataProvider
-  implements vscode.TreeDataProvider<vscode.TreeItem> {
+  implements vscode.TreeDataProvider<vscode.TreeItem>
+{
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }

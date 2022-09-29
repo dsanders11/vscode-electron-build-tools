@@ -8,7 +8,8 @@ import {
 } from "./utils";
 
 export class TextDocumentContentProvider
-  implements vscode.TextDocumentContentProvider {
+  implements vscode.TextDocumentContentProvider
+{
   async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
     const { checkoutPath, fileIndex, pullRequest, view } = querystringParse(
       uri.query

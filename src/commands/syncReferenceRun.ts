@@ -16,8 +16,7 @@ export const embeddedReferenceRun = Object.freeze([
   { line: "src/chrome/test/data/perf/frame_rate/content", progress: 9 },
   { line: "src/chrome/test/data/perf/canvas_bench", progress: 9 },
   {
-    line:
-      "src/third_party/blink/web_tests/wpt_internal/webgpu/third_party/glslang_js:chromium/third_party/glslang_js",
+    line: "src/third_party/blink/web_tests/wpt_internal/webgpu/third_party/glslang_js:chromium/third_party/glslang_js",
     progress: 9,
   },
   { line: "src/media/cdm/api", progress: 9 },
@@ -151,8 +150,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 26,
   },
   {
-    line:
-      "running 'python3 src/electron/script/apply_all_patches.py src/electron/patches/config.json'",
+    line: "running 'python3 src/electron/script/apply_all_patches.py src/electron/patches/config.json'",
     progress: 66,
   },
   { line: "Applying: add_realloc.patch", progress: 75 },
@@ -210,8 +208,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 75,
   },
   {
-    line:
-      "Applying: fix_disable_usage_of_pthread_fchdir_np_and_pthread_chdir_np_in_MAS.patch",
+    line: "Applying: fix_disable_usage_of_pthread_fchdir_np_and_pthread_chdir_np_in_MAS.patch",
     progress: 75,
   },
   {
@@ -223,8 +220,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 75,
   },
   {
-    line:
-      "Applying: patch_the_ensure_gn_version_py_script_to_work_on_mac_ci.patch",
+    line: "Applying: patch_the_ensure_gn_version_py_script_to_work_on_mac_ci.patch",
     progress: 75,
   },
   { line: "Applying: build_add_electron_tracing_category.patch", progress: 75 },
@@ -236,8 +232,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 75,
   },
   {
-    line:
-      "Applying: network_service_allow_remote_certificate_verification_logic.patch",
+    line: "Applying: network_service_allow_remote_certificate_verification_logic.patch",
     progress: 75,
   },
   {
@@ -260,13 +255,11 @@ export const embeddedReferenceRun = Object.freeze([
   },
   { line: "Applying: expose SetUserAgent on NetworkContext", progress: 75 },
   {
-    line:
-      "Applying: feat: add set_theme_source to allow apps to override chromiums internal theme choice",
+    line: "Applying: feat: add set_theme_source to allow apps to override chromiums internal theme choice",
     progress: 75,
   },
   {
-    line:
-      "Applying: add WebMessagePortConverter::EntangleAndInjectMessagePortChannel",
+    line: "Applying: add WebMessagePortConverter::EntangleAndInjectMessagePortChannel",
     progress: 75,
   },
   {
@@ -284,8 +277,7 @@ export const embeddedReferenceRun = Object.freeze([
   },
   { line: "Applying: add TrustedAuthClient to URLLoaderFactory", progress: 75 },
   {
-    line:
-      "Applying: feat: allow disabling blink scheduler throttling per RenderView",
+    line: "Applying: feat: allow disabling blink scheduler throttling per RenderView",
     progress: 75,
   },
   {
@@ -293,8 +285,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 75,
   },
   {
-    line:
-      "Applying: fix: use the new MediaPlayPause key listener for internal chrome logic",
+    line: "Applying: fix: use the new MediaPlayPause key listener for internal chrome logic",
     progress: 75,
   },
   {
@@ -302,13 +293,11 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 75,
   },
   {
-    line:
-      "Applying: fix: route mouse event navigations through the web_contents delegate",
+    line: "Applying: fix: route mouse event navigations through the web_contents delegate",
     progress: 75,
   },
   {
-    line:
-      "Applying: feat: add support for overriding the base spellchecker download URL",
+    line: "Applying: feat: add support for overriding the base spellchecker download URL",
     progress: 75,
   },
   {
@@ -316,8 +305,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 75,
   },
   {
-    line:
-      "Applying: content: allow embedder to prevent locking scheme registry",
+    line: "Applying: content: allow embedder to prevent locking scheme registry",
     progress: 75,
   },
   {
@@ -325,8 +313,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 75,
   },
   {
-    line:
-      "Applying: feat: allow embedders to add observers on created hunspell dictionaries",
+    line: "Applying: feat: allow embedders to add observers on created hunspell dictionaries",
     progress: 75,
   },
   { line: "Applying: feat: add onclose to MessagePort", progress: 75 },
@@ -337,8 +324,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: refactor: expose cursor changes to the WebContentsObserver",
+    line: "Applying: refactor: expose cursor changes to the WebContentsObserver",
     progress: 78,
   },
   { line: "Applying: crash: allow setting more options", progress: 78 },
@@ -360,13 +346,11 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: fix: swap global proxies before initializing the windows proxies",
+    line: "Applying: fix: swap global proxies before initializing the windows proxies",
     progress: 78,
   },
   {
-    line:
-      "Applying: feat: add streaming-protocol registry to multibuffer_data_source",
+    line: "Applying: feat: add streaming-protocol registry to multibuffer_data_source",
     progress: 78,
   },
   {
@@ -378,19 +362,16 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: fix: check IsSecureEventInputEnabled in constructor before setting SetPasswordInputEnabled to true",
+    line: "Applying: fix: check IsSecureEventInputEnabled in constructor before setting SetPasswordInputEnabled to true",
     progress: 78,
   },
   { line: "Applying: skip atk toolchain check", progress: 78 },
   {
-    line:
-      "Applying: feat: add hook to notify script ready from WorkerScriptController",
+    line: "Applying: feat: add hook to notify script ready from WorkerScriptController",
     progress: 78,
   },
   {
-    line:
-      "Applying: chore: provide IsWebContentsCreationOverridden with full params",
+    line: "Applying: chore: provide IsWebContentsCreationOverridden with full params",
     progress: 78,
   },
   { line: "Applying: fix: properly honor printing page ranges", progress: 78 },
@@ -404,8 +385,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: export gin::V8Platform::PageAllocator for usage outside of the gin platform",
+    line: "Applying: export gin::V8Platform::PageAllocator for usage outside of the gin platform",
     progress: 78,
   },
   { line: "Applying: expose ripemd160", progress: 78 },
@@ -421,13 +401,11 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      'Applying: Revert "[cleanup] Switch {OFFSET_OF} to {offsetof} where possible."',
+    line: 'Applying: Revert "[cleanup] Switch {OFFSET_OF} to {offsetof} where possible."',
     progress: 78,
   },
   {
-    line:
-      "Applying: fix: usage of c++ [[deprecated]] attirbute for older msvc versions",
+    line: "Applying: fix: usage of c++ [[deprecated]] attirbute for older msvc versions",
     progress: 78,
   },
   { line: "Applying: fix: use proper page size for mac arm64", progress: 78 },
@@ -437,8 +415,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: refactor: alter child_process.fork to use execute script with Electron",
+    line: "Applying: refactor: alter child_process.fork to use execute script with Electron",
     progress: 78,
   },
   { line: "Applying: feat: add uv_loop watcher_queue code", progress: 78 },
@@ -447,8 +424,7 @@ export const embeddedReferenceRun = Object.freeze([
   { line: "Applying: fix: expose InternalCallbackScope", progress: 78 },
   { line: "Applying: build: add GN build files", progress: 78 },
   {
-    line:
-      "Applying: fix: add default values for 'enable_lto' and 'build_v8_with_gn' in common.gypi",
+    line: "Applying: fix: add default values for 'enable_lto' and 'build_v8_with_gn' in common.gypi",
     progress: 78,
   },
   {
@@ -460,8 +436,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: fix: expose tracing::Agent and use tracing::TracingController instead of v8::TracingController",
+    line: "Applying: fix: expose tracing::Agent and use tracing::TracingController instead of v8::TracingController",
     progress: 78,
   },
   { line: 'Applying: Pass all globals through "require"', progress: 78 },
@@ -472,8 +447,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: build: modify js2c.py to allow injection of original-fs and custom embedder JS",
+    line: "Applying: build: modify js2c.py to allow injection of original-fs and custom embedder JS",
     progress: 78,
   },
   {
@@ -481,8 +455,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: chore: prevent / warn non context-aware native modules being loaded",
+    line: "Applying: chore: prevent / warn non context-aware native modules being loaded",
     progress: 78,
   },
   {
@@ -512,8 +485,7 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: fix: -Wincompatible-pointer-types-discards-qualifiers error",
+    line: "Applying: fix: -Wincompatible-pointer-types-discards-qualifiers error",
     progress: 78,
   },
   {
@@ -525,19 +497,16 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Applying: src: allow embedders to provide a custom PageAllocator to NodePlatform",
+    line: "Applying: src: allow embedders to provide a custom PageAllocator to NodePlatform",
     progress: 78,
   },
   { line: "Applying: build: add GN config", progress: 78 },
   {
-    line:
-      "Applying: fix: ensure that self is retained until the RACSignal is complete",
+    line: "Applying: fix: ensure that self is retained until the RACSignal is complete",
     progress: 78,
   },
   {
-    line:
-      "Applying: build: conditionally import EXT headers from framework or from relative path",
+    line: "Applying: build: conditionally import EXT headers from framework or from relative path",
     progress: 78,
   },
   {
@@ -545,23 +514,19 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 78,
   },
   {
-    line:
-      "Hook 'python3 src/electron/script/apply_all_patches.py src/electron/patches/config.json' took",
+    line: "Hook 'python3 src/electron/script/apply_all_patches.py src/electron/patches/config.json' took",
     progress: 78,
   },
   {
-    line:
-      'Hook \'python3 -c \'import os, subprocess; os.chdir(os.path.join("src", "electron")); subprocess.check_call(["python", "script/lib/npx.py", "yarn@1.15.2", "install", "--frozen-lockfile"]);\'\'',
+    line: 'Hook \'python3 -c \'import os, subprocess; os.chdir(os.path.join("src", "electron")); subprocess.check_call(["python", "script/lib/npx.py", "yarn@1.15.2", "install", "--frozen-lockfile"]);\'\'',
     progress: 81,
   },
   {
-    line:
-      "Hook 'vpython.bat src/tools/remove_stale_pyc_files.py src/android_webview/tools src/build/android src/gpu/gles2_conform_support src/infra src/ppapi src/printing src/third_party/blink/renderer/build/scripts src/third_party/blink/tools src/third_party/catapult src/tools'",
+    line: "Hook 'vpython.bat src/tools/remove_stale_pyc_files.py src/android_webview/tools src/build/android src/gpu/gles2_conform_support src/infra src/ppapi src/printing src/third_party/blink/renderer/build/scripts src/third_party/blink/tools src/third_party/catapult src/tools'",
     progress: 84,
   },
   {
-    line:
-      "Hook 'vpython.bat src/buildtools/ensure_gn_version.py git_revision:e002e68a48d1c82648eadde2f6aafa20d08c36f2'",
+    line: "Hook 'vpython.bat src/buildtools/ensure_gn_version.py git_revision:e002e68a48d1c82648eadde2f6aafa20d08c36f2'",
     progress: 84,
   },
   {
@@ -573,83 +538,67 @@ export const embeddedReferenceRun = Object.freeze([
     progress: 87,
   },
   {
-    line:
-      "Hook 'vpython.bat src/tools/clang/scripts/update.py --package=clang-tidy'",
+    line: "Hook 'vpython.bat src/tools/clang/scripts/update.py --package=clang-tidy'",
     progress: 88,
   },
   {
-    line:
-      "Hook 'vpython.bat src/build/util/lastchange.py -o src/build/util/LASTCHANGE'",
+    line: "Hook 'vpython.bat src/build/util/lastchange.py -o src/build/util/LASTCHANGE'",
     progress: 88,
   },
   {
-    line:
-      "Hook 'vpython.bat src/build/util/lastchange.py -m GPU_LISTS_VERSION --revision-id-only --header src/gpu/config/gpu_lists_version.h'",
+    line: "Hook 'vpython.bat src/build/util/lastchange.py -m GPU_LISTS_VERSION --revision-id-only --header src/gpu/config/gpu_lists_version.h'",
     progress: 89,
   },
   {
-    line:
-      "Hook 'vpython.bat src/build/util/lastchange.py -m SKIA_COMMIT_HASH -s src/third_party/skia --header src/skia/ext/skia_commit_hash.h'",
+    line: "Hook 'vpython.bat src/build/util/lastchange.py -m SKIA_COMMIT_HASH -s src/third_party/skia --header src/skia/ext/skia_commit_hash.h'",
     progress: 90,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --bucket chromium-clang-format -s src/buildtools/win/clang-format.exe.sha1'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --bucket chromium-clang-format -s src/buildtools/win/clang-format.exe.sha1'",
     progress: 90,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --bucket chromium-browser-clang/rc -s src/build/toolchain/win/rc/win/rc.exe.sha1'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --bucket chromium-browser-clang/rc -s src/build/toolchain/win/rc/win/rc.exe.sha1'",
     progress: 91,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --num_threads=4 --bucket chromium-browser-clang/orderfiles -d src/chrome/build'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --num_threads=4 --bucket chromium-browser-clang/orderfiles -d src/chrome/build'",
     progress: 92,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --directory --recursive --no_auth --num_threads=16 --bucket chromium-apache-win32 src/third_party/apache-win32'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --directory --recursive --no_auth --num_threads=16 --bucket chromium-apache-win32 src/third_party/apache-win32'",
     progress: 93,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth -u --bucket v8-wasm-fuzzer -s src/v8/test/fuzzer/wasm_corpus.tar.gz.sha1'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth -u --bucket v8-wasm-fuzzer -s src/v8/test/fuzzer/wasm_corpus.tar.gz.sha1'",
     progress: 94,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --bucket chromium-nodejs/12.14.1 -s src/third_party/node/win/node.exe.sha1'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --bucket chromium-nodejs/12.14.1 -s src/third_party/node/win/node.exe.sha1'",
     progress: 94,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --extract --no_auth --bucket chromium-nodejs -s src/third_party/node/node_modules.tar.gz.sha1'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --extract --no_auth --bucket chromium-nodejs -s src/third_party/node/node_modules.tar.gz.sha1'",
     progress: 95,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --num_threads=4 --bucket chromium-tools-traffic_annotation -d src/tools/traffic_annotation/bin/win32'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --num_threads=4 --bucket chromium-tools-traffic_annotation -d src/tools/traffic_annotation/bin/win32'",
     progress: 96,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --num_threads=4 --bucket chromium-binary-patching/zucchini_testdata --recursive -d src/components/zucchini'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --num_threads=4 --bucket chromium-binary-patching/zucchini_testdata --recursive -d src/components/zucchini'",
     progress: 97,
   },
   {
-    line:
-      "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --bucket chromium-ads-detection -s src/third_party/subresource-filter-ruleset/data/UnindexedRules.sha1'",
+    line: "Hook 'vpython.bat src/third_party/depot_tools/download_from_google_storage.py --no_resume --no_auth --bucket chromium-ads-detection -s src/third_party/subresource-filter-ruleset/data/UnindexedRules.sha1'",
     progress: 97,
   },
   {
-    line:
-      "Hook 'vpython.bat src/tools/update_pgo_profiles.py --target=win32 update --gs-url-base=chromium-optimization-profiles/pgo_profiles'",
+    line: "Hook 'vpython.bat src/tools/update_pgo_profiles.py --target=win32 update --gs-url-base=chromium-optimization-profiles/pgo_profiles'",
     progress: 98,
   },
   {
-    line:
-      "Hook 'vpython.bat src/tools/update_pgo_profiles.py --target=win64 update --gs-url-base=chromium-optimization-profiles/pgo_profiles'",
+    line: "Hook 'vpython.bat src/tools/update_pgo_profiles.py --target=win64 update --gs-url-base=chromium-optimization-profiles/pgo_profiles'",
     progress: 99,
   },
 ]);

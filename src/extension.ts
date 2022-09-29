@@ -208,10 +208,8 @@ export async function activate(context: vscode.ExtensionContext) {
         showCollapseAll: true,
         treeDataProvider: patchesProvider,
       });
-      const pullRequestFileSystemProvider = new ElectronPullRequestFileSystemProvider(
-        electronRoot,
-        patchesConfig
-      );
+      const pullRequestFileSystemProvider =
+        new ElectronPullRequestFileSystemProvider(electronRoot, patchesConfig);
       const linkableProvider = new DocsLinkablesProvider(electronRoot);
 
       // Show progress on views while the collector is working. This lets us

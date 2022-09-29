@@ -27,8 +27,10 @@ export interface PullRequestWithPatch {
 }
 
 export class ElectronPatchesProvider
-  implements vscode.TreeDataProvider<vscode.TreeItem> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | void>();
+  implements vscode.TreeDataProvider<vscode.TreeItem>
+{
+  private _onDidChangeTreeData =
+    new vscode.EventEmitter<vscode.TreeItem | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   private readonly patchesConfig: Promise<ElectronPatchesConfig>;

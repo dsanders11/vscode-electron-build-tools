@@ -22,7 +22,8 @@ import type { ElectronPatchesConfig, EVMConfig } from "./types";
 const exec = promisify(childProcess.exec);
 const fsReadFile = promisify(fs.readFile);
 
-export const patchedFilenameRegex = /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:new file mode \d+[\r\n]+)?index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|$)/gs;
+export const patchedFilenameRegex =
+  /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:new file mode \d+[\r\n]+)?index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|$)/gs;
 
 export interface DocLink {
   description: string;
@@ -185,9 +186,8 @@ export function truncateToLength(text: string, length: number) {
 }
 
 export function parsePatchMetadata(patchContents: string) {
-  const subjectAndDescription = /Subject: (.*?)\n\n([\s\S]*?)\s*(?=diff)/ms.exec(
-    patchContents
-  );
+  const subjectAndDescription =
+    /Subject: (.*?)\n\n([\s\S]*?)\s*(?=diff)/ms.exec(patchContents);
 
   return {
     from: /^From: ((.*)<(\S*)>)$/m.exec(patchContents)![1],
@@ -532,10 +532,8 @@ export async function drillDown(
   }
 ): Promise<void> {
   let parentChain: vscode.TreeItem[] = [];
-  let children:
-    | vscode.TreeItem[]
-    | null
-    | undefined = await treeDataProvider.getChildren();
+  let children: vscode.TreeItem[] | null | undefined =
+    await treeDataProvider.getChildren();
 
   while (children && children.length > 0) {
     const element: vscode.TreeItem | undefined =

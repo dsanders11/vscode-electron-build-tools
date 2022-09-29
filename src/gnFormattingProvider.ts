@@ -5,7 +5,8 @@ import * as vscode from "vscode";
 import Logger from "./logging";
 
 export class GnFormattingProvider
-  implements vscode.DocumentFormattingEditProvider {
+  implements vscode.DocumentFormattingEditProvider
+{
   private readonly _gnFormatScript: vscode.Uri;
 
   constructor(private readonly _electronRoot: vscode.Uri) {

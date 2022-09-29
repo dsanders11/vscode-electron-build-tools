@@ -104,9 +104,8 @@ export class DocsLinkablesProvider extends vscode.Disposable {
         this._linkables.set(file.path, await this._extractLinkables(file));
       }
 
-      const docsWatcher = vscode.workspace.createFileSystemWatcher(
-        docsGlobPattern
-      );
+      const docsWatcher =
+        vscode.workspace.createFileSystemWatcher(docsGlobPattern);
       const onDocsChanged = async (uri: vscode.Uri) => {
         const currentLinkables = this._linkables.get(uri.path);
         const linkables = await this._extractLinkables(uri);
