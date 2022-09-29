@@ -17,9 +17,7 @@ export const buildTargets = Object.freeze([
   "node:headers",
 ]);
 
-export const buildToolsExecutable = vscode.workspace
-  .getConfiguration("electronBuildTools.buildTools")
-  .get<string>("executable")!;
+export const buildToolsExecutable = "electron-build-tools";
 
 export const patchDirectoryPrettyNames = Object.freeze<ElectronPatchesConfig>({
   "src/electron/patches/chromium": "Chromium",

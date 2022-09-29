@@ -29,10 +29,6 @@ export interface ElectronBuildTools {
     | "node:headers";
   "electronBuildTools.build.ninjaArgs"?: NinjaArgs;
   "electronBuildTools.build.showTargets"?: ShowTargets;
-  /**
-   * Executable to use for running `build-tools` commands.
-   */
-  "electronBuildTools.buildTools.executable"?: "electron-build-tools" | "e";
   "electronBuildTools.docs.lintRelativeLinks"?: LintRelativeLinks;
   [k: string]: unknown;
 }

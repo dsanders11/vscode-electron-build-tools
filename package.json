@@ -245,15 +245,6 @@
           "title": "Show Targets",
           "description": "When building, show a list of build targets to choose from."
         },
-        "electronBuildTools.buildTools.executable": {
-          "type": "string",
-          "description": "Executable to use for running `build-tools` commands.",
-          "enum": [
-            "electron-build-tools",
-            "e"
-          ],
-          "default": "electron-build-tools"
-        },
         "electronBuildTools.docs.lintRelativeLinks": {
           "type": "boolean",
           "default": true,
