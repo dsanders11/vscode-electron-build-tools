@@ -23,7 +23,6 @@ import { GnFormattingProvider } from "./gnFormattingProvider";
 import { GnLinkProvider } from "./gnLinkProvider";
 import Logger from "./logging";
 import { SnippetProvider } from "./snippetProvider";
-import { TestCodeLensProvider } from "./testCodeLens";
 import {
   drillDown,
   findElectronRoot,
@@ -45,13 +44,7 @@ import {
   PatchDirectory,
 } from "./views/patches";
 import { HelpTreeDataProvider } from "./views/help";
-import {
-  ElectronTestCollector,
-  TestCollector,
-  TestsTreeDataProvider,
-} from "./views/tests";
 import { ElectronPullRequestFileSystemProvider } from "./pullRequestFileSystemProvider";
-import { registerTestCommands } from "./commands/tests";
 import { registerHelperCommands } from "./commands/helpers";
 import { registerConfigsCommands } from "./commands/configs";
 import { registerPatchesCommands } from "./commands/patches";
@@ -69,13 +62,10 @@ function registerElectronBuildToolsCommands(
   configsCollector: ConfigCollector,
   patchesProvider: ElectronPatchesProvider,
   patchesView: vscode.TreeView<vscode.TreeItem>,
-  testsProvider: TestsTreeDataProvider,
-  testsCollector: TestCollector,
   pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
 ) {
   registerBuildCommands(context);
   registerConfigsCommands(context, configsCollector, configsProvider);
-  registerTestCommands(context, electronRoot, testsProvider, testsCollector);
   registerPatchesCommands(
     context,
     electronRoot,
@@ -222,7 +212,6 @@ export async function activate(context: vscode.ExtensionContext) {
         electronRoot,
         patchesConfig
       );
-      const testsCollector = new ElectronTestCollector(context, electronRoot);
       const linkableProvider = new DocsLinkablesProvider(electronRoot);
 
       // Show progress on views while the collector is working. This lets us
@@ -247,12 +236,6 @@ export async function activate(context: vscode.ExtensionContext) {
           }
         );
       });
-      testsCollector.onDidStartRefreshing(({ refreshFinished }) => {
-        vscode.window.withProgress(
-          { location: { viewId: viewIds.TESTS } },
-          () => refreshFinished
-        );
-      });
 
       const configsProvider = new ElectronBuildToolsConfigsProvider(
         configsCollector
@@ -261,7 +244,6 @@ export async function activate(context: vscode.ExtensionContext) {
         treeDataProvider: configsProvider,
       });
 
-      const testsProvider = new TestsTreeDataProvider(testsCollector);
       context.subscriptions.push(
         diagnosticsCollection,
         linkableProvider,
@@ -275,10 +257,6 @@ export async function activate(context: vscode.ExtensionContext) {
           viewIds.ELECTRON,
           new ElectronViewProvider(electronRoot)
         ),
-        vscode.window.createTreeView(viewIds.TESTS, {
-          showCollapseAll: true,
-          treeDataProvider: testsProvider,
-        }),
         vscode.workspace.registerTextDocumentContentProvider(
           virtualDocumentScheme,
           new TextDocumentContentProvider()
@@ -324,34 +302,12 @@ export async function activate(context: vscode.ExtensionContext) {
         configsCollector,
         patchesProvider,
         patchesView,
-        testsProvider,
-        testsCollector,
         pullRequestFileSystemProvider
       );
       registerDocsCommands(context, linkableProvider);
       registerHelperCommands(context);
 
       context.subscriptions.push(
-        new OptionalFeature(
-          "electronBuildTools.tests",
-          "runTestCodeLens",
-          (codeLensEnabled: boolean) => {
-            if (codeLensEnabled) {
-              Logger.info("Tests code lens enabled");
-              return vscode.languages.registerCodeLensProvider(
-                {
-                  pattern: new vscode.RelativePattern(
-                    electronRoot,
-                    "{spec,spec-main}/**/*-spec.{js,ts}"
-                  ),
-                },
-                new TestCodeLensProvider(testsCollector)
-              );
-            } else {
-              Logger.info("Tests code lens disabled");
-            }
-          }
-        ),
         new OptionalFeature(
           "electronBuildTools.docs",
           "lintRelativeLinks",

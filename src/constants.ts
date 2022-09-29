@@ -54,5 +54,4 @@ export const viewIds = Object.freeze({
   ELECTRON: `${viewIdPrefix}:electron`,
   HELP: `${viewIdPrefix}:help`,
   PATCHES: `${viewIdPrefix}:patches`,
-  TESTS: `${viewIdPrefix}:tests`,
 });

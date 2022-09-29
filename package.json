@@ -18,7 +18,6 @@
     "workspaceContains:electron/ELECTRON_VERSION",
     "onView:electron-build-tools:configs",
     "onView:electron-build-tools:patches",
-    "onView:electron-build-tools:tests",
     "onView:electron-build-tools:docs",
     "onView:electron-build-tools:electron"
   ],
@@ -90,23 +89,11 @@
         "category": "Electron Build Tools"
       },
       {
-        "command": "electron-build-tools.openTestFile",
-        "title": "Open Test File",
-        "category": "Electron Build Tools"
-      },
-      {
         "command": "electron-build-tools.refreshPatches",
         "title": "Refresh Patches",
         "category": "Electron Build Tools",
         "icon": "$(refresh)",
         "enablement": "electron-build-tools:canRefreshPatches"
-      },
-      {
-        "command": "electron-build-tools.refreshTests",
-        "title": "Refresh Tests",
-        "category": "Electron Build Tools",
-        "icon": "$(refresh)",
-        "enablement": "electron-build-tools:canLoadTests"
       },
       {
         "command": "electron-build-tools.removeConfig",
@@ -126,34 +113,6 @@
         "title": "Reveal in Electron Side Bar",
         "category": "Electron Build Tools",
         "enablement": "electron-build-tools:active"
-      },
-      {
-        "command": "electron-build-tools.runTest",
-        "title": "Run Test",
-        "category": "Electron Build Tools",
-        "icon": "$(run)",
-        "enablement": "electron-build-tools:canRunTests"
-      },
-      {
-        "command": "electron-build-tools.runTestFile",
-        "title": "Run Test File",
-        "category": "Electron Build Tools",
-        "icon": "$(run-all)",
-        "enablement": "electron-build-tools:canRunTests"
-      },
-      {
-        "command": "electron-build-tools.runTestRunner",
-        "title": "Run Test Runner",
-        "category": "Electron Build Tools",
-        "icon": "$(run-all)",
-        "enablement": "electron-build-tools:canRunTests"
-      },
-      {
-        "command": "electron-build-tools.runTestSuite",
-        "title": "Run Test Suite",
-        "category": "Electron Build Tools",
-        "icon": "$(run-all)",
-        "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.sanitizeConfig",
@@ -181,13 +140,6 @@
         "enablement": "electron-build-tools:active"
       },
       {
-        "command": "electron-build-tools.showTestsDocs",
-        "title": "Show Tests Documentation",
-        "category": "Electron Build Tools",
-        "icon": "$(remote-explorer-documentation)",
-        "enablement": "electron-build-tools:active"
-      },
-      {
         "command": "electron-build-tools.sync",
         "title": "Sync",
         "category": "Electron Build Tools",
@@ -198,13 +150,6 @@
         "title": "Force Sync",
         "category": "Electron Build Tools",
         "enablement": "electron-build-tools:canSync"
-      },
-      {
-        "command": "electron-build-tools.test",
-        "title": "Run Tests",
-        "category": "Electron Build Tools",
-        "icon": "$(run-all)",
-        "enablement": "electron-build-tools:canRunTests"
       },
       {
         "command": "electron-build-tools.useConfig",
@@ -314,12 +259,6 @@
           "default": true,
           "title": "Lint Relative Links",
           "description": "Lint relative links in the docs and mark broken links as problems."
-        },
-        "electronBuildTools.tests.runTestCodeLens": {
-          "type": "boolean",
-          "default": true,
-          "title": "Run Test Code Lens",
-          "description": "Show 'Run Test' in editor above Electron tests."
         }
       }
     },
@@ -388,10 +327,6 @@
           "when": "false"
         },
         {
-          "command": "electron-build-tools.openTestFile",
-          "when": "false"
-        },
-        {
           "command": "electron-build-tools.removeConfig",
           "when": "false"
         },
@@ -400,31 +335,11 @@
           "when": "false"
         },
         {
-          "command": "electron-build-tools.refreshTests",
-          "when": "false"
-        },
-        {
           "command": "electron-build-tools.removePullRequestPatch",
           "when": "false"
         },
         {
           "command": "electron-build-tools.revealInElectronSidebar",
-          "when": "false"
-        },
-        {
-          "command": "electron-build-tools.runTest",
-          "when": "false"
-        },
-        {
-          "command": "electron-build-tools.runTestFile",
-          "when": "false"
-        },
-        {
-          "command": "electron-build-tools.runTestRunner",
-          "when": "false"
-        },
-        {
-          "command": "electron-build-tools.runTestSuite",
           "when": "false"
         },
         {
@@ -444,19 +359,11 @@
           "when": "false"
         },
         {
-          "command": "electron-build-tools.showTestsDocs",
-          "when": "false"
-        },
-        {
           "command": "electron-build-tools.sync",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
           "command": "electron-build-tools.sync.force",
-          "when": "electron-build-tools:build-tools-installed"
-        },
-        {
-          "command": "electron-build-tools.test",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
@@ -501,33 +408,17 @@
           "group": "1_modification"
         }
       ],
-      "editor/title": [
-        {
-          "command": "electron-build-tools.runTestFile",
-          "group": "1_run",
-          "when": "!isInDiffEditor && resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
-        }
-      ],
       "explorer/context": [
         {
           "command": "electron-build-tools.revealInElectronSidebar",
           "group": "navigation",
           "when": "electron-build-tools:ready && resourceDirname =~ /.*electron(?:\\\\|\\/)patches(?:\\\\|\\/).*$/ && resourceExtname == .patch"
-        },
-        {
-          "command": "electron-build-tools.runTestFile",
-          "group": "navigation",
-          "when": "resourceLangId == typescript && resourceDirname =~ /.*electron(?:\\\\|\\/)(?:spec-main|spec)$/ && resourceFilename =~ /.*-spec.ts$/"
         }
       ],
       "view/item/context": [
         {
           "command": "electron-build-tools.openPatch",
           "when": "view == electron-build-tools:patches && viewItem == patch"
-        },
-        {
-          "command": "electron-build-tools.openTestFile",
-          "when": "view == electron-build-tools:tests && viewItem =~ /^test$|^suite$/"
         },
         {
           "command": "electron-build-tools.refreshPatches",
@@ -550,21 +441,6 @@
         {
           "command": "electron-build-tools.removePullRequestPatch",
           "when": "view == electron-build-tools:patches && viewItem == pull-request",
-          "group": "inline"
-        },
-        {
-          "command": "electron-build-tools.runTest",
-          "when": "view == electron-build-tools:tests && viewItem == test",
-          "group": "inline"
-        },
-        {
-          "command": "electron-build-tools.runTestRunner",
-          "when": "view == electron-build-tools:tests && viewItem == runner",
-          "group": "inline"
-        },
-        {
-          "command": "electron-build-tools.runTestSuite",
-          "when": "view == electron-build-tools:tests && viewItem == suite",
           "group": "inline"
         },
         {
@@ -598,11 +474,6 @@
           "group": "navigation"
         },
         {
-          "command": "electron-build-tools.refreshTests",
-          "when": "view == electron-build-tools:tests",
-          "group": "navigation"
-        },
-        {
           "command": "electron-build-tools.searchDocs",
           "when": "view == electron-build-tools:docs",
           "group": "navigation"
@@ -610,16 +481,6 @@
         {
           "command": "electron-build-tools.showPatchesDocs",
           "when": "view == electron-build-tools:patches",
-          "group": "navigation"
-        },
-        {
-          "command": "electron-build-tools.showTestsDocs",
-          "when": "view == electron-build-tools:tests",
-          "group": "navigation"
-        },
-        {
-          "command": "electron-build-tools.test",
-          "when": "view == electron-build-tools:tests",
           "group": "navigation"
         }
       ]
@@ -697,11 +558,6 @@
         {
           "id": "electron-build-tools:patches",
           "name": "Patches",
-          "when": "!electron-build-tools:ready || electron-build-tools:active"
-        },
-        {
-          "id": "electron-build-tools:tests",
-          "name": "Tests",
           "when": "!electron-build-tools:ready || electron-build-tools:active"
         },
         {

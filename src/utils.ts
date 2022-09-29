@@ -1,6 +1,5 @@
 import * as childProcess from "child_process";
 import * as fs from "fs";
-import * as net from "net";
 import * as os from "os";
 import * as path from "path";
 import * as querystring from "querystring";
@@ -16,12 +15,7 @@ import MarkdownIt from "markdown-it";
 import type MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
 
-import { ParsedTestSuite, TestRunner } from "./common";
-import {
-  buildToolsExecutable,
-  commandPrefix,
-  contextKeyPrefix,
-} from "./constants";
+import { buildToolsExecutable, contextKeyPrefix } from "./constants";
 import Logger from "./logging";
 import type { ElectronPatchesConfig, EVMConfig } from "./types";
 
@@ -347,88 +341,6 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
   walkSections(rootSection, parsedHeadings.slice(1));
 
   return rootSection;
-}
-
-export async function getElectronTests(
-  context: vscode.ExtensionContext,
-  electronRoot: vscode.Uri,
-  runner: TestRunner,
-  files?: vscode.Uri[]
-): Promise<ParsedTestSuite> {
-  if (files === undefined) {
-    files = await vscode.workspace.findFiles(
-      new vscode.RelativePattern(
-        electronRoot,
-        `spec${runner === TestRunner.MAIN ? "-main" : ""}/**/*-spec.{js,ts}`
-      ),
-      "**​/node_modules/**"
-    );
-  }
-
-  const electronExe = await vscode.commands.executeCommand<string>(
-    `${commandPrefix}.show.exe`
-  )!;
-  const scriptName = context.asAbsolutePath("out/electron/listMochaTests.js");
-  const socketName = generateSocketName();
-
-  return new Promise(async (resolve, reject) => {
-    let result = "";
-
-    const socketServer = net.createServer().listen(socketName);
-    socketServer.once("connection", (socket) => {
-      socket.on("data", (data) => {
-        result += data.toString();
-      });
-
-      socket.once("error", reject);
-
-      // Send filenames of the tests
-      for (const uri of files!) {
-        socket.write(`${uri.fsPath}\n`);
-      }
-      socket.write("DONE\n");
-    });
-    socketServer.once("error", reject);
-
-    try {
-      await exec(`${electronExe} ${scriptName} ${socketName}`, {
-        encoding: "utf8",
-        cwd: electronRoot.fsPath,
-        env: {
-          // Filter out environment variables that VS Code has set which
-          // would effect Electron, such as ELECTRON_RUN_AS_NODE, but try
-          // to pick up the other handy stuff like debugger auto-attach
-          ...Object.fromEntries(
-            Object.entries(process.env).filter(
-              ([key]) => !key.startsWith("ELECTRON_")
-            )
-          ),
-          NODE_OPTIONS: process.env.NODE_OPTIONS,
-          TS_NODE_PROJECT: vscode.Uri.joinPath(
-            electronRoot,
-            "tsconfig.spec.json"
-          ).fsPath,
-          TS_NODE_FILES: "true", // Without this compilation fails
-          TS_NODE_TRANSPILE_ONLY: "true", // Faster
-          TS_NODE_CACHE: "false",
-          TS_NODE_COMPILER: "electron-build-tools-typescript",
-          ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
-        },
-      });
-
-      try {
-        resolve(JSON.parse(result));
-      } catch (err) {
-        Logger.error(err);
-        reject(err);
-      }
-    } catch (err) {
-      Logger.error(err);
-      reject(err);
-    } finally {
-      socketServer.close();
-    }
-  });
 }
 
 export function alphabetizeByLabel<T extends vscode.TreeItem>(
