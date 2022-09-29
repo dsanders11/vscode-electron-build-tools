@@ -289,7 +289,7 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
             // use vscode.Uri.file to parse them
             links.push({
               description: child.content,
-              destination: vscode.Uri.parse(`file:///${filePath}`),
+              destination: vscode.Uri.parse(`file://${filePath}`),
               level,
             });
           }
