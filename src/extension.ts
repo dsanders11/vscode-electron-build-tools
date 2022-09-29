@@ -140,11 +140,14 @@ function registerElectronBuildToolsCommands(
       await exec(`${buildToolsExecutable} show goma`);
     }),
     vscode.commands.registerCommand(
-      `${commandPrefix}.show.outdir`,
+      `${commandPrefix}.show.out.path`,
       async () => {
-        const { stdout } = await exec(`${buildToolsExecutable} show outdir`, {
-          encoding: "utf8",
-        });
+        const { stdout } = await exec(
+          `${buildToolsExecutable} show out --path`,
+          {
+            encoding: "utf8",
+          }
+        );
         return stdout.trim();
       }
     ),

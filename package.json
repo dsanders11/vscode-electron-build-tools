@@ -483,7 +483,7 @@
         "label": "Electron Build Tools: Build Output",
         "fileLocation": [
           "relative",
-          "${command:electron-build-tools.show.outdir}"
+          "${command:electron-build-tools.show.out.path}"
         ],
         "applyTo": "allDocuments",
         "pattern": {
