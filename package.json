@@ -11,7 +11,7 @@
   "license": "MIT",
   "version": "0.6.0",
   "engines": {
-    "vscode": "^1.52.0"
+    "vscode": "^1.64.0"
   },
   "activationEvents": [
     "workspaceContains:ELECTRON_VERSION",
@@ -626,7 +626,6 @@
   "dependencies": {
     "@electron/docs-parser": "^0.10.1",
     "@octokit/rest": "^18.0.9",
-    "chokidar": "^3.4.3",
     "diff": "^5.0.0",
     "markdown-it": "^10.0.0",
     "markdown-it-emoji": "^2.0.0",

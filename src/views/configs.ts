@@ -1,7 +1,5 @@
 import * as vscode from "vscode";
 
-import * as chokidar from "chokidar";
-
 import { commandPrefix } from "../constants";
 import { getConfigs, getConfigsFilePath } from "../utils";
 
@@ -16,22 +14,35 @@ export interface ConfigCollector {
   getConfigs(): Promise<{ configs: string[]; activeConfig: string | null }>;
 }
 
-export class BuildToolsConfigCollector implements ConfigCollector {
+export class BuildToolsConfigCollector
+  extends vscode.Disposable
+  implements ConfigCollector {
   private _onDidStartRefreshing = new vscode.EventEmitter<OnDidStartRefreshing>();
   readonly onDidStartRefreshing = this._onDidStartRefreshing.event;
 
   private _configs?: string[];
   private _activeConfig: string | null = null;
+  private _disposables: vscode.Disposable[] = [];
 
   constructor(private readonly _extensionContext: vscode.ExtensionContext) {
+    super(() => {
+      this._disposables.forEach((disposable) => disposable.dispose());
+    });
+
     this._configs = _extensionContext.globalState.get<string[]>(
       "cachedConfigs"
     );
 
-    const watcher = chokidar.watch(getConfigsFilePath(), {
-      ignoreInitial: true,
-    });
-    watcher.on("all", () => this.refreshConfigs());
+    const configWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(getConfigsFilePath(), "**")
+    );
+
+    this._disposables.push(
+      configWatcher,
+      configWatcher.onDidChange(() => this.refreshConfigs()),
+      configWatcher.onDidCreate(() => this.refreshConfigs()),
+      configWatcher.onDidDelete(() => this.refreshConfigs())
+    );
   }
 
   async _getConfigs(): Promise<void> {
