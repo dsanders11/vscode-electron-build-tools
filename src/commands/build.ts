@@ -134,6 +134,12 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
               message: "Regenerating Ninja Files",
               increment: 0,
             });
+          } else if (/Downloading .*Xcode/.test(line)) {
+            // TODO - Capture Xcode download progress and report it
+            progress.report({
+              message: "Downloading Xcode",
+              increment: 0,
+            });
           } else {
             const buildProgress = parseInt(line.split("%")[0].trim());
 
