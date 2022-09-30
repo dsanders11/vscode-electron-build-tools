@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1 (9-29-2022)
+
+* chore: show downloading Xcode state in build progress notification
+* fix: `e show outdir` -> `e show out --path`
+* build: update prettier
+* chore: remove chokidar dependency
+
 ## 0.6.0 (9-28-2022)
 
 * chore: remove `build-tools` executable setting
