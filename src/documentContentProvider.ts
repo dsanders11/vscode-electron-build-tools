@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 
+import type { PromisifiedExecError } from "./common";
 import { pullRequestScheme } from "./constants";
 import {
   getContentForFileIndex,
@@ -25,12 +26,20 @@ export class TextDocumentContentProvider
         try {
           content = await getContentForFileIndex(fileIndex, checkoutPath);
         } catch (err) {
-          if (err && err.code === 128 && pullRequest) {
-            content = (
-              await vscode.workspace.fs.readFile(
-                uri.with({ scheme: pullRequestScheme })
-              )
-            ).toString();
+          if (
+            err instanceof Error &&
+            Object.prototype.hasOwnProperty.call(err, "code")
+          ) {
+            const errorWithCode = err as PromisifiedExecError;
+            if (errorWithCode.code === 128 && pullRequest) {
+              content = (
+                await vscode.workspace.fs.readFile(
+                  uri.with({ scheme: pullRequestScheme })
+                )
+              ).toString();
+            } else {
+              throw err;
+            }
           } else {
             throw err;
           }

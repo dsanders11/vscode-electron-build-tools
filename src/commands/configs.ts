@@ -4,6 +4,7 @@ import { promisify } from "util";
 
 import * as vscode from "vscode";
 
+import type { PromisifiedExecError } from "../common";
 import { buildToolsExecutable, commandPrefix, viewIds } from "../constants";
 import {
   default as ExtensionState,
@@ -21,6 +22,19 @@ const exec = promisify(childProcess.exec);
 
 interface ConfigOptionItem extends vscode.QuickPickItem {
   optionName?: string;
+}
+
+function handleError(err: unknown, errorMessage: string) {
+  Logger.error(err instanceof Error ? err : String(err));
+
+  if (
+    err instanceof Error &&
+    Object.prototype.hasOwnProperty.call(err, "stderr")
+  ) {
+    errorMessage += `: ${(err as PromisifiedExecError).stderr.trim()}`;
+  }
+
+  vscode.window.showErrorMessage(errorMessage);
 }
 
 export function registerConfigsCommands(
@@ -176,10 +190,7 @@ export function registerConfigsCommands(
             }
           );
         } catch (err) {
-          Logger.error(err);
-          vscode.window.showErrorMessage(
-            `Failed to create new config: ${err.stderr.trim()}`
-          );
+          handleError(err, "Failed to create new config");
         }
       }
     ),
@@ -195,8 +206,8 @@ export function registerConfigsCommands(
             configFilePath
           );
           await vscode.window.showTextDocument(document);
-        } catch (e) {
-          Logger.error(e);
+        } catch (err) {
+          Logger.error(err instanceof Error ? err : String(err));
         }
 
         return configFilePath;
@@ -215,10 +226,7 @@ export function registerConfigsCommands(
           // TBD - This isn't very noticeable
           vscode.window.setStatusBarMessage("Removed config");
         } catch (err) {
-          Logger.error(err);
-          vscode.window.showErrorMessage(
-            `Failed to remove config: ${err.stderr.trim()}`
-          );
+          handleError(err, "Failed to remove config");
           configsProvider.refresh();
         }
       }
@@ -232,10 +240,7 @@ export function registerConfigsCommands(
           // TBD - This isn't very noticeable
           vscode.window.setStatusBarMessage("Sanitized config");
         } catch (err) {
-          Logger.error(err);
-          vscode.window.showErrorMessage(
-            `Failed to sanitize config: ${err.stderr.trim()}`
-          );
+          handleError(err, "Failed to sanitize config");
         }
       }
     ),
@@ -271,7 +276,7 @@ export function registerConfigsCommands(
         try {
           await exec(`${buildToolsExecutable} use ${configName}`);
         } catch (err) {
-          Logger.error(err);
+          Logger.error(err instanceof Error ? err : String(err));
           vscode.window.showErrorMessage(
             "Failed to set active Electron build-tools config"
           );

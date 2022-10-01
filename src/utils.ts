@@ -15,6 +15,7 @@ import MarkdownIt from "markdown-it";
 import type MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
 
+import type { PromisifiedExecError } from "./common";
 import { buildToolsExecutable, contextKeyPrefix } from "./constants";
 import Logger from "./logging";
 import type { ElectronPatchesConfig, EVMConfig } from "./types";
@@ -51,8 +52,14 @@ export async function isBuildToolsInstalled(): Promise<boolean> {
     await exec(`${command} ${buildToolsExecutable}`);
     return true;
   } catch (err) {
-    if (err.code === undefined) {
-      Logger.error(err);
+    if (
+      err instanceof Error &&
+      Object.prototype.hasOwnProperty.call(err, "code")
+    ) {
+      const errorWithCode = err as PromisifiedExecError;
+      if (errorWithCode.code === undefined) {
+        Logger.error(errorWithCode);
+      }
     }
 
     return false;

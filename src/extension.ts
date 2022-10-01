@@ -124,7 +124,7 @@ function registerElectronBuildToolsCommands(
               { expand: true, focus: true }
             );
           } catch (err) {
-            Logger.error(err);
+            Logger.error(err instanceof Error ? err : String(err));
             vscode.window.showErrorMessage("Couldn't reveal patch in sidebar");
           }
         }

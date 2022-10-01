@@ -68,7 +68,7 @@ export function registerPatchesCommands(
           vscode.window.setStatusBarMessage("Refreshed patches");
           patchesProvider.refresh();
         } catch (err) {
-          Logger.error(err);
+          Logger.error(err instanceof Error ? err : String(err));
           vscode.window.showErrorMessage("Failed to refresh patches");
         } finally {
           endProgress();
