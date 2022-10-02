@@ -145,6 +145,10 @@ export function registerConfigsCommands(
           const cliOptions = options
             .filter((option) => option.optionName !== undefined)
             .map((option) => `--${option.optionName}`);
+          cliOptions.push(
+            `--root ${vscode.Uri.joinPath(rootPath[0], "electron").fsPath}`
+          );
+
           const useFork = options.find(
             (quickPickItem) => quickPickItem.label === "Add Fork"
           );
