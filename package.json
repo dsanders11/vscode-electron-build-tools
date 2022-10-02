@@ -610,8 +610,8 @@
     "@types/throttle-debounce": "^2.1.0",
     "@types/uuid": "^8.3.0",
     "@types/vscode": "^1.71.0",
-    "@typescript-eslint/eslint-plugin": "^4.1.1",
-    "@typescript-eslint/parser": "^4.1.1",
+    "@typescript-eslint/eslint-plugin": "^5.38.1",
+    "@typescript-eslint/parser": "^5.38.1",
     "copyfiles": "^2.4.0",
     "eslint": "^7.9.0",
     "glob": "^7.1.6",
@@ -620,7 +620,7 @@
     "lint-staged": "^10.5.1",
     "prettier": "^2.7.1",
     "type-coverage": "^2.14.2",
-    "typescript": "^4.0.2"
+    "typescript": "^4.8.4"
   },
   "dependencies": {
     "@electron/docs-parser": "^0.10.1",
