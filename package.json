@@ -619,7 +619,7 @@
     "json-schema-to-typescript": "^11.0.2",
     "lint-staged": "^10.5.1",
     "prettier": "^2.7.1",
-    "type-coverage": "^2.14.2",
+    "type-coverage": "^2.22.0",
     "typescript": "^4.8.4"
   },
   "dependencies": {
