@@ -623,7 +623,7 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "@electron/docs-parser": "^0.10.1",
+    "@electron/docs-parser": "^0.12.4",
     "@octokit/rest": "^18.0.9",
     "diff": "^5.0.0",
     "markdown-it": "^10.0.0",
