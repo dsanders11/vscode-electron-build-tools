@@ -34,7 +34,7 @@ export class GnFormattingProvider
         }
       );
 
-      cp.stdout.on("data", (data) => {
+      cp.stdout.on("data", (data: Buffer | string) => {
         formattedText += data.toString("utf8");
       });
 

@@ -272,7 +272,7 @@ export function registerConfigsCommands(
           }
         }
 
-        const configName = (value as any).label ?? value;
+        const configName = typeof value === "string" ? value : value.label;
 
         // Do an optimistic update for snappier UI
         configsProvider.setActive(configName);

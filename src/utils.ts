@@ -464,7 +464,10 @@ export function makeCommandUri(command: string, ...args: any[]) {
   return vscode.Uri.parse(`command:${command}?${commandArgs}`);
 }
 
-export async function setContext(key: string, value: any): Promise<any> {
+export async function setContext<ValueType>(
+  key: string,
+  value: ValueType
+): Promise<any> {
   return await vscode.commands.executeCommand(
     "setContext",
     `${contextKeyPrefix}:${key}`,

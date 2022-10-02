@@ -55,7 +55,7 @@ export function registerPatchesCommands(
         );
       },
       async (arg: PatchDirectory | string | undefined) => {
-        const target = arg !== undefined ? (arg as any).name ?? arg : "all";
+        const target = typeof arg === "string" ? arg : arg?.name ?? "all";
 
         const endProgress = startProgress({
           location: { viewId: viewIds.PATCHES },

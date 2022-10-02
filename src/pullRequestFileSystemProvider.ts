@@ -37,7 +37,7 @@ interface PullRequestPatchedFile {
 type FileFromPullRequest = PullRequestFile | PullRequestPatchedFile;
 
 function isPullRequestFile(file: FileFromPullRequest): file is PullRequestFile {
-  return !!(file as any).status;
+  return Object.prototype.hasOwnProperty.call(file, "status");
 }
 
 function getPatchAddedLines(patch: string) {
