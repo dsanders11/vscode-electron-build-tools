@@ -58,6 +58,11 @@ function mapFnBodyToSourceRange(file, body) {
 
     if (sourceMap) {
       const transformedContent = getFileContent(file);
+
+      if (!transformedContent) {
+        return null;
+      }
+
       const idx = transformedContent.indexOf(body);
 
       if (idx !== -1) {
