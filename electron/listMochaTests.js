@@ -115,6 +115,7 @@ function parseTestSuites(suite) {
 
 // These are required or there will be a reference error
 // while Mocha is processing the tests
+global.serviceWorkerScheme = "sw";
 global.standardScheme = "app";
 global.zoomScheme = "zoom";
 global.window = {};
