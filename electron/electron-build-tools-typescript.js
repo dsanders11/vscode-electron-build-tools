@@ -24,7 +24,7 @@ module.exports = {
           emitOnlyDtsFiles,
           forceDtsEmit
         );
-        contentMap.set(filename, output.outputFiles[1].text);
+        contentMap.set(fileName, output.outputFiles[1].text);
 
         return output;
       },
