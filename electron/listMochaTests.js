@@ -148,8 +148,9 @@ app
           try {
             await mocha.loadFiles();
             const parsedSuites = parseTestSuites(mocha.suite);
-            socket.write(JSON.stringify(parsedSuites, undefined, 4));
-            process.exit(0);
+            socket.write(JSON.stringify(parsedSuites, undefined, 4), () =>
+              process.exit(0)
+            );
           } catch (err) {
             process.stderr.write(err.toString());
             process.exit(1);
