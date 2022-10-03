@@ -1,4 +1,3 @@
-const Module = require("module");
 const net = require("net");
 const path = require("path");
 const readline = require("readline");
@@ -9,28 +8,22 @@ process.once("uncaughtException", (err) => {
   process.exit(1);
 });
 
-// We need the typescript module but it would be 60 MB to bundle it with the
-// extension, which doesn't seem like the right thing to do. It's already in
-// the Electron source tree, so give access to it by adding to the global path
-// This also gives access to Mocha, rather than including it in the extension
-Module.globalPaths.push(path.resolve(process.cwd(), "node_modules"));
-
-// However, node_modules resolution works upward from the file path, so once
-// inside code outside of this script, we lose access to the extension's
-// node_modules, so explicitly inject it in there so any module searches it
-Module.globalPaths.push(path.resolve(__dirname, "..", "..", "node_modules"));
-
-// Needed for our custom files
-Module.globalPaths.push(path.resolve(__dirname));
-
-// Needed or some imports at the start of test files will fail
-Module.globalPaths.push(path.resolve(process.cwd(), "spec", "node_modules"));
-
 const { app } = require("electron");
 
-const { SourceMapConsumer } = require("source-map");
-const { retrieveSourceMap } = require("source-map-support");
-const { getFileContent } = require("electron-build-tools-typescript");
+const { SourceMapConsumer } = require(path.resolve(
+  process.cwd(),
+  "node_modules",
+  "source-map"
+));
+const { retrieveSourceMap } = require(path.resolve(
+  process.cwd(),
+  "node_modules",
+  "source-map-support"
+));
+const { getFileContent } = require(path.resolve(
+  __dirname,
+  "electron-build-tools-typescript"
+));
 
 const sourceMapConsumers = new Map();
 
@@ -124,10 +117,15 @@ app
   .whenReady()
   .then(async () => {
     // This lets Mocha compile the TypeScript tests on the fly
-    require("ts-node/register");
+    require(path.resolve(process.cwd(), "node_modules", "ts-node/register"));
 
     // Don't load Mocha until after setting up ts-node
-    const Mocha = require("mocha");
+    const Mocha = require(path.resolve(
+      process.cwd(),
+      "spec",
+      "node_modules",
+      "mocha"
+    ));
 
     const mocha = new Mocha();
 
