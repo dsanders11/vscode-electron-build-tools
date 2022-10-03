@@ -576,7 +576,7 @@
     "viewsWelcome": [
       {
         "view": "electron-build-tools:welcome",
-        "contents": "In order to use the Electron Build Tools extension, you need build-tools installed.\nFind out more at the [build-tools repository](https://github.com/electron/build-tools).\nIf you have build-tools installed and you're seeing this, take a look at the [troubleshooting guide](https://github.com/dsanders11/vscode-electron-build-tools/wiki/Troubleshooting)."
+        "contents": "In order to use the Electron Build Tools extension, you need the npm package @electron/build-tools, version 1.1.0 or newer, installed."
       },
       {
         "view": "electron-build-tools:workspace",
