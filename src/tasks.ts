@@ -33,6 +33,7 @@ export function runAsTask({
   shellOptions,
   problemMatchers,
   exitCodeHandler,
+  presentationOptions,
   cancellationToken,
 }: {
   context: vscode.ExtensionContext;
@@ -43,6 +44,7 @@ export function runAsTask({
   shellOptions?: vscode.ShellExecutionOptions;
   problemMatchers?: string | string[];
   exitCodeHandler?: (exitCode: number) => boolean | undefined;
+  presentationOptions?: vscode.TaskPresentationOptions;
   cancellationToken?: vscode.CancellationToken;
 }): ElectronBuildToolsTask {
   const socketName = generateSocketName();
@@ -69,12 +71,16 @@ export function runAsTask({
     problemMatchers
   );
 
-  // TODO - How to stop the terminal from being closed on task cancel?
-  task.presentationOptions = {
-    reveal: vscode.TaskRevealKind.Silent,
-    echo: false,
-    clear: true,
-  };
+  if (presentationOptions) {
+    task.presentationOptions = presentationOptions;
+  } else {
+    // TODO - How to stop the terminal from being closed on task cancel?
+    task.presentationOptions = {
+      reveal: vscode.TaskRevealKind.Silent,
+      echo: false,
+      clear: true,
+    };
+  }
 
   const socketServer = net.createServer().listen(socketName);
 
