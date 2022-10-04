@@ -3,10 +3,17 @@ import * as net from "net";
 
 import type { IpcMessage } from "../src/common";
 
-const [command, socketPath] = process.argv.slice(2, 4);
+const [b64command, socketPath] = process.argv.slice(2, 4);
+
+const command = Buffer.from(b64command, "base64").toString();
+
+// Echo the command being run to stderr for easier debugging
+process.stderr.write(
+  `Executing "\x1b[36m${command}\x1b[0m" in \x1b[35m${process.cwd()}\x1b[0m\r\n`
+);
 
 // Command was base64-encoded to prevent quotes from being mucked with
-const cp = childProcess.spawn(Buffer.from(command, "base64").toString(), {
+const cp = childProcess.spawn(command, {
   windowsVerbatimArguments: true,
   shell: true,
 });
