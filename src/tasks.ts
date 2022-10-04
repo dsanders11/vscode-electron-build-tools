@@ -33,6 +33,7 @@ export function runAsTask({
   shellOptions,
   problemMatchers,
   exitCodeHandler,
+  cancellationToken,
 }: {
   context: vscode.ExtensionContext;
   operationName: string;
@@ -42,6 +43,7 @@ export function runAsTask({
   shellOptions?: vscode.ShellExecutionOptions;
   problemMatchers?: string | string[];
   exitCodeHandler?: (exitCode: number) => boolean | undefined;
+  cancellationToken?: vscode.CancellationToken;
 }): ElectronBuildToolsTask {
   const socketName = generateSocketName();
 
@@ -129,11 +131,14 @@ export function runAsTask({
           }
         });
 
-        token.onCancellationRequested(() => {
+        const cancelTask = () => {
           resolve(false);
           taskExecution.terminate();
           Logger.warn(`User canceled '${command}'`);
-        });
+        };
+
+        token.onCancellationRequested(cancelTask);
+        cancellationToken?.onCancellationRequested(cancelTask);
       }).finally(() => taskExecution.terminate());
     }
   );
