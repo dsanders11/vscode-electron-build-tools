@@ -600,7 +600,7 @@
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
-    "@octokit/types": "^5.5.0",
+    "@octokit/types": "^7.5.1",
     "@types/diff": "^4.0.2",
     "@types/markdown-it": "^10.0.2",
     "@types/markdown-it-emoji": "^1.4.0",
@@ -622,7 +622,7 @@
   },
   "dependencies": {
     "@electron/docs-parser": "^0.12.4",
-    "@octokit/rest": "^18.0.9",
+    "@octokit/rest": "^19.0.4",
     "diff": "^5.0.0",
     "markdown-it": "^10.0.0",
     "markdown-it-emoji": "^2.0.0",
