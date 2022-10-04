@@ -1,7 +1,7 @@
 import * as childProcess from "child_process";
 import * as net from "net";
 
-import { IpcMessage } from "../src/common";
+import type { IpcMessage } from "../src/common";
 
 const [command, socketPath] = process.argv.slice(2, 4);
 
