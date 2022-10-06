@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1 (10-5-2022)
+
+* fix: clean release
+
 ## 0.7.0 (10-5-2022)
 
 * chore: bump VS Code engine version
