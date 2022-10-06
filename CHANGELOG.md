@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0 (10-5-2022)
+
+* chore: bump VS Code engine version
+* fix: specify --root when calling `e init`
+
 ## 0.6.1 (9-29-2022)
 
 * chore: show downloading Xcode state in build progress notification
