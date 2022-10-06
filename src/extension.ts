@@ -23,6 +23,7 @@ import { GnFormattingProvider } from "./gnFormattingProvider";
 import { GnLinkProvider } from "./gnLinkProvider";
 import Logger from "./logging";
 import { SnippetProvider } from "./snippetProvider";
+import { createTestController } from "./tests";
 import {
   drillDown,
   findElectronRoot,
@@ -201,6 +202,8 @@ export async function activate(context: vscode.ExtensionContext) {
         "electron-build-tools"
       );
 
+      const testController = createTestController(context, electronRoot);
+
       const patchesConfig = getPatchesConfigFile(electronRoot);
       const configsCollector = new BuildToolsConfigCollector(context);
       const patchesProvider = new ElectronPatchesProvider(
@@ -246,6 +249,7 @@ export async function activate(context: vscode.ExtensionContext) {
       });
 
       context.subscriptions.push(
+        testController,
         configsCollector,
         diagnosticsCollection,
         linkableProvider,
