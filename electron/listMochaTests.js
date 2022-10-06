@@ -28,10 +28,8 @@ const { getFileContent } = require(path.resolve(
 const sourceMapConsumers = new Map();
 
 function positionAt(content, offset) {
-  const lines = Array.from(
-    content.slice(0, offset).matchAll(/^(.*)(?:\r\n|$)/gm)
-  );
-  const lastLine = lines.slice(-1)[0][1];
+  const lines = content.slice(0, offset).split("\n");
+  const lastLine = lines.at(-1).replace(/\r$/, "");
 
   return { line: lines.length - 1, character: lastLine.length };
 }
