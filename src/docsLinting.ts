@@ -13,7 +13,7 @@ import { ensurePosixSeparators, positionAt } from "./utils";
 
 function getLinksInDocument(document: vscode.TextDocument) {
   const text = document.getText();
-  const links = [];
+  const links: vscode.DocumentLink[] = [];
 
   const inlineLinkMatches = Array.from(text.matchAll(Markdown.linkPattern)).map(
     (match) => ["inline", match]

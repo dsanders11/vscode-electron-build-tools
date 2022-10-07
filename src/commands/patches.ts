@@ -164,7 +164,7 @@ export function registerPatchesCommands(
             const pullRequest = prResponse.data;
             const pulRequestFiles = prFilesResponse.data;
             const patchDirectoryRegex = /^patches\/(\S*)\/.patches$/;
-            const patchDirectories = [];
+            const patchDirectories: string[] = [];
 
             for (const file of prFilesResponse.data) {
               const matches = patchDirectoryRegex.exec(file.filename);
