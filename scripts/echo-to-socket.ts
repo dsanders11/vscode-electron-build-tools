@@ -3,7 +3,7 @@ import * as net from "net";
 
 import type { IpcMessage } from "../src/common";
 
-const [b64command, socketPath] = process.argv.slice(2, 4);
+const [b64command, socketPath, suppressExitCode] = process.argv.slice(2, 5);
 
 const command = Buffer.from(b64command, "base64").toString();
 
@@ -34,7 +34,7 @@ const socket = net.createConnection(socketPath, () => {
 
 // We bubble up the exit code as well
 cp.on("exit", (exitCode, signal) => {
-  process.exit(exitCode || 0);
+  process.exit(suppressExitCode ? 0 : exitCode || 0);
 });
 
 // Send signals down to the wrapped child

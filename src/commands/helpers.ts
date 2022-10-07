@@ -149,7 +149,7 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
           let prettiedTable = "";
 
           for (const [lineNumber, line] of table.entries()) {
-            const prettiedColumns = [];
+            const prettiedColumns: string[] = [];
 
             for (const [idx, column] of line.entries()) {
               const alignment = columnAlignments[idx];

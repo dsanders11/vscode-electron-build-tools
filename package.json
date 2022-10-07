@@ -497,34 +497,17 @@
           "severity": 4,
           "message": 5
         }
-      },
-      {
-        "name": "mocha",
-        "source": "electron-build-tools",
-        "label": "Electron Build Tools: Mocha Output",
-        "fileLocation": [
-          "autodetect",
-          "${command:electron-build-tools.show.root}/src/"
-        ],
-        "applyTo": "allDocuments",
-        "pattern": [
-          {
-            "regexp": "^\\s+(AssertionError: .*)$",
-            "message": 1
-          },
-          {
-            "regexp": "^.*\\((.*):(\\d+):(\\d+)\\)\\s*$",
-            "file": 1,
-            "line": 2,
-            "column": 3
-          }
-        ]
       }
     ],
     "snippets": [
       {
         "language": "typescript",
         "path": "./snippets/mocha-specs.json"
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "electron-build-tools"
       }
     ],
     "views": {
@@ -627,6 +610,7 @@
     "@electron/docs-parser": "^0.12.4",
     "@octokit/rest": "^19.0.4",
     "diff": "^5.0.0",
+    "folder-hash": "^4.0.2",
     "markdown-it": "^10.0.0",
     "markdown-it-emoji": "^2.0.0",
     "throttle-debounce": "^5.0.0",

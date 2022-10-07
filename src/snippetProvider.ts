@@ -17,7 +17,7 @@ export class SnippetProvider implements vscode.CompletionItemProvider {
   ): vscode.ProviderResult<
     vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem>
   > {
-    const items = [];
+    const items: vscode.CompletionItem[] = [];
 
     switch (document.languageId) {
       case "cpp":

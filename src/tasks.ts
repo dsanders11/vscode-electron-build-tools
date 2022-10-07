@@ -35,6 +35,7 @@ export function runAsTask({
   exitCodeHandler,
   presentationOptions,
   cancellationToken,
+  suppressExitCode = false,
 }: {
   context: vscode.ExtensionContext;
   operationName: string;
@@ -46,6 +47,7 @@ export function runAsTask({
   exitCodeHandler?: (exitCode: number) => boolean | undefined;
   presentationOptions?: vscode.TaskPresentationOptions;
   cancellationToken?: vscode.CancellationToken;
+  suppressExitCode?: boolean;
 }): ElectronBuildToolsTask {
   const socketName = generateSocketName();
 
@@ -58,7 +60,9 @@ export function runAsTask({
     taskName,
     "electron-build-tools",
     new vscode.ShellExecution(
-      `node out/scripts/echo-to-socket.js "${b64command}" ${socketName}`,
+      `node out/scripts/echo-to-socket.js "${b64command}" ${socketName} ${
+        suppressExitCode ? 1 : ""
+      }`.trimEnd(),
       {
         cwd: context.extensionPath,
         ...shellOptions,
@@ -114,6 +118,7 @@ export function runAsTask({
       });
 
       const taskExecution = await vscode.tasks.executeTask(task);
+      const disposables: vscode.Disposable[] = [];
 
       return new Promise<boolean>(async (resolve, reject) => {
         socketServer.once("error", () => reject("Socket server error"));
@@ -122,7 +127,7 @@ export function runAsTask({
           if (execution === taskExecution) {
             resolve(true);
           }
-        });
+        }, disposables);
 
         vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
           if (execution === taskExecution && exitCode !== undefined) {
@@ -135,7 +140,7 @@ export function runAsTask({
               );
             }
           }
-        });
+        }, disposables);
 
         const cancelTask = () => {
           resolve(false);
@@ -143,9 +148,20 @@ export function runAsTask({
           Logger.warn(`User canceled '${command}'`);
         };
 
+        if (
+          token.isCancellationRequested ||
+          cancellationToken?.isCancellationRequested
+        ) {
+          cancelTask();
+          return;
+        }
+
         token.onCancellationRequested(cancelTask);
         cancellationToken?.onCancellationRequested(cancelTask);
-      }).finally(() => taskExecution.terminate());
+      }).finally(() => {
+        taskExecution.terminate();
+        disposables.forEach((disposable) => disposable.dispose());
+      });
     }
   );
 

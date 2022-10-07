@@ -276,7 +276,7 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
   const rootHeading = parsedHeadings[0];
 
   const parseLinks = (content: MarkdownToken[]) => {
-    const links = [];
+    const links: DocLink[] = [];
 
     for (const { children, level, type } of content) {
       if (type === "inline" && children) {

@@ -35,7 +35,7 @@ export class DocsTreeDataProvider implements TreeDataProvider<TreeItem> {
 
       for (let idx = 0; idx < links.length; idx++) {
         const link = links[idx];
-        const nestedLinks = [];
+        const nestedLinks: DocLink[] = [];
 
         // Look ahead to see if there's nested links
         while (idx + 1 < links.length && links[idx + 1].level > link.level) {
