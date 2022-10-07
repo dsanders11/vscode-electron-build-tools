@@ -1,4 +1,12 @@
-const typescript = require("typescript-cached-transpile");
+const path = require("path");
+
+const typescript = require(path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "node_modules",
+  "typescript-cached-transpile"
+));
 
 const contentMap = new Map();
 
