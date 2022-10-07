@@ -260,7 +260,6 @@ async function getElectronTests(
         if (execution === taskExecution) {
           await socketClosedPromise;
           socketServer.close();
-          Logger.info(result); // TODO - Remove debug code
           resolve(JSON.parse(result));
         }
       });
@@ -274,7 +273,6 @@ async function getElectronTests(
           } else {
             await socketClosedPromise;
             socketServer.close();
-            Logger.info(result); // TODO - Remove debug code
             resolve(JSON.parse(result));
           }
         }
