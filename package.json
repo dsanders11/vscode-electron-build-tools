@@ -494,28 +494,6 @@
           "severity": 4,
           "message": 5
         }
-      },
-      {
-        "name": "mocha",
-        "source": "electron-build-tools",
-        "label": "Electron Build Tools: Mocha Output",
-        "fileLocation": [
-          "autodetect",
-          "${command:electron-build-tools.show.root}/src/"
-        ],
-        "applyTo": "allDocuments",
-        "pattern": [
-          {
-            "regexp": "^\\s+(AssertionError: .*)$",
-            "message": 1
-          },
-          {
-            "regexp": "^.*\\((.*):(\\d+):(\\d+)\\)\\s*$",
-            "file": 1,
-            "line": 2,
-            "column": 3
-          }
-        ]
       }
     ],
     "snippets": [
