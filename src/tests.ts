@@ -327,7 +327,7 @@ async function getElectronTests(
     })
   );
   task.presentationOptions = {
-    reveal: vscode.TaskRevealKind.Never,
+    reveal: vscode.TaskRevealKind.Silent,
     echo: false,
     clear: true,
   };
