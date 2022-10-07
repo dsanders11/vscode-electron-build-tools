@@ -75,7 +75,6 @@ export function createTestController(
     async (request, token) => {
       const extraArgs = runProfileData.get(runProfile);
       const run = testController.createTestRun(request);
-      let runAllTests = false;
 
       const testRegexes: string[] = [];
       const testsById = new Map<string, vscode.TestItem>();
@@ -92,7 +91,7 @@ export function createTestController(
 
       if (!request.include) {
         if (request.exclude) {
-          // If no request.include, include all top-level tests
+          // If no request.include, include all top-level tests which aren't excluded
           for (const [, test] of testController.items) {
             if (!request.exclude?.includes(test)) {
               addTests(test);
@@ -101,8 +100,6 @@ export function createTestController(
               testsById.delete(test.id);
             }
           }
-        } else {
-          runAllTests = true;
         }
       } else {
         request.include.forEach((test) => {
