@@ -148,6 +148,14 @@ export function runAsTask({
           Logger.warn(`User canceled '${command}'`);
         };
 
+        if (
+          token.isCancellationRequested ||
+          cancellationToken?.isCancellationRequested
+        ) {
+          cancelTask();
+          return;
+        }
+
         token.onCancellationRequested(cancelTask);
         cancellationToken?.onCancellationRequested(cancelTask);
       }).finally(() => {
