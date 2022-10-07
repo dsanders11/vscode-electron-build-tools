@@ -191,6 +191,9 @@
       "properties": {
         "electronBuildTools.build.buildOptions": {
           "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
           "properties": {
             "--no-goma": {
               "type": "string",
@@ -487,7 +490,6 @@
         ],
         "applyTo": "allDocuments",
         "pattern": {
-          "regexp": "^(.*)\\((\\d+),(\\d+)\\):\\s+(warning|error):\\s+(.*)$",
           "file": 1,
           "line": 2,
           "column": 3,
