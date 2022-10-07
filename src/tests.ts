@@ -39,12 +39,12 @@ export function createTestController(
   );
 
   testController.refreshHandler = async (token: vscode.CancellationToken) => {
-    vscode.window.withProgress(
-      {
-        location: { viewId: "workbench.view.extension.test" },
-      },
-      () => discoverTests(context, electronRoot, testController, token)
-    );
+    try {
+      await discoverTests(context, electronRoot, testController, token);
+    } catch (err) {
+      Logger.error(err instanceof Error ? err : String(err));
+      throw new Error("Error when refreshing Electron tests");
+    }
   };
 
   const runProfile = testController.createRunProfile(
