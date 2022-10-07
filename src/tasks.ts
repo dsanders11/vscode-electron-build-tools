@@ -114,6 +114,7 @@ export function runAsTask({
       });
 
       const taskExecution = await vscode.tasks.executeTask(task);
+      const disposables: vscode.Disposable[] = [];
 
       return new Promise<boolean>(async (resolve, reject) => {
         socketServer.once("error", () => reject("Socket server error"));
@@ -122,7 +123,7 @@ export function runAsTask({
           if (execution === taskExecution) {
             resolve(true);
           }
-        });
+        }, disposables);
 
         vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
           if (execution === taskExecution && exitCode !== undefined) {
@@ -135,7 +136,7 @@ export function runAsTask({
               );
             }
           }
-        });
+        }, disposables);
 
         const cancelTask = () => {
           resolve(false);
@@ -145,7 +146,10 @@ export function runAsTask({
 
         token.onCancellationRequested(cancelTask);
         cancellationToken?.onCancellationRequested(cancelTask);
-      }).finally(() => taskExecution.terminate());
+      }).finally(() => {
+        taskExecution.terminate();
+        disposables.forEach((disposable) => disposable.dispose());
+      });
     }
   );
 
