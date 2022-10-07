@@ -35,6 +35,7 @@ export function runAsTask({
   exitCodeHandler,
   presentationOptions,
   cancellationToken,
+  suppressExitCode = false,
 }: {
   context: vscode.ExtensionContext;
   operationName: string;
@@ -46,6 +47,7 @@ export function runAsTask({
   exitCodeHandler?: (exitCode: number) => boolean | undefined;
   presentationOptions?: vscode.TaskPresentationOptions;
   cancellationToken?: vscode.CancellationToken;
+  suppressExitCode?: boolean;
 }): ElectronBuildToolsTask {
   const socketName = generateSocketName();
 
@@ -58,7 +60,9 @@ export function runAsTask({
     taskName,
     "electron-build-tools",
     new vscode.ShellExecution(
-      `node out/scripts/echo-to-socket.js "${b64command}" ${socketName}`,
+      `node out/scripts/echo-to-socket.js "${b64command}" ${socketName} ${
+        suppressExitCode ? 1 : ""
+      }`.trimEnd(),
       {
         cwd: context.extensionPath,
         ...shellOptions,
