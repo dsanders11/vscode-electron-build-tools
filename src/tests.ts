@@ -129,12 +129,13 @@ function createTestItems(
 ) {
   const tests: ParsedTest[] = [];
 
-  for (const parsedTest of suite.tests) {
+  for (const [idx, parsedTest] of suite.tests.entries()) {
     const test = testController.createTestItem(
       parsedTest.fullTitle,
       parsedTest.title,
       vscode.Uri.file(parsedTest.file)
     );
+    test.sortText = `a${idx}`;
 
     if (parsedTest.range) {
       test.range = parsedTest.range;
@@ -143,12 +144,14 @@ function createTestItems(
     collection.add(test);
   }
 
-  for (const parsedSuite of suite.suites) {
+  for (const [idx, parsedSuite] of suite.suites.entries()) {
     const testSuite = testController.createTestItem(
       parsedSuite.fullTitle,
       parsedSuite.title,
       vscode.Uri.file(parsedSuite.file)
     );
+    // Suites run after tests, so sort accordingly
+    testSuite.sortText = `b${idx}`;
     collection.add(testSuite);
 
     tests.push(
