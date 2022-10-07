@@ -524,6 +524,11 @@
         "path": "./snippets/mocha-specs.json"
       }
     ],
+    "taskDefinitions": [
+      {
+        "type": "electron-build-tools"
+      }
+    ],
     "views": {
       "electron-build-tools": [
         {
