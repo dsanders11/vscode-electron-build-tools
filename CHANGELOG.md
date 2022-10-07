@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2 (10-7-2022)
+
+* fix: import module by absolute path
+
 ## 0.8.1 (10-7-2022)
 
 * fix: clean release
