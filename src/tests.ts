@@ -2,6 +2,8 @@ import * as net from "net";
 
 import * as vscode from "vscode";
 
+import { setupSpecRunner } from "../electron/spec-runner";
+
 import { buildToolsExecutable, commandPrefix } from "./constants";
 import {
   default as ExtensionState,
@@ -190,6 +192,9 @@ async function getElectronTests(
       "**/node_modules/**"
     );
   }
+
+  // This does things like install modules if they haven't been installed yet
+  await setupSpecRunner(electronRoot.fsPath);
 
   const electronExe = await vscode.commands.executeCommand<string>(
     `${commandPrefix}.show.exe`
