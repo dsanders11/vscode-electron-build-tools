@@ -38,6 +38,17 @@ export function createTestController(
     "Electron Tests"
   );
 
+  testController.resolveHandler = async (test?: vscode.TestItem) => {
+    if (!test) {
+      try {
+        await discoverTests(context, electronRoot, testController);
+      } catch (err) {
+        Logger.error(err instanceof Error ? err : String(err));
+        throw new Error("Error when loading Electron tests");
+      }
+    }
+  };
+
   testController.refreshHandler = async (token: vscode.CancellationToken) => {
     try {
       await discoverTests(context, electronRoot, testController, token);
@@ -108,16 +119,6 @@ export function createTestController(
     }
   };
 
-  // Do initial discovery and try to show the user that there's
-  // something going on with the test explorer
-  // TODO - Would be nice if test explorer showed progress better
-  vscode.window.withProgress(
-    {
-      location: { viewId: "workbench.view.extension.test" },
-    },
-    () => discoverTests(context, electronRoot, testController)
-  );
-
   return testController;
 }
 
@@ -164,8 +165,6 @@ async function discoverTests(
   testController: vscode.TestController,
   token?: vscode.CancellationToken
 ) {
-  // TODO - Store cached tests, fill the tree with them but mark them all busy, then do initial refresh
-
   const testSuites = await ExtensionState.runOperation(
     ExtensionOperation.LOAD_TESTS,
     () => getElectronTests(context, electronRoot, token),
