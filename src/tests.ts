@@ -69,6 +69,7 @@ export function createTestController(
     }
   };
 
+  // TODO - Add a debug profile
   const runProfile = testController.createRunProfile(
     "Run",
     vscode.TestRunProfileKind.Run,
@@ -131,6 +132,14 @@ export function createTestController(
         cancellationToken: token,
         shellOptions: {
           env: {
+            // TODO - Create a custom reporter which is like json-stream, but
+            //        outputs 'actual' and 'expected' (like json reporter),
+            //        outputs for skipped tests so they can be marked skipped
+            //        in-order, outputs for suites so that they can be marked
+            //        during a test run (although VS Code should handle that
+            //        for us, you would think), and outputs start and end
+            //        events so we can transition test states from enqueued
+            //        to started to result
             MOCHA_REPORTER: "json-stream",
           },
         },
