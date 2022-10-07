@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0 (10-7-2022)
+
+* feat: support VS Code testing view
+* fix: update build output problem matcher
+* fix: correct UI for build options settings
+
 ## 0.7.1 (10-5-2022)
 
 * fix: clean release
