@@ -29,6 +29,15 @@ interface ParsedTest extends ParsedTestData {
   range: vscode.Range | null;
 }
 
+interface MochaTestResult {
+  title: string;
+  fullTitle: string;
+  duration: number;
+  currentRetry?: number;
+  err?: string;
+  stack?: string;
+}
+
 export function createTestController(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri
@@ -64,48 +73,128 @@ export function createTestController(
     "Run",
     vscode.TestRunProfileKind.Run,
     async (request, token) => {
-      // TODO - Implement running tests
       const extraArgs = runProfileData.get(runProfile);
+      const run = testController.createTestRun(request);
+      let runAllTests = false;
 
-      // TODO - Improve this logic
-      if (!request.include?.length && !request.exclude?.length) {
-        // TODO - Run all tests
-      } else if (request.include && !request.exclude?.length) {
-        const testRun = testController.createTestRun(request);
+      const testRegexes: string[] = [];
+      const testsById = new Map<string, vscode.TestItem>();
 
-        const testRegexes = [];
+      // To process test results we need a map of all test IDs to the
+      // corresponding TestItem. Would be great if `testController.items.get`
+      // had an option to do a deep get in all children, but it doesn't.
+      // We'll also used testsById to track which tests were skipped, since
+      // Mocha's json-stream reporter provides no output on skipped tests.
+      function addTests(testItem: vscode.TestItem) {
+        testsById.set(testItem.id, testItem);
+        testItem.children.forEach(addTests);
+      }
 
-        for (const testItem of request.include) {
-          testRun.started(testItem);
-          testRegexes.push(escapeStringForRegex(testItem.id));
+      if (!request.include) {
+        if (request.exclude) {
+          // If no request.include, include all top-level tests
+          for (const [, test] of testController.items) {
+            if (!request.exclude?.includes(test)) {
+              addTests(test);
+              testRegexes.push(`'${escapeStringForRegex(test.id)}`);
+            } else {
+              testsById.delete(test.id);
+            }
+          }
+        } else {
+          runAllTests = true;
         }
-
-        let command = `${buildToolsExecutable} test --runners=main -g '${testRegexes.join(
-          "|"
-        )}'`;
-
-        if (extraArgs) {
-          command += ` ${extraArgs}`;
-        }
-
-        const task = runAsTask({
-          context,
-          operationName: "Electron Build Tools - Running Test",
-          taskName: "test",
-          command,
-          cancellationToken: token,
+      } else {
+        request.include.forEach((test) => {
+          addTests(test);
+          testRegexes.push(escapeStringForRegex(test.id));
         });
+      }
 
-        task.onDidWriteLine(({ line }) => {
-          testRun.appendOutput(`${line}\r\n`);
-        });
+      let command = `${buildToolsExecutable} test --runners=main`;
 
-        try {
-          await task.finished;
-        } finally {
-          testRun.passed(request.include[0]);
-          testRun.end();
+      if (testRegexes.length) {
+        command += ` -g '${testRegexes.join("|")}'`;
+      }
+
+      if (extraArgs) {
+        command += ` ${extraArgs}`;
+      }
+
+      // Mark all tests we're about to run as started
+      for (const test of testsById.values()) {
+        run.started(test);
+      }
+
+      const task = runAsTask({
+        context,
+        operationName: "Electron Build Tools - Running Test(s)",
+        taskName: "test",
+        command,
+        cancellationToken: token,
+        shellOptions: {
+          env: {
+            MOCHA_REPORTER: "json-stream",
+          },
+        },
+        // Ignore non-zero exit codes, there's no way to
+        // distinguish from normal test failures
+        suppressExitCode: true,
+      });
+
+      task.onDidWriteLine(({ line }) => {
+        run.appendOutput(`${line}\r\n`);
+
+        // Looks like a JSON stream event
+        if (/^\[("pass"|"fail"|"pending"),\{.*\}\]$/.test(line)) {
+          const [result, details]: [string, MochaTestResult] = JSON.parse(line);
+          const test = testsById.get(details.fullTitle);
+
+          if (test) {
+            // There is only one result per test, delete so we can find skips
+            testsById.delete(details.fullTitle);
+
+            if (result === "pass") {
+              run.passed(test, details.duration);
+            } else if (result === "fail") {
+              const testMessage = new vscode.TestMessage(
+                details.err ? details.err : "Couldn't parse failure output"
+              );
+
+              // Pull file position details if they're available
+              if (test.uri && details.err && details.stack) {
+                const failureDetails = /^.*\((.*):(\d+):(\d+)\)\s*$/m.exec(
+                  details.stack
+                );
+
+                if (
+                  failureDetails &&
+                  test.uri.fsPath.endsWith(failureDetails[1])
+                ) {
+                  testMessage.location = new vscode.Location(
+                    test.uri,
+                    new vscode.Position(
+                      parseInt(failureDetails[2]) - 1,
+                      parseInt(failureDetails[3]) - 1
+                    )
+                  );
+                }
+              }
+
+              run.failed(test, testMessage, details.duration);
+            }
+          }
         }
+      });
+
+      try {
+        await task.finished;
+
+        for (const test of testsById.values()) {
+          run.skipped(test);
+        }
+      } finally {
+        run.end();
       }
     }
   );
