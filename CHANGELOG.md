@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1 (10-7-2022)
+
+* fix: clean release
+
 ## 0.8.0 (10-7-2022)
 
 * feat: support VS Code testing view
