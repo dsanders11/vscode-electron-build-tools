@@ -2,6 +2,25 @@ const net = require("net");
 const path = require("path");
 const readline = require("readline");
 
+import type { ParsedTestSuite } from "../src/tests";
+
+interface MochaTestSuite {
+  file: string;
+  fullTitle: () => string;
+  pending: boolean;
+  suites: MochaTestSuite[];
+  tests: MochaTest[];
+  title: string;
+}
+
+interface MochaTest {
+  body: string;
+  file: string;
+  fullTitle: () => string;
+  pending: boolean;
+  title: string;
+}
+
 // We want to terminate on errors, not show a dialog
 process.once("uncaughtException", (err) => {
   console.error(err);
@@ -25,16 +44,16 @@ const { getFileContent } = require(path.resolve(
   "electron-build-tools-typescript"
 ));
 
-const sourceMapConsumers = new Map();
+const sourceMapConsumers = new Map<string, any>();
 
-function positionAt(content, offset) {
+function positionAt(content: string, offset: number) {
   const lines = content.slice(0, offset).split("\n");
-  const lastLine = lines.at(-1).replace(/\r$/, "");
+  const lastLine = lines.at(-1)!.replace(/\r$/, "");
 
   return { line: lines.length - 1, character: lastLine.length };
 }
 
-function mapFnBodyToSourceRange(file, body) {
+function mapFnBodyToSourceRange(file: string, body: string) {
   if (body) {
     let sourceMap = sourceMapConsumers.get(file);
 
@@ -81,19 +100,19 @@ function mapFnBodyToSourceRange(file, body) {
   return null;
 }
 
-function parseTestSuites(suite) {
-  const parsedTests = {
+function parseTestSuites(suite: MochaTestSuite) {
+  const parsedTests: ParsedTestSuite = {
     title: suite.title,
     fullTitle: suite.fullTitle(),
     file: suite.file,
     pending: suite.pending,
     suites: [],
-    tests: suite.tests.map((test) => ({
+    tests: suite.tests.map((test: MochaTest) => ({
       title: test.title,
       fullTitle: test.fullTitle(),
       file: test.file,
       pending: test.pending,
-      range: mapFnBodyToSourceRange(test.file, test.body),
+      range: mapFnBodyToSourceRange(test.file, test.body) as any,
     })),
   };
 
@@ -106,10 +125,10 @@ function parseTestSuites(suite) {
 
 // These are required or there will be a reference error
 // while Mocha is processing the tests
-global.serviceWorkerScheme = "sw";
-global.standardScheme = "app";
-global.zoomScheme = "zoom";
-global.window = {};
+(global as any).serviceWorkerScheme = "sw";
+(global as any).standardScheme = "app";
+(global as any).zoomScheme = "zoom";
+(global as any).window = {};
 
 app
   .whenReady()
@@ -137,7 +156,7 @@ app
         input: socket,
       });
 
-      rl.on("line", async (line) => {
+      rl.on("line", async (line: string) => {
         if (line !== "DONE") {
           mocha.addFile(line);
         } else {
@@ -147,8 +166,8 @@ app
             socket.write(JSON.stringify(parsedSuites, undefined, 4), () =>
               process.exit(0)
             );
-          } catch (err) {
-            process.stderr.write(err.toString());
+          } catch (err: any) {
+            console.error(err);
             process.exit(1);
           }
         }
@@ -159,7 +178,7 @@ app
       });
     });
   })
-  .catch((err) => {
+  .catch((err: any) => {
     console.error(err);
     process.exit(1);
   });

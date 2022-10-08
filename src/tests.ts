@@ -20,7 +20,7 @@ interface ParsedTestData {
   pending: boolean;
 }
 
-interface ParsedTestSuite extends ParsedTestData {
+export interface ParsedTestSuite extends ParsedTestData {
   suites: ParsedTestSuite[];
   tests: ParsedTest[];
 }

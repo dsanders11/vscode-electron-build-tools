@@ -576,12 +576,12 @@
   "main": "./out/src/extension.js",
   "scripts": {
     "vscode:prepublish": "yarn run compile",
-    "compile": "tsc -p ./ && copyfiles electron/*.js out",
+    "compile": "tsc -p ./",
     "lint": "eslint src --ext ts && yarn prettier:check",
     "watch": "tsc -watch -p ./",
     "pretest": "yarn run compile && yarn run lint",
-    "prettier:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"electron/**/*.js\"",
-    "prettier:write": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"electron/**/*.js\""
+    "prettier:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"electron/**/*.ts\"",
+    "prettier:write": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"electron/**/*.ts\""
   },
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
@@ -597,7 +597,6 @@
     "@types/vscode": "^1.71.0",
     "@typescript-eslint/eslint-plugin": "^5.39.0",
     "@typescript-eslint/parser": "^5.39.0",
-    "copyfiles": "^2.4.0",
     "eslint": "^7.9.0",
     "husky": "^4.3.0",
     "json-schema-to-typescript": "^11.0.2",
@@ -619,9 +618,6 @@
     "word-wrap": "^1.2.3"
   },
   "lint-staged": {
-    "*.js": [
-      "yarn prettier:write"
-    ],
     "*.ts": [
       "yarn prettier:write"
     ]
