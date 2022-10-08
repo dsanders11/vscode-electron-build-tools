@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { commandPrefix } from "../constants";
-import { getConfigs, getConfigsFilePath } from "../utils";
+import { getConfigs, getConfigsFilePath, setContext } from "../utils";
 
 export interface OnDidStartRefreshing {
   refreshFinished: Promise<void>;
@@ -48,6 +48,10 @@ export class BuildToolsConfigCollector
 
   async _getConfigs(): Promise<void> {
     const { configs, activeConfig } = await getConfigs();
+
+    // Set context value so functionality can be toggled
+    // on or off depending on if there is an active config
+    await setContext("active-config", activeConfig !== null);
 
     this._configs = configs;
     this._activeConfig = activeConfig;
