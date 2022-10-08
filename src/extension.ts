@@ -176,7 +176,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(
       viewIds.HELP,
-      new HelpTreeDataProvider()
+      new HelpTreeDataProvider(context.extensionUri)
     )
   );
 

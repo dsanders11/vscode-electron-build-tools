@@ -5,6 +5,8 @@ import { buildToolsRepository, extensionId, repositoryUrl } from "../constants";
 export class HelpTreeDataProvider
   implements vscode.TreeDataProvider<vscode.TreeItem>
 {
+  constructor(private readonly extensionUri: vscode.Uri) {}
+
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }
@@ -31,8 +33,23 @@ export class HelpTreeDataProvider
           vscode.Uri.parse(`${repositoryUrl}/wiki`)
         ),
         new LinkHelpTreeItem(
-          "Electron Build Tools Documentation",
-          new vscode.ThemeIcon("remote-explorer-documentation"),
+          "Electron Build Tools",
+          {
+            dark: vscode.Uri.joinPath(
+              this.extensionUri,
+              "resources",
+              "icons",
+              "dark",
+              "electron.svg"
+            ),
+            light: vscode.Uri.joinPath(
+              this.extensionUri,
+              "resources",
+              "icons",
+              "light",
+              "electron.svg"
+            ),
+          },
           vscode.Uri.parse(buildToolsRepository)
         ),
         new LinkHelpTreeItem(
@@ -51,7 +68,12 @@ export class HelpTreeDataProvider
 class LinkHelpTreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
-    public readonly iconPath: vscode.ThemeIcon,
+    public readonly iconPath:
+      | vscode.ThemeIcon
+      | {
+          light: vscode.Uri;
+          dark: vscode.Uri;
+        },
     public readonly url: vscode.Uri
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
