@@ -34,7 +34,6 @@ import {
 } from "./utils";
 import {
   BuildToolsConfigCollector,
-  ConfigCollector,
   ElectronBuildToolsConfigsProvider,
 } from "./views/configs";
 import { DocsTreeDataProvider } from "./views/docs";
@@ -59,14 +58,11 @@ const exec = promisify(childProcess.exec);
 function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
-  configsProvider: ElectronBuildToolsConfigsProvider,
-  configsCollector: ConfigCollector,
   patchesProvider: ElectronPatchesProvider,
   patchesView: vscode.TreeView<vscode.TreeItem>,
   pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
 ) {
   registerBuildCommands(context);
-  registerConfigsCommands(context, configsCollector, configsProvider);
   registerPatchesCommands(
     context,
     electronRoot,
@@ -74,7 +70,6 @@ function registerElectronBuildToolsCommands(
     patchesView,
     pullRequestFileSystemProvider
   );
-  registerSyncCommands(context);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -189,39 +184,24 @@ export async function activate(context: vscode.ExtensionContext) {
     setContext("is-electron-workspace", false),
   ]);
 
-  if (buildToolsIsInstalled && workspaceFolders) {
-    const electronRoot = await findElectronRoot(workspaceFolders[0]);
+  // If build-tools is installed, always provide config and sync functionality
+  // so that a user can fully setup Electron on a clean machine with commands
+  if (buildToolsIsInstalled) {
+    ExtensionState.setInitialState();
 
-    setContext("is-electron-workspace", electronRoot !== undefined);
+    const configsCollector = new BuildToolsConfigCollector(context);
+    const configsProvider = new ElectronBuildToolsConfigsProvider(
+      configsCollector
+    );
+    const configsView = vscode.window.createTreeView(viewIds.CONFIGS, {
+      treeDataProvider: configsProvider,
+    });
 
-    if (electronRoot !== undefined) {
-      setContext("active", true);
-      ExtensionState.setInitialState();
-
-      const diagnosticsCollection = vscode.languages.createDiagnosticCollection(
-        "electron-build-tools"
-      );
-
-      const testController = createTestController(context, electronRoot);
-
-      const patchesConfig = getPatchesConfigFile(electronRoot);
-      const configsCollector = new BuildToolsConfigCollector(context);
-      const patchesProvider = new ElectronPatchesProvider(
-        electronRoot,
-        patchesConfig
-      );
-      const patchesView = vscode.window.createTreeView(viewIds.PATCHES, {
-        showCollapseAll: true,
-        treeDataProvider: patchesProvider,
-      });
-      const pullRequestFileSystemProvider =
-        new ElectronPullRequestFileSystemProvider(electronRoot, patchesConfig);
-      const linkableProvider = new DocsLinkablesProvider(electronRoot);
-
-      // Show progress on views while the collector is working. This lets us
-      // immediately show the cached data from extension storage, while
-      // refreshing them in the background and showing that it's working
-      configsCollector.onDidStartRefreshing(({ refreshFinished }) => {
+    // Show progress on views while the collector is working. This lets us
+    // immediately show the cached data from extension storage, while
+    // refreshing them in the background and showing that it's working
+    const disposable = configsCollector.onDidStartRefreshing(
+      ({ refreshFinished }) => {
         vscode.window.withProgress(
           { location: { viewId: viewIds.CONFIGS } },
           async () => {
@@ -239,21 +219,46 @@ export async function activate(context: vscode.ExtensionContext) {
             }
           }
         );
-      });
+      }
+    );
 
-      const configsProvider = new ElectronBuildToolsConfigsProvider(
-        configsCollector
+    registerConfigsCommands(context, configsCollector, configsProvider);
+    registerSyncCommands(context);
+
+    context.subscriptions.push(configsCollector, configsView, disposable);
+  }
+
+  if (buildToolsIsInstalled && workspaceFolders) {
+    const electronRoot = await findElectronRoot(workspaceFolders[0]);
+
+    setContext("is-electron-workspace", electronRoot !== undefined);
+
+    if (electronRoot !== undefined) {
+      setContext("active", true);
+
+      const diagnosticsCollection = vscode.languages.createDiagnosticCollection(
+        "electron-build-tools"
       );
-      const configsView = vscode.window.createTreeView(viewIds.CONFIGS, {
-        treeDataProvider: configsProvider,
+
+      const testController = createTestController(context, electronRoot);
+
+      const patchesConfig = getPatchesConfigFile(electronRoot);
+      const patchesProvider = new ElectronPatchesProvider(
+        electronRoot,
+        patchesConfig
+      );
+      const patchesView = vscode.window.createTreeView(viewIds.PATCHES, {
+        showCollapseAll: true,
+        treeDataProvider: patchesProvider,
       });
+      const pullRequestFileSystemProvider =
+        new ElectronPullRequestFileSystemProvider(electronRoot, patchesConfig);
+      const linkableProvider = new DocsLinkablesProvider(electronRoot);
 
       context.subscriptions.push(
         testController,
-        configsCollector,
         diagnosticsCollection,
         linkableProvider,
-        configsView,
         patchesView,
         vscode.window.createTreeView(viewIds.DOCS, {
           showCollapseAll: true,
@@ -304,8 +309,6 @@ export async function activate(context: vscode.ExtensionContext) {
       registerElectronBuildToolsCommands(
         context,
         electronRoot,
-        configsProvider,
-        configsCollector,
         patchesProvider,
         patchesView,
         pullRequestFileSystemProvider

@@ -74,7 +74,7 @@
         "command": "electron-build-tools.build",
         "title": "Build",
         "category": "Electron Build Tools",
-        "enablement": "electron-build-tools:canBuild"
+        "enablement": "electron-build-tools:active && electron-build-tools:canBuild"
       },
       {
         "command": "electron-build-tools.newConfig",
@@ -143,13 +143,13 @@
         "command": "electron-build-tools.sync",
         "title": "Sync",
         "category": "Electron Build Tools",
-        "enablement": "electron-build-tools:canSync"
+        "enablement": "electron-build-tools:build-tools-installed && electron-build-tools:canSync"
       },
       {
         "command": "electron-build-tools.sync.force",
         "title": "Force Sync",
         "category": "Electron Build Tools",
-        "enablement": "electron-build-tools:canSync"
+        "enablement": "electron-build-tools:build-tools-installed && electron-build-tools:canSync"
       },
       {
         "command": "electron-build-tools.useConfig",
@@ -530,7 +530,7 @@
         {
           "id": "electron-build-tools:configs",
           "name": "Configs",
-          "when": "!electron-build-tools:ready || electron-build-tools:active"
+          "when": "electron-build-tools:build-tools-installed"
         },
         {
           "id": "electron-build-tools:patches",
