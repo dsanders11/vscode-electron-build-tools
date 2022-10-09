@@ -7,6 +7,7 @@ import {
   patchDirectoryPrettyNames,
   pullRequestScheme,
 } from "../constants";
+import Logger from "../logging";
 import type { ElectronPatchesConfig } from "../types";
 import {
   ensurePosixSeparators,
@@ -122,6 +123,19 @@ export class ElectronPatchesProvider
         children.push(new PatchDirectory(label, uri, patchDirectoryBasename));
       }
 
+      // Sort by label to make it easier to visually browse
+      try {
+        children.sort((a, b) => {
+          if (a instanceof PatchDirectory && b instanceof PatchDirectory) {
+            return a.label.localeCompare(b.label);
+          } else {
+            throw new Error("Expected only PatchDirectory files");
+          }
+        });
+      } catch (err) {
+        Logger.error(err instanceof Error ? err : String(err));
+      }
+
       // Also include the node for viewing patches in pull requests
       children.push(this.viewPullRequestTreeItem);
     } else if (
@@ -194,7 +208,7 @@ export class ElectronPatchesProvider
 
 export class PatchDirectory extends vscode.TreeItem {
   constructor(
-    label: string,
+    public label: string,
     public resourceUri: vscode.Uri,
     public name: string
   ) {
