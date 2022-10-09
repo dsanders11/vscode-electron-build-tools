@@ -34,6 +34,35 @@ export const patchDirectoryPrettyNames = Object.freeze<ElectronPatchesConfig>({
   "src/electron/patches/v8": "V8",
 });
 
+export const checkoutDirectoryGitHubRepo = Object.freeze<{
+  [k: string]: { owner: string; repo: string };
+}>({
+  src: { owner: "chromium", repo: "chromium" },
+  "src/third_party/boringssl/src": { owner: "google", repo: "boringssl" },
+  "src/third_party/devtools-frontend/src": {
+    owner: "ChromeDevTools",
+    repo: "devtools-frontend",
+  },
+  // TODO - Google actually has a fork of FFmpeg, but it's not on GH
+  "src/third_party/ffmpeg": { owner: "FFmpeg", repo: "FFmpeg" },
+  "src/v8": { owner: "v8", repo: "v8" },
+  "src/third_party/electron_node": { owner: "nodejs", repo: "node" },
+  "src/third_party/nan": { owner: "nodejs", repo: "nan" },
+  "src/third_party/perfetto": { owner: "google", repo: "perfetto" },
+  "src/third_party/squirrel.mac": {
+    owner: "Squirrel",
+    repo: "Squirrel.Mac",
+  },
+  "src/third_party/squirrel.mac/vendor/Mantle": {
+    owner: "Mantle",
+    repo: "Mantle",
+  },
+  "src/third_party/squirrel.mac/vendor/ReactiveObjC": {
+    owner: "ReactiveCocoa",
+    repo: "ReactiveObjC.git",
+  },
+});
+
 export const virtualDocumentScheme = "electron-build-tools";
 
 export const pullRequestScheme = "electron-pull-request";

@@ -105,6 +105,8 @@ export function registerPatchesCommands(
             view: "contents",
             fileIndex: metadata.fileIndexB,
             checkoutPath: checkoutDirectory.fsPath,
+            unpatchedFileIndex: metadata.fileIndexA,
+            patch: patch.fsPath,
           }),
         });
 

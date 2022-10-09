@@ -17,6 +17,8 @@ class ExtensionStateTracker {
   //       such as running tests. So Set() may by overly constricting here
   private readonly _runningOperations = new Set<ExtensionOperation>();
 
+  private _ghAuthenticationSession: vscode.AuthenticationSession | null = null;
+
   private _updateContexts() {
     return Promise.all([
       setContext("canBuild", this.canRunOperation(ExtensionOperation.BUILD)),
@@ -154,6 +156,18 @@ class ExtensionStateTracker {
       },
       thisArg
     );
+  }
+
+  async getGitHubAuthenticationSession() {
+    if (!this._ghAuthenticationSession) {
+      this._ghAuthenticationSession = await vscode.authentication.getSession(
+        "github",
+        [],
+        { createIfNone: true }
+      );
+    }
+
+    return this._ghAuthenticationSession;
   }
 }
 

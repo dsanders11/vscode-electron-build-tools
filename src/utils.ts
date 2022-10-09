@@ -11,12 +11,19 @@ import {
   headingsAndContent,
   HeadingContent,
 } from "@electron/docs-parser/dist/markdown-helpers";
+import { Octokit } from "@octokit/rest";
 import MarkdownIt from "markdown-it";
 import type MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
 
 import type { PromisifiedExecError } from "./common";
-import { buildToolsExecutable, contextKeyPrefix } from "./constants";
+import {
+  buildToolsExecutable,
+  checkoutDirectoryGitHubRepo,
+  commandPrefix,
+  contextKeyPrefix,
+} from "./constants";
+import ExtensionState from "./extensionState";
 import Logger from "./logging";
 import type { ElectronPatchesConfig, EVMConfig } from "./types";
 
@@ -45,6 +52,8 @@ export interface FileInPatch {
   fileIndexA: string;
   fileIndexB: string;
 }
+
+export class ContentNotFoundError extends Error {}
 
 export async function isBuildToolsInstalled(): Promise<boolean> {
   const command = os.platform() === "win32" ? "where" : "which";
@@ -392,16 +401,82 @@ export function parseMarkdownHeader(line: string) {
   }
 }
 
+async function getOctokit() {
+  try {
+    const ghAuthSession = await ExtensionState.getGitHubAuthenticationSession();
+    return new Octokit({ auth: ghAuthSession.accessToken });
+  } catch (err) {
+    Logger.error(err instanceof Error ? err : String(err));
+
+    return new Octokit();
+  }
+}
+
 export async function getContentForFileIndex(
   fileIndex: string,
   checkoutPath: string
 ) {
-  const { stdout } = await exec(`git show ${fileIndex}`, {
-    encoding: "utf8",
-    cwd: checkoutPath,
-  });
+  if (/^[0]+$/.test(fileIndex)) {
+    // Special case where it's all zeroes, so it's an empty file
+    return "";
+  }
 
-  return stdout.trim();
+  try {
+    const { stdout } = await exec(`git show ${fileIndex}`, {
+      encoding: "utf8",
+      cwd: checkoutPath,
+    });
+
+    return stdout.trim();
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      Object.prototype.hasOwnProperty.call(err, "code")
+    ) {
+      const errorWithCode = err as PromisifiedExecError;
+      if (errorWithCode.code === 128) {
+        // Couldn't find content locally (might not be synced)
+        // so instead pull it from GitHub where it hopefully is
+        // TODO - Replace this with plumbing the root dir down to this point
+        const rootDir = await vscode.commands.executeCommand<string>(
+          `${commandPrefix}.show.root`
+        )!;
+
+        if (!checkoutPath.startsWith(rootDir)) {
+          throw new ContentNotFoundError(
+            `Couldn't load content for ${fileIndex}`
+          );
+        }
+
+        const ghRepo =
+          checkoutDirectoryGitHubRepo[path.relative(rootDir, checkoutPath)];
+
+        if (!ghRepo) {
+          throw new ContentNotFoundError(
+            `Couldn't load content for ${fileIndex}`
+          );
+        }
+
+        const octokit = await getOctokit();
+
+        try {
+          // TODO - Cache responses to avoid rate-limiting
+          const response = await octokit.rest.git.getBlob({
+            ...ghRepo,
+            file_sha: fileIndex,
+          });
+
+          return Buffer.from(response.data.content, "base64").toString();
+        } catch (err) {
+          throw new ContentNotFoundError(
+            `Couldn't load content for ${fileIndex}`
+          );
+        }
+      }
+    }
+
+    throw err;
+  }
 }
 
 export function querystringParse(
