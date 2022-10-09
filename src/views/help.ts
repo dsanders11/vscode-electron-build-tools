@@ -1,6 +1,11 @@
 import * as vscode from "vscode";
 
-import { buildToolsRepository, extensionId, repositoryUrl } from "../constants";
+import {
+  buildToolsRepository,
+  commandPrefix,
+  extensionId,
+  repositoryUrl,
+} from "../constants";
 
 export class HelpTreeDataProvider
   implements vscode.TreeDataProvider<vscode.TreeItem>
@@ -24,6 +29,16 @@ export class HelpTreeDataProvider
         command: "vscode.openIssueReporter",
         arguments: [`${extensionId}`],
         title: "Report Issue",
+      };
+
+      const walkthroughTreeItem = new vscode.TreeItem(
+        "Open Extension Walkthrough",
+        vscode.TreeItemCollapsibleState.None
+      );
+      walkthroughTreeItem.iconPath = new vscode.ThemeIcon("extensions");
+      walkthroughTreeItem.command = {
+        command: `${commandPrefix}.openWalkthrough`,
+        title: "Open Walkthrough",
       };
 
       return [
@@ -52,6 +67,7 @@ export class HelpTreeDataProvider
           },
           vscode.Uri.parse(buildToolsRepository)
         ),
+        walkthroughTreeItem,
         new LinkHelpTreeItem(
           "Review Issues",
           new vscode.ThemeIcon("remote-explorer-review-issues"),

@@ -172,7 +172,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider(
       viewIds.HELP,
       new HelpTreeDataProvider(context.extensionUri)
-    )
+    ),
+    vscode.commands.registerCommand(`${commandPrefix}.openWalkthrough`, () => {
+      return vscode.commands.executeCommand(
+        "workbench.action.openWalkthrough",
+        "dsanders11.vscode-electron-build-tools#electron-build-tools"
+      );
+    })
   );
 
   const workspaceFolders = vscode.workspace.workspaceFolders;
