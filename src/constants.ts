@@ -20,13 +20,18 @@ export const buildTargets = Object.freeze([
 export const buildToolsExecutable = "electron-build-tools";
 
 export const patchDirectoryPrettyNames = Object.freeze<ElectronPatchesConfig>({
-  "src/electron/patches/chromium": "Chromium",
   "src/electron/patches/boringssl": "BoringSSL",
-  "src/electron/patches/v8": "V8",
-  "src/electron/patches/node": "Node",
-  "src/electron/patches/squirrel.mac": "squirrel.mac",
-  "src/electron/patches/ReactiveObjC": "ReactiveObjC",
+  "src/electron/patches/chromium": "Chromium",
   "src/electron/patches/depot_tools": "depot_tools",
+  "src/electron/patches/devtools_frontend": "Chrome DevTools Frontend",
+  "src/electron/patches/ffmpeg": "FFmpeg",
+  "src/electron/patches/Mantle": "Mantle",
+  "src/electron/patches/node": "Node.js",
+  "src/electron/patches/nan": "NAN",
+  "src/electron/patches/perfetto": "Perfetto",
+  "src/electron/patches/ReactiveObjC": "ReactiveObjC",
+  "src/electron/patches/squirrel.mac": "Squirrel.Mac",
+  "src/electron/patches/v8": "V8",
 });
 
 export const virtualDocumentScheme = "electron-build-tools";
