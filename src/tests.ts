@@ -142,7 +142,7 @@ export function createTestController(
             //        for us, you would think), and outputs start and end
             //        events so we can transition test states from enqueued
             //        to started to result
-            MOCHA_REPORTER: "json-stream",
+            MOCHA_REPORTER: vscode.Uri.joinPath(context.extensionUri, "out", "electron", "mocha-reporter.js").fsPath,
           },
         },
         // Ignore non-zero exit codes, there's no way to
