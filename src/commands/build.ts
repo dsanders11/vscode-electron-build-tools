@@ -22,19 +22,19 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
       () => {
         vscode.window.showErrorMessage("Can't build, other work in-progress");
       },
-      async () => {
+      async (advanced?: false) => {
         const operationName = "Electron Build Tools - Building";
 
         const buildConfig = vscode.workspace.getConfiguration(
           "electronBuildTools.build"
         );
-        const options = Object.entries(
+        let options = Object.entries(
           buildConfig.get<ExtensionConfig.BuildOptions>("buildOptions")!
         ).reduce((opts, [key, value]) => {
           opts.push(`${key} ${value}`.trim());
           return opts;
         }, [] as string[]);
-        const ninjaArgs = Object.entries(
+        let ninjaArgs = Object.entries(
           buildConfig.get<ExtensionConfig.NinjaArgs>("ninjaArgs")!
         ).reduce((opts, [key, value]) => {
           opts.push(`${key} ${value}`.trim());
@@ -48,9 +48,7 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
             : settingsDefaultTarget;
         let target = settingsDefaultTarget;
 
-        let quickPick: vscode.QuickPick<vscode.QuickPickItem> | undefined;
-
-        if (buildConfig.get<boolean>("showTargets")) {
+        if (advanced || buildConfig.get<boolean>("showTargets")) {
           // Settings default target takes precedence
           const defaultTarget =
             settingsDefaultTarget ?? (await getConfigDefaultTarget());
@@ -78,23 +76,76 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
             }
           }
 
-          quickPick = vscode.window.createQuickPick();
+          const quickPick = vscode.window.createQuickPick();
           quickPick.items = quickPickItems;
+          quickPick.title = "Build Electron";
           quickPick.placeholder = "Target To Build";
+
+          if (advanced) {
+            quickPick.step = 1;
+            quickPick.totalSteps = 3;
+          }
+
+          const target = await new Promise((resolve) => {
+            quickPick.onDidAccept(() => {
+              resolve(quickPick.selectedItems[0].label ?? target);
+              quickPick.dispose();
+            });
+            quickPick.onDidHide(() => {
+              resolve(undefined);
+              quickPick.dispose();
+            });
+            quickPick.show();
+          });
+
+          if (!target) {
+            return;
+          }
         }
 
-        if (quickPick) {
-          const userQuit = await new Promise((resolve) => {
-            quickPick!.onDidAccept(() => {
-              target = quickPick!.selectedItems[0].label ?? target;
-              quickPick!.dispose();
-              resolve(undefined);
+        if (advanced) {
+          const buildOptionsInput = vscode.window.createInputBox();
+          buildOptionsInput.title = "Build Electron";
+          buildOptionsInput.prompt = "Build options";
+          buildOptionsInput.value = options.join(" ");
+          buildOptionsInput.step = 2;
+          buildOptionsInput.totalSteps = 3;
+
+          let userQuit = await new Promise((resolve) => {
+            buildOptionsInput.onDidAccept(() => {
+              resolve(false);
+              options = [buildOptionsInput.value];
+              buildOptionsInput.dispose();
             });
-            quickPick!.onDidHide(() => {
-              quickPick!.dispose();
+            buildOptionsInput.onDidHide(() => {
               resolve(true);
+              buildOptionsInput.dispose();
             });
-            quickPick!.show();
+            buildOptionsInput.show();
+          });
+
+          if (userQuit) {
+            return;
+          }
+
+          const ninjaArgsInput = vscode.window.createInputBox();
+          ninjaArgsInput.title = "Build Electron";
+          ninjaArgsInput.prompt = "Ninja args";
+          ninjaArgsInput.value = ninjaArgs.join(" ");
+          ninjaArgsInput.step = 3;
+          ninjaArgsInput.totalSteps = 3;
+
+          userQuit = await new Promise((resolve) => {
+            ninjaArgsInput.onDidAccept(() => {
+              resolve(false);
+              ninjaArgs = [ninjaArgsInput.value];
+              ninjaArgsInput.dispose();
+            });
+            ninjaArgsInput.onDidHide(() => {
+              resolve(true);
+              ninjaArgsInput.dispose();
+            });
+            ninjaArgsInput.show();
           });
 
           if (userQuit) {
@@ -163,6 +214,12 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
 
         await task.finished;
       }
-    )
+    ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.buildAdvanced`,
+      () => {
+        return vscode.commands.executeCommand(`${commandPrefix}.build`, true);
+      }
+    ),
   );
 }
