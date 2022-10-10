@@ -1,6 +1,6 @@
 export interface IpcMessage {
   stream: string;
-  data: string;
+  data: any;
 }
 
 export namespace Markdown {

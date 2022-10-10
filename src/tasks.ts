@@ -12,6 +12,7 @@ export interface ElectronBuildToolsTask {
   onDidWriteData: vscode.Event<OnDidWriteData>;
   onDidWriteErrorLine: vscode.Event<OnDidWriteLine>;
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
+  eventsDone: Promise<void>;
   finished: Promise<boolean | undefined>;
 }
 
@@ -71,6 +72,7 @@ export function runAsTask({
         ...shellOptions,
         env: {
           FORCE_COLOR: "true",
+          EBT_SOCKET_PATH: socketName,
           ...shellOptions?.env,
         },
       }
@@ -94,6 +96,12 @@ export function runAsTask({
   const onDidWriteDataEmitter = new vscode.EventEmitter<OnDidWriteData>();
   const onDidWriteErrorLineEmitter = new vscode.EventEmitter<OnDidWriteLine>();
   const onDidWriteLineEmitter = new vscode.EventEmitter<OnDidWriteLine>();
+
+  let eventsStarted = false;
+  let eventsDone: (value: void) => void;
+  const eventsDonePromise = new Promise<void>(
+    (resolve) => (eventsDone = resolve)
+  );
 
   const taskPromise = vscode.window.withProgress(
     {
@@ -153,6 +161,14 @@ export function runAsTask({
             onDidWriteDataEmitter.fire(message);
           }
         });
+
+        const socketDone = () => {
+          socket.destroy();
+          eventsDone();
+        };
+
+        socket.once("close", socketDone);
+        socket.once("end", socketDone);
 
         stderr.on("line", (line) =>
           onDidWriteErrorLineEmitter.fire({ progress, line })
@@ -220,12 +236,18 @@ export function runAsTask({
     onDidWriteData: onDidWriteDataEmitter.event,
     onDidWriteErrorLine: onDidWriteErrorLineEmitter.event,
     onDidWriteLine: onDidWriteLineEmitter.event,
+    eventsDone: eventsDonePromise,
     finished: new Promise(async (resolve) => {
       try {
         resolve(await taskPromise);
       } catch (err) {
         Logger.error(err instanceof Error ? err : String(err));
         resolve(false);
+      } finally {
+        // Events never started, they're now done
+        if (!eventsStarted) {
+          eventsDone();
+        }
       }
     }),
   };
