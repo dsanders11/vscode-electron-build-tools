@@ -55,13 +55,15 @@ export function runAsTask({
   // base64 encode the command to get around shell quoting issues
   const b64command = Buffer.from(command).toString("base64");
 
+  const script = context.asAbsolutePath("out/scripts/echo-to-socket.js");
+
   const task = new vscode.Task(
     { type: "electron-build-tools", task: taskName },
     vscode.TaskScope.Workspace,
     taskName,
     "electron-build-tools",
     new vscode.ShellExecution(
-      `node out/scripts/echo-to-socket.js "${b64command}" ${socketName} ${
+      `node ${script} "${b64command}" ${socketName} ${
         suppressExitCode ? 1 : ""
       }`.trimEnd(),
       {
