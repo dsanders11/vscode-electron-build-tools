@@ -23,17 +23,31 @@ const cp = childProcess.spawn(command, {
 cp.stdout!.pipe(process.stdout);
 cp.stderr!.pipe(process.stderr);
 
+// Encode any newlines so we can use newline as a delimeter
+function encodeNewlines(value: string) {
+  return value.replace(/%|\n/g, (match) => {
+    switch (match) {
+      case "%%":
+        return "%25";
+      case "\n":
+        return "%0A";
+      default:
+        throw new Error("Unreachable");
+    }
+  });
+}
+
 // And also pipe output to the socket
 const socket = net.createConnection(socketPath, () => {
   cp.stdout!.on("data", (data: Buffer) => {
     // Send stdout as an IPC message across the socket
     const message: IpcMessage = { stream: "stdout", data: data.toString() };
-    socket.write(JSON.stringify(message));
+    socket.write(`${encodeNewlines(JSON.stringify(message))}\n`);
   });
   cp.stderr!.on("data", (data: Buffer) => {
     // Send stderr as an IPC message across the socket
     const message: IpcMessage = { stream: "stderr", data: data.toString() };
-    socket.write(JSON.stringify(message));
+    socket.write(`${encodeNewlines(JSON.stringify(message))}\n`);
   });
 });
 

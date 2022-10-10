@@ -103,9 +103,15 @@ export function runAsTask({
     },
     async (progress, token) => {
       socketServer.on("connection", (socket) => {
+        eventsStarted = true;
+
+        const messageStream = new PassThrough();
         const stderrStream = new PassThrough();
         const stdoutStream = new PassThrough();
 
+        const messages = readline.createInterface({
+          input: messageStream,
+        });
         const stderr = readline.createInterface({
           input: stderrStream,
         });
@@ -114,7 +120,30 @@ export function runAsTask({
         });
 
         socket.on("data", (data) => {
-          const message: IpcMessage = JSON.parse(data.toString());
+          messageStream.write(data);
+        });
+
+        messages.on("line", (line) => {
+          // Remove the newline encoding
+          line = line.replace(/%25|%0A/g, (match) => {
+            switch (match) {
+              case "%25":
+                return "%";
+              case "%0A":
+                return "\n";
+              default:
+                throw new Error("Unreachable");
+            }
+          });
+
+          let message: IpcMessage;
+
+          try {
+            message = JSON.parse(line);
+          } catch (err) {
+            Logger.error(`Failed to parse message: ${err}`);
+            return;
+          }
 
           if (message.stream === "stdout") {
             stdoutStream.write(message.data);
