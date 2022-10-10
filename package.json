@@ -84,6 +84,12 @@
         "enablement": "electron-build-tools:active && electron-build-tools:canBuild"
       },
       {
+        "command": "electron-build-tools.installBuildTools",
+        "title": "Install Build Tools",
+        "category": "Electron Build Tools",
+        "enablement": "!electron-build-tools:build-tools-installed"
+      },
+      {
         "command": "electron-build-tools.newConfig",
         "title": "New Config",
         "category": "Electron Build Tools",
@@ -331,6 +337,10 @@
         {
           "command": "electron-build-tools.buildAdvanced",
           "when": "electron-build-tools:build-tools-installed"
+        },
+        {
+          "command": "electron-build-tools.installBuildTools",
+          "when": "false"
         },
         {
           "command": "electron-build-tools.openPatch",
