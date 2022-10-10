@@ -143,6 +143,7 @@ export function createTestController(
             //        events so we can transition test states from enqueued
             //        to started to result
             MOCHA_REPORTER: vscode.Uri.joinPath(context.extensionUri, "out", "electron", "mocha-reporter.js").fsPath,
+            ELECTRON_ROOT: electronRoot.fsPath,
           },
         },
         // Ignore non-zero exit codes, there's no way to

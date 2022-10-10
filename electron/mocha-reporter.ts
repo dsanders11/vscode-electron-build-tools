@@ -1,7 +1,8 @@
 const path = require("path");
 
 const Base = require(path.resolve(
-  process.cwd(),
+  process.env["ELECTRON_ROOT"],
+  "spec",
   "node_modules",
   "mocha",
   "lib",
