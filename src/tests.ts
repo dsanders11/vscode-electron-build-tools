@@ -204,7 +204,7 @@ export function createTestController(
 
       try {
         const cleanExit = await task.finished;
-        testRunError = testRunError || !cleanExit;
+        testRunError = testRunError || cleanExit === false;
 
         for (const test of testsById.values()) {
           if (!testRunError) {

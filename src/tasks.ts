@@ -12,7 +12,7 @@ export interface ElectronBuildToolsTask {
   onDidWriteData: vscode.Event<OnDidWriteData>;
   onDidWriteErrorLine: vscode.Event<OnDidWriteLine>;
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
-  finished: Promise<boolean>;
+  finished: Promise<boolean | undefined>;
 }
 
 type OnDidWriteData = IpcMessage;
@@ -165,7 +165,7 @@ export function runAsTask({
       const taskExecution = await vscode.tasks.executeTask(task);
       const disposables: vscode.Disposable[] = [];
 
-      return new Promise<boolean>(async (resolve, reject) => {
+      return new Promise<boolean | undefined>(async (resolve, reject) => {
         socketServer.once("error", () => reject("Socket server error"));
 
         vscode.tasks.onDidEndTask(({ execution }) => {
@@ -175,20 +175,26 @@ export function runAsTask({
         }, disposables);
 
         vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
-          if (execution === taskExecution && exitCode !== undefined) {
-            resolve(exitCode === 0);
-            const handled = exitCodeHandler ? exitCodeHandler(exitCode) : false;
+          if (execution === taskExecution) {
+            if (exitCode !== undefined) {
+              resolve(exitCode === 0);
+              const handled = exitCodeHandler
+                ? exitCodeHandler(exitCode)
+                : false;
 
-            if (exitCode !== 0 && !handled) {
-              vscode.window.showErrorMessage(
-                `'${operationName}' failed with exit code ${exitCode}`
-              );
+              if (exitCode !== 0 && !handled) {
+                vscode.window.showErrorMessage(
+                  `'${operationName}' failed with exit code ${exitCode}`
+                );
+              }
+            } else {
+              resolve(undefined);
             }
           }
         }, disposables);
 
         const cancelTask = () => {
-          resolve(false);
+          resolve(undefined);
           taskExecution.terminate();
           Logger.warn(`User canceled '${command}'`);
         };
@@ -214,10 +220,11 @@ export function runAsTask({
     onDidWriteData: onDidWriteDataEmitter.event,
     onDidWriteErrorLine: onDidWriteErrorLineEmitter.event,
     onDidWriteLine: onDidWriteLineEmitter.event,
-    finished: new Promise<boolean>(async (resolve) => {
+    finished: new Promise(async (resolve) => {
       try {
         resolve(await taskPromise);
-      } catch {
+      } catch (err) {
+        Logger.error(err instanceof Error ? err : String(err));
         resolve(false);
       }
     }),
