@@ -463,6 +463,7 @@ export async function getContentForFileIndex(
           // TODO - Cache responses to avoid rate-limiting
           const response = await octokit.rest.git.getBlob({
             ...ghRepo,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             file_sha: fileIndex,
           });
 

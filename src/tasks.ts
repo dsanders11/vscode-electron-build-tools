@@ -123,8 +123,12 @@ export function runAsTask({
           }
         });
 
-        stderr.on("line", (line) => onDidWriteErrorLineEmitter.fire({ progress, line }));
-        stdout.on("line", (line) => onDidWriteLineEmitter.fire({ progress, line }));
+        stderr.on("line", (line) =>
+          onDidWriteErrorLineEmitter.fire({ progress, line })
+        );
+        stdout.on("line", (line) =>
+          onDidWriteLineEmitter.fire({ progress, line })
+        );
       });
 
       const taskExecution = await vscode.tasks.executeTask(task);

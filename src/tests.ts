@@ -209,7 +209,10 @@ export function createTestController(
           if (!testRunError) {
             run.skipped(test);
           } else {
-            run.errored(test, new vscode.TestMessage("Error during test execution"));
+            run.errored(
+              test,
+              new vscode.TestMessage("Error during test execution")
+            );
           }
         }
       } finally {

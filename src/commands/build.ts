@@ -215,11 +215,8 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
         await task.finished;
       }
     ),
-    vscode.commands.registerCommand(
-      `${commandPrefix}.buildAdvanced`,
-      () => {
-        return vscode.commands.executeCommand(`${commandPrefix}.build`, true);
-      }
-    ),
+    vscode.commands.registerCommand(`${commandPrefix}.buildAdvanced`, () => {
+      return vscode.commands.executeCommand(`${commandPrefix}.build`, true);
+    })
   );
 }
