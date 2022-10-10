@@ -23,11 +23,16 @@ const cp = childProcess.spawn(command, {
 cp.stdout!.pipe(process.stdout);
 cp.stderr!.pipe(process.stderr);
 
-// And also pipe stdout to the socket
+// And also pipe output to the socket
 const socket = net.createConnection(socketPath, () => {
   cp.stdout!.on("data", (data: Buffer) => {
     // Send stdout as an IPC message across the socket
     const message: IpcMessage = { stream: "stdout", data: data.toString() };
+    socket.write(JSON.stringify(message));
+  });
+  cp.stderr!.on("data", (data: Buffer) => {
+    // Send stderr as an IPC message across the socket
+    const message: IpcMessage = { stream: "stderr", data: data.toString() };
     socket.write(JSON.stringify(message));
   });
 });

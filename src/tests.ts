@@ -124,6 +124,8 @@ export function createTestController(
         run.started(test);
       }
 
+      let testRunError = false;
+
       const task = runAsTask({
         context,
         operationName: "Electron Build Tools - Running Test(s)",
@@ -193,11 +195,22 @@ export function createTestController(
         }
       });
 
+      task.onDidWriteErrorLine(({ line }) => {
+        if (/^An error occurred while running the spec runner\s*$/.test(line)) {
+          testRunError = true;
+        }
+      });
+
       try {
-        await task.finished;
+        const cleanExit = await task.finished;
+        testRunError = testRunError || !cleanExit;
 
         for (const test of testsById.values()) {
-          run.skipped(test);
+          if (!testRunError) {
+            run.skipped(test);
+          } else {
+            run.errored(test, new vscode.TestMessage("Error during test execution"));
+          }
         }
       } finally {
         run.end();

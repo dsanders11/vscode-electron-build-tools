@@ -10,6 +10,7 @@ import { generateSocketName } from "./utils";
 
 export interface ElectronBuildToolsTask {
   onDidWriteData: vscode.Event<OnDidWriteData>;
+  onDidWriteErrorLine: vscode.Event<OnDidWriteLine>;
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
   finished: Promise<boolean>;
 }
@@ -89,6 +90,7 @@ export function runAsTask({
   const socketServer = net.createServer().listen(socketName);
 
   const onDidWriteDataEmitter = new vscode.EventEmitter<OnDidWriteData>();
+  const onDidWriteErrorLineEmitter = new vscode.EventEmitter<OnDidWriteLine>();
   const onDidWriteLineEmitter = new vscode.EventEmitter<OnDidWriteLine>();
 
   const taskPromise = vscode.window.withProgress(
@@ -99,8 +101,13 @@ export function runAsTask({
     },
     async (progress, token) => {
       socketServer.on("connection", (socket) => {
+        const stderrStream = new PassThrough();
         const stdoutStream = new PassThrough();
-        const rl = readline.createInterface({
+
+        const stderr = readline.createInterface({
+          input: stderrStream,
+        });
+        const stdout = readline.createInterface({
           input: stdoutStream,
         });
 
@@ -109,12 +116,15 @@ export function runAsTask({
 
           if (message.stream === "stdout") {
             stdoutStream.write(message.data);
+          } else if (message.stream === "stderr") {
+            stderrStream.write(message.data);
           } else {
             onDidWriteDataEmitter.fire(message);
           }
         });
 
-        rl.on("line", (line) => onDidWriteLineEmitter.fire({ progress, line }));
+        stderr.on("line", (line) => onDidWriteErrorLineEmitter.fire({ progress, line }));
+        stdout.on("line", (line) => onDidWriteLineEmitter.fire({ progress, line }));
       });
 
       const taskExecution = await vscode.tasks.executeTask(task);
@@ -167,6 +177,7 @@ export function runAsTask({
 
   return {
     onDidWriteData: onDidWriteDataEmitter.event,
+    onDidWriteErrorLine: onDidWriteErrorLineEmitter.event,
     onDidWriteLine: onDidWriteLineEmitter.event,
     finished: new Promise<boolean>(async (resolve) => {
       try {
