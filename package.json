@@ -19,7 +19,8 @@
     "onView:electron-build-tools:configs",
     "onView:electron-build-tools:patches",
     "onView:electron-build-tools:docs",
-    "onView:electron-build-tools:electron"
+    "onView:electron-build-tools:electron",
+    "onWalkthrough:electron-build-tools"
   ],
   "categories": [
     "Extension Packs",
@@ -83,6 +84,12 @@
         "enablement": "electron-build-tools:active && electron-build-tools:canBuild"
       },
       {
+        "command": "electron-build-tools.installBuildTools",
+        "title": "Install Build Tools",
+        "category": "Electron Build Tools",
+        "enablement": "!electron-build-tools:build-tools-installed"
+      },
+      {
         "command": "electron-build-tools.newConfig",
         "title": "New Config",
         "category": "Electron Build Tools",
@@ -92,6 +99,11 @@
       {
         "command": "electron-build-tools.openPatch",
         "title": "Open Patch",
+        "category": "Electron Build Tools"
+      },
+      {
+        "command": "electron-build-tools.openWalkthrough",
+        "title": "Open Walkthrough",
         "category": "Electron Build Tools"
       },
       {
@@ -327,7 +339,15 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
+          "command": "electron-build-tools.installBuildTools",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.openPatch",
+          "when": "false"
+        },
+        {
+          "command": "electron-build-tools.openWalkthrough",
           "when": "false"
         },
         {
@@ -572,11 +592,90 @@
     "viewsWelcome": [
       {
         "view": "electron-build-tools:welcome",
-        "contents": "In order to use the Electron Build Tools extension, you need the npm package @electron/build-tools, version 1.1.0 or newer, installed."
+        "contents": "In order to use the Electron Build Tools extension, you need the npm package @electron/build-tools, version 1.1.0 or newer, installed.\n[Open Walkthrough](command:electron-build-tools.openWalkthrough)"
       },
       {
         "view": "electron-build-tools:workspace",
         "contents": "An Electron checkout wasn't found in this workspace.\n[Open Folder](command:vscode.openFolder)"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "electron-build-tools",
+        "title": "Get Started with Electron Build Tools",
+        "description": "Learn about Electron Build Tools and the Electron Build Tools extension for VS Code",
+        "featuredFor": [
+          "ELECTRON_VERSION",
+          "src/ELECTRON_VERSION"
+        ],
+        "steps": [
+          {
+            "id": "electron-build-tools.install",
+            "title": "Install Electron Build Tools",
+            "description": "Install the ``@electron/build-tools`` npm package.\n[Install Electron Build Tools](command:electron-build-tools.installBuildTools)",
+            "media": {
+              "markdown": "resources/walkthrough/install-build-tools.md"
+            },
+            "completionEvents": [
+              "onContext:electron-build-tools:build-tools-installed"
+            ]
+          },
+          {
+            "id": "electron-build-tools.create-config",
+            "title": "Create a Build Tools config",
+            "description": "Create a config to start building Electron.\n[Create Config](command:electron-build-tools.newConfig)",
+            "media": {
+              "markdown": "resources/walkthrough/config.md"
+            },
+            "completionEvents": [
+              "onContext:electron-build-tools:active-config"
+            ]
+          },
+          {
+            "id": "electron-build-tools.sync",
+            "title": "Sync the Electron checkout",
+            "description": "The initial sync will download the source code and sync dependencies.\n[Sync](command:electron-build-tools.sync)",
+            "media": {
+              "markdown": "resources/walkthrough/sync-command.md"
+            },
+            "completionEvents": [
+              "onCommand:electron-build-tools.sync"
+            ]
+          },
+          {
+            "id": "electron-build-tools.open-workspace",
+            "title": "Open the Electron checkout",
+            "description": "Open the Electron checkout in the workspace to get started with Electron Build Tools extension features.\nThis can either be at the root level, ``src``, or in the Electron subfolder, ``src/electron``.\n[Open Folder](command:vscode.openFolder)",
+            "media": {
+              "markdown": "resources/walkthrough/empty.md"
+            },
+            "completionEvents": [
+              "onContext:electron-build-tools:is-electron-workspace"
+            ]
+          },
+          {
+            "id": "electron-build-tools.build",
+            "title": "Build Electron",
+            "description": "Build Electron from source.\n[Build](command:electron-build-tools.build)",
+            "media": {
+              "markdown": "resources/walkthrough/build.md"
+            },
+            "completionEvents": [
+              "onCommand:electron-build-tools.build"
+            ]
+          },
+          {
+            "id": "electron-build-tools.learn-more",
+            "title": "Learn more",
+            "description": "🎨 Explore all the features the Electron Build Tools extension has to offer by looking for \"Electron Build Tools\" in the [Command Palette](command:workbench.action.showCommands).\n ✨ Take a look at the [Changelog](https://marketplace.visualstudio.com/items/dsanders11.vscode-electron-build-tools/changelog) to learn more about the latest features. \n \n[Learn More](https://github.com/dsanders11/vscode-electron-build-tools)",
+            "media": {
+              "markdown": "resources/walkthrough/empty.md"
+            },
+            "completionEvents": [
+              "onStepSelected"
+            ]
+          }
+        ]
       }
     ]
   },

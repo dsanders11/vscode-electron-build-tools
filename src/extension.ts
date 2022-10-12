@@ -28,6 +28,7 @@ import {
   drillDown,
   findElectronRoot,
   getPatchesConfigFile,
+  installBuildTools,
   isBuildToolsInstalled,
   OptionalFeature,
   setContext,
@@ -172,7 +173,40 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider(
       viewIds.HELP,
       new HelpTreeDataProvider(context.extensionUri)
-    )
+    ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.installBuildTools`,
+      async () => {
+        vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "Installing Electron Build Tools",
+            cancellable: true,
+          },
+          async (progress, token) => {
+            const success = await installBuildTools(token);
+
+            if (success !== undefined) {
+              if (success) {
+                vscode.window.showInformationMessage(
+                  "Successfully installed Electron Build Tools"
+                );
+              } else {
+                vscode.window.showErrorMessage(
+                  "Failed to install Electron Build Tools"
+                );
+              }
+            }
+          }
+        );
+      }
+    ),
+    vscode.commands.registerCommand(`${commandPrefix}.openWalkthrough`, () => {
+      return vscode.commands.executeCommand(
+        "workbench.action.openWalkthrough",
+        "dsanders11.vscode-electron-build-tools#electron-build-tools"
+      );
+    })
   );
 
   const workspaceFolders = vscode.workspace.workspaceFolders;

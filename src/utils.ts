@@ -666,3 +666,39 @@ export function positionAt(content: string, offset: number) {
 
   return new vscode.Position(lines.length - 1, lastLine.length);
 }
+
+export async function installBuildTools(token: vscode.CancellationToken) {
+  const task = new vscode.Task(
+    { type: "electron-build-tools", task: "install-build-tools" },
+    vscode.TaskScope.Workspace,
+    "Install Build Tools",
+    "electron-build-tools",
+    new vscode.ProcessExecution("yarn", [
+      "global",
+      "add",
+      "@electron/build-tools",
+    ])
+  );
+  task.presentationOptions = {
+    reveal: vscode.TaskRevealKind.Silent,
+    echo: true,
+    clear: true,
+  };
+
+  const disposables: vscode.Disposable[] = [];
+
+  return new Promise<boolean | undefined>(async (resolve) => {
+    vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
+      if (execution === taskExecution) {
+        resolve(exitCode ? exitCode === 0 : undefined);
+        disposables.forEach((disposable) => disposable.dispose());
+      }
+    }, disposables);
+
+    const taskExecution = await vscode.tasks.executeTask(task);
+
+    token.onCancellationRequested(() => {
+      taskExecution.terminate();
+    }, disposables);
+  });
+}
