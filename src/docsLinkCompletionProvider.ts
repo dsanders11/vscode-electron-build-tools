@@ -48,43 +48,8 @@ export class DocsLinkCompletionProvider
           positionWithinLink <= linkDefinitionEnd
         ) {
           if (
-            context.triggerCharacter === "#" ||
-            (hashIdx !== -1 && positionWithinLink >= hashIdx)
+            context.triggerCharacter !== "#"
           ) {
-            // Provide completions to linkables within the linked file
-            const filename = linkText.split("#")[0];
-            const linkedFilePath = vscode.Uri.file(
-              path.join(baseDir, filename)
-            );
-            const linkables = (
-              await this._linkablesProvider.getLinkables()
-            ).filter((linkable) => {
-              const linkableFilePath = vscode.Uri.joinPath(
-                this._linkablesProvider.docsRoot,
-                linkable.filename
-              );
-
-              return linkableFilePath.fsPath === linkedFilePath.fsPath;
-            });
-
-            for (const linkable of linkables) {
-              if (linkable.urlFragment) {
-                const completion = new vscode.CompletionItem(
-                  linkable.urlFragment,
-                  vscode.CompletionItemKind.Reference
-                );
-                completion.detail = "Electron";
-                completion.documentation = linkable.text;
-                completion.range = new vscode.Range(
-                  position.line,
-                  matchIdx + linkDefinitionBegin + hashIdx + 2, // After hash
-                  position.line,
-                  matchIdx + linkDefinitionEnd
-                );
-                completions.push(completion);
-              }
-            }
-          } else {
             // Provide completions to files within the docs, relative to this
             // file. Exclude fiddles, there's too much noise-to-signal there
             const files = await vscode.workspace.findFiles(
