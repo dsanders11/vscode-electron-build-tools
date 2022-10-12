@@ -12,7 +12,8 @@ export interface ElectronBuildToolsTask {
   onDidWriteData: vscode.Event<OnDidWriteData>;
   onDidWriteErrorLine: vscode.Event<OnDidWriteLine>;
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
-  finished: Promise<boolean>;
+  eventsDone: Promise<void>;
+  finished: Promise<boolean | undefined>;
 }
 
 type OnDidWriteData = IpcMessage;
@@ -55,13 +56,15 @@ export function runAsTask({
   // base64 encode the command to get around shell quoting issues
   const b64command = Buffer.from(command).toString("base64");
 
+  const script = context.asAbsolutePath("out/scripts/echo-to-socket.js");
+
   const task = new vscode.Task(
     { type: "electron-build-tools", task: taskName },
     vscode.TaskScope.Workspace,
     taskName,
     "electron-build-tools",
     new vscode.ShellExecution(
-      `node out/scripts/echo-to-socket.js "${b64command}" ${socketName} ${
+      `node ${script} "${b64command}" ${socketName} ${
         suppressExitCode ? 1 : ""
       }`.trimEnd(),
       {
@@ -69,6 +72,7 @@ export function runAsTask({
         ...shellOptions,
         env: {
           FORCE_COLOR: "true",
+          EBT_SOCKET_PATH: socketName,
           ...shellOptions?.env,
         },
       }
@@ -93,6 +97,12 @@ export function runAsTask({
   const onDidWriteErrorLineEmitter = new vscode.EventEmitter<OnDidWriteLine>();
   const onDidWriteLineEmitter = new vscode.EventEmitter<OnDidWriteLine>();
 
+  let eventsStarted = false;
+  let eventsDone: (value: void) => void;
+  const eventsDonePromise = new Promise<void>(
+    (resolve) => (eventsDone = resolve)
+  );
+
   const taskPromise = vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -101,9 +111,15 @@ export function runAsTask({
     },
     async (progress, token) => {
       socketServer.on("connection", (socket) => {
+        eventsStarted = true;
+
+        const messageStream = new PassThrough();
         const stderrStream = new PassThrough();
         const stdoutStream = new PassThrough();
 
+        const messages = readline.createInterface({
+          input: messageStream,
+        });
         const stderr = readline.createInterface({
           input: stderrStream,
         });
@@ -112,7 +128,30 @@ export function runAsTask({
         });
 
         socket.on("data", (data) => {
-          const message: IpcMessage = JSON.parse(data.toString());
+          messageStream.write(data);
+        });
+
+        messages.on("line", (line) => {
+          // Remove the newline encoding
+          line = line.replace(/%25|%0A/g, (match) => {
+            switch (match) {
+              case "%25":
+                return "%";
+              case "%0A":
+                return "\n";
+              default:
+                throw new Error("Unreachable");
+            }
+          });
+
+          let message: IpcMessage;
+
+          try {
+            message = JSON.parse(line);
+          } catch (err) {
+            Logger.error(`Failed to parse message: ${err}`);
+            return;
+          }
 
           if (message.stream === "stdout") {
             stdoutStream.write(message.data);
@@ -122,6 +161,14 @@ export function runAsTask({
             onDidWriteDataEmitter.fire(message);
           }
         });
+
+        const socketDone = () => {
+          socket.destroy();
+          eventsDone();
+        };
+
+        socket.once("close", socketDone);
+        socket.once("end", socketDone);
 
         stderr.on("line", (line) =>
           onDidWriteErrorLineEmitter.fire({ progress, line })
@@ -134,7 +181,7 @@ export function runAsTask({
       const taskExecution = await vscode.tasks.executeTask(task);
       const disposables: vscode.Disposable[] = [];
 
-      return new Promise<boolean>(async (resolve, reject) => {
+      return new Promise<boolean | undefined>(async (resolve, reject) => {
         socketServer.once("error", () => reject("Socket server error"));
 
         vscode.tasks.onDidEndTask(({ execution }) => {
@@ -144,20 +191,26 @@ export function runAsTask({
         }, disposables);
 
         vscode.tasks.onDidEndTaskProcess(({ execution, exitCode }) => {
-          if (execution === taskExecution && exitCode !== undefined) {
-            resolve(exitCode === 0);
-            const handled = exitCodeHandler ? exitCodeHandler(exitCode) : false;
+          if (execution === taskExecution) {
+            if (exitCode !== undefined) {
+              resolve(exitCode === 0);
+              const handled = exitCodeHandler
+                ? exitCodeHandler(exitCode)
+                : false;
 
-            if (exitCode !== 0 && !handled) {
-              vscode.window.showErrorMessage(
-                `'${operationName}' failed with exit code ${exitCode}`
-              );
+              if (exitCode !== 0 && !handled) {
+                vscode.window.showErrorMessage(
+                  `'${operationName}' failed with exit code ${exitCode}`
+                );
+              }
+            } else {
+              resolve(undefined);
             }
           }
         }, disposables);
 
         const cancelTask = () => {
-          resolve(false);
+          resolve(undefined);
           taskExecution.terminate();
           Logger.warn(`User canceled '${command}'`);
         };
@@ -183,11 +236,18 @@ export function runAsTask({
     onDidWriteData: onDidWriteDataEmitter.event,
     onDidWriteErrorLine: onDidWriteErrorLineEmitter.event,
     onDidWriteLine: onDidWriteLineEmitter.event,
-    finished: new Promise<boolean>(async (resolve) => {
+    eventsDone: eventsDonePromise,
+    finished: new Promise(async (resolve) => {
       try {
         resolve(await taskPromise);
-      } catch {
+      } catch (err) {
+        Logger.error(err instanceof Error ? err : String(err));
         resolve(false);
+      } finally {
+        // Events never started, they're now done
+        if (!eventsStarted) {
+          eventsDone();
+        }
       }
     }),
   };
