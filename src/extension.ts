@@ -4,8 +4,7 @@ import { promisify } from "util";
 
 import * as vscode from "vscode";
 
-import MarkdownIt from "markdown-it";
-import MarkdownItEmoji from "markdown-it-emoji";
+import type MarkdownIt from "markdown-it";
 
 import {
   buildToolsExecutable,
@@ -333,7 +332,7 @@ export async function activate(context: vscode.ExtensionContext) {
       );
 
       // Render emojis in Markdown
-      result.extendMarkdownIt = (md: MarkdownIt) => md.use(MarkdownItEmoji);
+      result.extendMarkdownIt = (md: MarkdownIt) => md.use(require("markdown-it-emoji"));
     }
   }
 
