@@ -569,7 +569,7 @@ export class OptionalFeature<T> extends vscode.Disposable {
   constructor(
     configSection: string,
     settingName: string,
-    setupFeature: (settingValue: T) => vscode.Disposable | undefined
+    setupFeature: (settingValue: T) => vscode.Disposable | void
   ) {
     super(() => {
       this._disposable?.dispose();
@@ -593,12 +593,12 @@ export class OptionalFeature<T> extends vscode.Disposable {
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration(configSection)) {
         this._disposable?.dispose();
-        this._disposable = setupFeature(getSettingValue());
+        this._disposable = setupFeature(getSettingValue())!;
       }
     });
 
     // Initial setup of the feature
-    this._disposable = setupFeature(getSettingValue());
+    this._disposable = setupFeature(getSettingValue())!;
   }
 }
 

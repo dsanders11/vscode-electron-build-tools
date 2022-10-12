@@ -28,7 +28,6 @@ import {
   findElectronRoot,
   getPatchesConfigFile,
   isBuildToolsInstalled,
-  OptionalFeature,
   setContext,
 } from "./utils";
 import {
@@ -235,10 +234,6 @@ export async function activate(context: vscode.ExtensionContext) {
     if (electronRoot !== undefined) {
       setContext("active", true);
 
-      const diagnosticsCollection = vscode.languages.createDiagnosticCollection(
-        "electron-build-tools"
-      );
-
       const testController = createTestController(context, electronRoot);
 
       const patchesConfig = getPatchesConfigFile(electronRoot);
@@ -256,7 +251,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
       context.subscriptions.push(
         testController,
-        diagnosticsCollection,
         linkableProvider,
         patchesView,
         vscode.window.createTreeView(viewIds.DOCS, {
@@ -315,21 +309,7 @@ export async function activate(context: vscode.ExtensionContext) {
       registerDocsCommands(context, linkableProvider);
       registerHelperCommands(context);
 
-      context.subscriptions.push(
-        new OptionalFeature(
-          "electronBuildTools.docs",
-          "lintRelativeLinks",
-          (shouldLintDocs: boolean) => {
-            if (shouldLintDocs) {
-              Logger.info("Docs relative link linting enabled");
-              return setupDocsLinting(linkableProvider, diagnosticsCollection);
-            } else {
-              // TODO - Clear existing diagnostics so they don't linger
-              Logger.info("Docs relative link linting disabled");
-            }
-          }
-        )
-      );
+      setupDocsLinting(context);
 
       // Render emojis in Markdown
       result.extendMarkdownIt = (md: MarkdownIt) => md.use(require("markdown-it-emoji"));
