@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0 (10-12-2022)
+
+* feat: use custom Mocha reporter for better testing results
+* feat: add advanced build command
+* feat: config and sync commands available outside workspace
+* feat: pull patch diff content from GH if not found locally
+* chore: more pretty names for patch directories
+* chore: sort patch directories by label
+
 ## 0.8.2 (10-7-2022)
 
 * fix: import module by absolute path
