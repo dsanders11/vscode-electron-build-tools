@@ -1,7 +1,9 @@
 import * as net from "net";
 import * as path from "path";
 
-const Base = require(path.resolve(
+import type { reporters, Runner, Test } from "mocha";
+
+const Base: reporters.Base = require(path.resolve(
   process.env["ELECTRON_ROOT"]!,
   "spec",
   "node_modules",
@@ -10,8 +12,6 @@ const Base = require(path.resolve(
   "reporters",
   "base"
 ));
-
-import type { Runner, Test } from "mocha";
 
 // Encode any newlines so we can use newline as a delimeter
 function encodeNewlines(value: string) {
