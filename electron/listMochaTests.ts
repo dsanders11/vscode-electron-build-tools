@@ -2,8 +2,6 @@ import * as net from "net";
 import * as path from "path";
 import * as readline from "readline";
 
-const { getFileContent } = require("./electron-build-tools-typescript");
-
 import type { ParsedTestSuite } from "../src/tests";
 
 interface MochaTestSuite {
@@ -40,6 +38,10 @@ const { retrieveSourceMap } = require(path.resolve(
   process.cwd(),
   "node_modules",
   "source-map-support"
+));
+const { getFileContent } = require(path.resolve(
+  __dirname,
+  "electron-build-tools-typescript"
 ));
 
 const sourceMapConsumers = new Map<string, any>();
