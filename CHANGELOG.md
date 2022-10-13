@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.1 (10-12-2022)
+
+* fix: use correct externals value for esbuild
+
 ## 0.10.0 (10-12-2022)
 
 * feat: use VS Code's built-in Markdown linting for links
