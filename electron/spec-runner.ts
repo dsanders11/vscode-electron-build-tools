@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+
 import * as childProcess from "child_process";
 import * as crypto from "crypto";
 import * as path from "path";

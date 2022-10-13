@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import * as vscode from "vscode";
-
 import type { ElectronPatchesConfig } from "./types";
 
 export const extensionId = "dsanders11.vscode-electron-build-tools";
