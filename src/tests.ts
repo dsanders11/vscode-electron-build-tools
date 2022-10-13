@@ -16,7 +16,7 @@ import { escapeStringForRegex, generateSocketName } from "./utils";
 interface ParsedTestData {
   title: string;
   fullTitle: string;
-  file: string;
+  file?: string;
   pending: boolean;
 }
 
@@ -268,7 +268,7 @@ function createTestItems(
     const test = testController.createTestItem(
       parsedTest.fullTitle,
       parsedTest.title,
-      vscode.Uri.file(parsedTest.file)
+      parsedTest.file ? vscode.Uri.file(parsedTest.file) : undefined
     );
     test.sortText = `a${idx}`;
 
@@ -283,7 +283,7 @@ function createTestItems(
     const testSuite = testController.createTestItem(
       parsedSuite.fullTitle,
       parsedSuite.title,
-      vscode.Uri.file(parsedSuite.file)
+      parsedSuite.file ? vscode.Uri.file(parsedSuite.file) : undefined
     );
     // Suites run after tests, so sort accordingly
     testSuite.sortText = `b${idx}`;

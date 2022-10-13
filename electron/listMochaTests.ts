@@ -112,7 +112,7 @@ function parseTestSuites(suite: MochaTestSuite) {
       fullTitle: test.fullTitle(),
       file: test.file,
       pending: test.pending,
-      range: mapFnBodyToSourceRange(test.file, test.body) as any,
+      range: test.file ? mapFnBodyToSourceRange(test.file, test.body) as any : null,
     })),
   };
 
