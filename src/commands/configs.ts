@@ -68,6 +68,16 @@ export function registerConfigsCommands(
                 resolve(configNameInput.value);
                 configNameInput.dispose();
               });
+              configNameInput.onDidChangeValue(() => {
+                if (configNameInput.value.match(/\s/)) {
+                  configNameInput.validationMessage = {
+                    message: "Cannot have spaces in config name",
+                    severity: vscode.InputBoxValidationSeverity.Error,
+                  };
+                } else {
+                  configNameInput.validationMessage = undefined;
+                }
+              });
               configNameInput.show();
             }
           );
@@ -170,6 +180,16 @@ export function registerConfigsCommands(
                 forkNameInput.onDidAccept(() => {
                   resolve(forkNameInput.value);
                   forkNameInput.dispose();
+                });
+                forkNameInput.onDidChangeValue(() => {
+                  if (!forkNameInput.value.match(/^\w+\/electron$/)) {
+                    forkNameInput.validationMessage = {
+                      message: "Must match the format '<username>/electron'",
+                      severity: vscode.InputBoxValidationSeverity.Error,
+                    };
+                  } else {
+                    forkNameInput.validationMessage = undefined;
+                  }
                 });
                 forkNameInput.show();
               }
