@@ -1,10 +1,15 @@
 const childProcess = require("child_process");
 const crypto = require("crypto");
-const fs = require("fs-extra");
-const { hashElement } = require("folder-hash");
 const path = require("path");
 
 export async function setupSpecRunner(electronRoot: string) {
+  const fs = require(path.resolve(electronRoot, "node_modules", "fs-extra"));
+  const { hashElement } = require(path.resolve(
+    electronRoot,
+    "node_modules",
+    "folder-hash"
+  ));
+
   const SCRIPT_DIR = path.resolve(electronRoot, "script");
 
   const utils = require(path.resolve(SCRIPT_DIR, "lib", "utils"));
