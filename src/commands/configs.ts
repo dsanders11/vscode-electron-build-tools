@@ -52,11 +52,13 @@ export function registerConfigsCommands(
         );
       },
       async () => {
+        const title = "New Electron Build Tools Config";
+
         try {
           const configName = await new Promise<string | undefined>(
             (resolve) => {
               const configNameInput = vscode.window.createInputBox();
-              configNameInput.title = "New Electron Build Tools Config";
+              configNameInput.title = title;
               configNameInput.step = 1;
               configNameInput.totalSteps = 4;
               configNameInput.prompt = "Enter config name";
@@ -100,7 +102,7 @@ export function registerConfigsCommands(
           >((resolve) => {
             const configOptionsQuickPick =
               vscode.window.createQuickPick<ConfigOptionItem>();
-            configOptionsQuickPick.title = "New Electron Build Tools Config";
+            configOptionsQuickPick.title = title;
             configOptionsQuickPick.placeholder = "Configuration options";
             configOptionsQuickPick.items = [
               {
@@ -167,7 +169,7 @@ export function registerConfigsCommands(
             const forkName = await new Promise<string | undefined>(
               (resolve) => {
                 const forkNameInput = vscode.window.createInputBox();
-                forkNameInput.title = "New Electron Build Tools Config";
+                forkNameInput.title = title;
                 forkNameInput.placeholder = "Fork Name";
                 forkNameInput.step = 4;
                 forkNameInput.totalSteps = 4;
