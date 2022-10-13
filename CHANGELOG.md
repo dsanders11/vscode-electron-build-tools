@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.0 (10-12-2022)
+
+* feat: use VS Code's built-in Markdown linting for links
+* fix: add typescript as dependency
+
 ## 0.9.0 (10-12-2022)
 
 * feat: use custom Mocha reporter for better testing results
