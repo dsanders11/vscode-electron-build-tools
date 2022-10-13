@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.0 (10-13-2022)
+
+* feat: build settings option for new config
+* chore: validate user input for new config
+
 ## 0.10.4 (10-13-2022)
 
 * fix: restore mocha-reporter.js in packaged extension
