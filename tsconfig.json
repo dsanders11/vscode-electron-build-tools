@@ -7,15 +7,16 @@
       "ES2020"
     ],
     "sourceMap": true,
-    "rootDirs": [
-      "src",
-      "scripts"
-    ],
     "strict": true,
     "esModuleInterop": true
   },
+  "include": [
+    "electron/mocha-reporter.ts",
+    "electron/spec-runner.ts",
+  ],
   "exclude": [
     "node_modules",
+    "src",
     ".vscode-test"
   ]
 }

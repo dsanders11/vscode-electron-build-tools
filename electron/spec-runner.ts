@@ -1,6 +1,6 @@
-const childProcess = require("child_process");
-const crypto = require("crypto");
-const path = require("path");
+import * as childProcess from "child_process";
+import * as crypto from "crypto";
+import * as path from "path";
 
 export async function setupSpecRunner(electronRoot: string) {
   const fs = require(path.resolve(electronRoot, "node_modules", "fs-extra"));

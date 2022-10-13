@@ -1,8 +1,8 @@
-const net = require("net");
-const path = require("path");
+import * as net from "net";
+import * as path from "path";
 
 const Base = require(path.resolve(
-  process.env["ELECTRON_ROOT"],
+  process.env["ELECTRON_ROOT"]!,
   "spec",
   "node_modules",
   "mocha",
@@ -32,7 +32,7 @@ function Reporter(runner: Runner) {
   // @ts-ignore
   Base.call(this, runner);
 
-  const socket = net.createConnection(process.env["EBT_SOCKET_PATH"], () => {
+  const socket = net.createConnection(process.env["EBT_SOCKET_PATH"]!, () => {
     const writeToSocket = (value: string) => {
       socket.write(`${encodeNewlines(value)}\n`);
     };

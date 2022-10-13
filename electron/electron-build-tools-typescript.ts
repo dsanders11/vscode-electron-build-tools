@@ -1,19 +1,9 @@
-const path = require("path");
+import typescript from "typescript-cached-transpile";
 
-const typescript = require(path.resolve(
-  __dirname,
-  "..",
-  "..",
-  "node_modules",
-  "typescript-cached-transpile"
-));
-import type {
-  createLanguageService,
-  transpileModule,
-} from "typescript-cached-transpile";
-
-type CreateLanguageServiceParameters = Parameters<typeof createLanguageService>;
-type TranspileModuleParameters = Parameters<typeof transpileModule>;
+type CreateLanguageServiceParameters = Parameters<
+  typeof typescript.createLanguageService
+>;
+type TranspileModuleParameters = Parameters<typeof typescript.transpileModule>;
 
 const contentMap = new Map<string, string>();
 
@@ -25,9 +15,11 @@ module.exports = {
     documentRegistry: CreateLanguageServiceParameters[1],
     syntaxOnlyOrLanguageServiceMode?: CreateLanguageServiceParameters[2]
   ) => {
-    const service = (
-      typescript.createLanguageService as typeof createLanguageService
-    )(host, documentRegistry, syntaxOnlyOrLanguageServiceMode);
+    const service = typescript.createLanguageService(
+      host,
+      documentRegistry,
+      syntaxOnlyOrLanguageServiceMode
+    );
 
     return {
       ...service,
@@ -51,10 +43,7 @@ module.exports = {
     input: TranspileModuleParameters[0],
     transpileOptions: TranspileModuleParameters[1]
   ) => {
-    const output = (typescript.transpileModule as typeof transpileModule)(
-      input,
-      transpileOptions
-    );
+    const output = typescript.transpileModule(input, transpileOptions);
     contentMap.set(transpileOptions.fileName!, output.outputText);
 
     return output;
