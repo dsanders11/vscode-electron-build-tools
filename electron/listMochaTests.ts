@@ -2,24 +2,8 @@ import * as net from "net";
 import * as path from "path";
 import * as readline from "readline";
 
+import type { default as MochaType, Test, Suite } from "mocha";
 import type { ParsedTestSuite } from "../src/tests";
-
-interface MochaTestSuite {
-  file: string;
-  fullTitle: () => string;
-  pending: boolean;
-  suites: MochaTestSuite[];
-  tests: MochaTest[];
-  title: string;
-}
-
-interface MochaTest {
-  body: string;
-  file: string;
-  fullTitle: () => string;
-  pending: boolean;
-  title: string;
-}
 
 // We want to terminate on errors, not show a dialog
 process.once("uncaughtException", (err) => {
@@ -27,7 +11,7 @@ process.once("uncaughtException", (err) => {
   process.exit(1);
 });
 
-const { app } = require("electron");
+import { app } from "electron";
 
 const { SourceMapConsumer } = require(path.resolve(
   process.cwd(),
@@ -100,19 +84,21 @@ function mapFnBodyToSourceRange(file: string, body: string) {
   return null;
 }
 
-function parseTestSuites(suite: MochaTestSuite) {
+function parseTestSuites(suite: Suite) {
   const parsedTests: ParsedTestSuite = {
     title: suite.title,
     fullTitle: suite.fullTitle(),
     file: suite.file,
     pending: suite.pending,
     suites: [],
-    tests: suite.tests.map((test: MochaTest) => ({
+    tests: suite.tests.map((test: Test) => ({
       title: test.title,
       fullTitle: test.fullTitle(),
       file: test.file,
       pending: test.pending,
-      range: test.file ? mapFnBodyToSourceRange(test.file, test.body) as any : null,
+      range: test.file
+        ? (mapFnBodyToSourceRange(test.file, test.body) as any)
+        : null,
     })),
   };
 
@@ -125,9 +111,9 @@ function parseTestSuites(suite: MochaTestSuite) {
 
 // These are required or there will be a reference error
 // while Mocha is processing the tests
-(global as any).serviceWorkerScheme = "sw";
-(global as any).standardScheme = "app";
-(global as any).zoomScheme = "zoom";
+global.serviceWorkerScheme = "sw";
+global.standardScheme = "app";
+global.zoomScheme = "zoom";
 (global as any).window = {};
 
 app
@@ -144,7 +130,7 @@ app
       "mocha"
     ));
 
-    const mocha = new Mocha();
+    const mocha: MochaType = new Mocha();
 
     // Use a socket to pass filenames rather than command line
     // arguments since there's a max length on Windows which
@@ -161,6 +147,7 @@ app
           mocha.addFile(line);
         } else {
           try {
+            // @ts-ignore
             await mocha.loadFiles();
             const parsedSuites = parseTestSuites(mocha.suite);
             socket.write(JSON.stringify(parsedSuites, undefined, 4), () =>
