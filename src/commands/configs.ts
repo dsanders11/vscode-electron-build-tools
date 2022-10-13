@@ -20,6 +20,10 @@ import type {
 
 const exec = promisify(childProcess.exec);
 
+interface BuildSettingsOptionItem extends vscode.QuickPickItem {
+  value: string;
+}
+
 interface ConfigOptionItem extends vscode.QuickPickItem {
   optionName?: string;
 }
@@ -60,7 +64,6 @@ export function registerConfigsCommands(
               const configNameInput = vscode.window.createInputBox();
               configNameInput.title = title;
               configNameInput.step = 1;
-              configNameInput.totalSteps = 4;
               configNameInput.prompt = "Enter config name";
               configNameInput.onDidHide(() => {
                 configNameInput.dispose();
@@ -94,6 +97,43 @@ export function registerConfigsCommands(
           });
 
           if (rootPath === undefined) {
+            return;
+          }
+
+          const buildSettings = await new Promise<
+            BuildSettingsOptionItem | undefined
+          >((resolve) => {
+            const quickPick =
+              vscode.window.createQuickPick<BuildSettingsOptionItem>();
+            quickPick.title = title;
+            quickPick.placeholder = "Build settings";
+            quickPick.items = [
+              {
+                label: "Testing",
+                detail: "A testing build for development",
+                description: "Default",
+                picked: true,
+                value: "testing",
+              },
+              {
+                label: "Release",
+                detail: "A release build",
+                value: "release",
+              },
+            ];
+            quickPick.step = 3;
+            quickPick.onDidHide(() => {
+              quickPick.dispose();
+              resolve(undefined);
+            });
+            quickPick.onDidAccept(() => {
+              resolve(quickPick.selectedItems[0]);
+              quickPick.dispose();
+            });
+            quickPick.show();
+          });
+
+          if (buildSettings === undefined) {
             return;
           }
 
@@ -137,8 +177,7 @@ export function registerConfigsCommands(
               },
             ];
             configOptionsQuickPick.canSelectMany = true;
-            configOptionsQuickPick.step = 3;
-            configOptionsQuickPick.totalSteps = 4;
+            configOptionsQuickPick.step = 4;
             configOptionsQuickPick.onDidHide(() => {
               configOptionsQuickPick.dispose();
               resolve(undefined);
@@ -158,7 +197,8 @@ export function registerConfigsCommands(
             .filter((option) => option.optionName !== undefined)
             .map((option) => `--${option.optionName}`);
           cliOptions.push(
-            `--root ${vscode.Uri.joinPath(rootPath[0], "electron").fsPath}`
+            `--root ${vscode.Uri.joinPath(rootPath[0], "electron").fsPath}`,
+            `-i ${buildSettings.value}`
           );
 
           const useFork = options.find(
@@ -171,8 +211,7 @@ export function registerConfigsCommands(
                 const forkNameInput = vscode.window.createInputBox();
                 forkNameInput.title = title;
                 forkNameInput.placeholder = "Fork Name";
-                forkNameInput.step = 4;
-                forkNameInput.totalSteps = 4;
+                forkNameInput.step = 5;
                 forkNameInput.prompt =
                   "This should take the format 'username/electron'";
                 forkNameInput.onDidHide(() => {
