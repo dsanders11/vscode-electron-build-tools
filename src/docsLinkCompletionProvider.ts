@@ -47,9 +47,7 @@ export class DocsLinkCompletionProvider
           linkDefinitionBegin < positionWithinLink &&
           positionWithinLink <= linkDefinitionEnd
         ) {
-          if (
-            context.triggerCharacter !== "#"
-          ) {
+          if (context.triggerCharacter !== "#") {
             // Provide completions to files within the docs, relative to this
             // file. Exclude fiddles, there's too much noise-to-signal there
             const files = await vscode.workspace.findFiles(

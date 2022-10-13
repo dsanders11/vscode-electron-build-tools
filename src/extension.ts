@@ -312,7 +312,8 @@ export async function activate(context: vscode.ExtensionContext) {
       setupDocsLinting(context);
 
       // Render emojis in Markdown
-      result.extendMarkdownIt = (md: MarkdownIt) => md.use(require("markdown-it-emoji"));
+      result.extendMarkdownIt = (md: MarkdownIt) =>
+        md.use(require("markdown-it-emoji"));
     }
   }
 
