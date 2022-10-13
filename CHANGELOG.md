@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.4 (10-13-2022)
+
+* fix: restore mocha-reporter.js in packaged extension
+
 ## 0.10.3 (10-12-2022)
 
 * fix: restore echo-to-socket.js script in packaged extension
