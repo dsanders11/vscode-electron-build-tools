@@ -2,7 +2,7 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import { ensurePosixSeparators, slugifyHeading } from "./utils";
+import { ensurePosixSeparators, parseMarkdownHeader } from "./utils";
 
 export interface DocsLinkable {
   text: string;
@@ -65,28 +65,26 @@ export class DocsLinkablesProvider extends vscode.Disposable {
     const filename = ensurePosixSeparators(
       path.relative(this.docsRoot.fsPath, uri.fsPath)
     );
+    const fileLines = (await vscode.workspace.fs.readFile(uri))
+      .toString()
+      .split("\n");
 
-    function linkablesFromSymbols(symbols: vscode.DocumentSymbol[]) {
-      for (const symbol of symbols) {
-        if (symbol.kind === vscode.SymbolKind.String) {
-          const name = symbol.name.replace(/^#+\s*/, "").replace(/`/g, "");
-          linkables.push({
-            text: name,
-            filename,
-            urlFragment:
-              symbol.range.start.line > 0 ? slugifyHeading(name) : undefined,
-          });
-          linkablesFromSymbols(symbol.children);
+    for (const [idx, line] of fileLines.entries()) {
+      const parsedHeader = parseMarkdownHeader(line);
+
+      if (parsedHeader !== undefined) {
+        const { text, urlFragment } = parsedHeader;
+
+        if (idx === 0) {
+          linkables.push({ text, filename });
+        } else {
+          // Only the top-level header can have an empty urlFragment
+          if (urlFragment.length > 0) {
+            linkables.push({ text, filename, urlFragment });
+          }
         }
       }
     }
-
-    linkablesFromSymbols(
-      await vscode.commands.executeCommand(
-        "vscode.executeDocumentSymbolProvider",
-        uri
-      )
-    );
 
     return linkables;
   }
