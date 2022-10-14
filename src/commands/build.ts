@@ -86,7 +86,7 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
             quickPick.totalSteps = 3;
           }
 
-          const target = await new Promise((resolve) => {
+          target = await new Promise((resolve) => {
             quickPick.onDidAccept(() => {
               resolve(quickPick.selectedItems[0].label ?? target);
               quickPick.dispose();
