@@ -249,9 +249,12 @@ export function createTestController(
     const extraArgs = await vscode.window.showInputBox({
       title: "Electron Test Runner",
       placeHolder: "Extra args to pass to the test runner",
+      value: runProfileData.get(runProfile),
     });
 
-    if (extraArgs) {
+    if (extraArgs === "") {
+      runProfileData.delete(runProfile);
+    } else if (extraArgs) {
       runProfileData.set(runProfile, extraArgs);
     }
   };
