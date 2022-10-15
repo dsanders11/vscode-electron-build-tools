@@ -130,14 +130,21 @@ export function getPatchesConfigFile(electronRoot: vscode.Uri) {
 
 export async function getPatches(directory: vscode.Uri): Promise<vscode.Uri[]> {
   const patchListFile = vscode.Uri.joinPath(directory, ".patches");
-  const patchFilenames = (await vscode.workspace.fs.readFile(patchListFile))
+  const patchListFileContent = (
+    await vscode.workspace.fs.readFile(patchListFile)
+  )
     .toString()
-    .trim()
-    .split("\n");
+    .trim();
 
-  return patchFilenames.map((patchFilename) =>
-    vscode.Uri.joinPath(directory, patchFilename.trim())
-  );
+  if (!patchListFileContent) {
+    return [];
+  }
+
+  return patchListFileContent
+    .split("\n")
+    .map((patchFilename) =>
+      vscode.Uri.joinPath(directory, patchFilename.trim())
+    );
 }
 
 export async function getFilesInPatch(
