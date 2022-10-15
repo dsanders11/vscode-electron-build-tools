@@ -14,6 +14,7 @@ export interface ElectronBuildToolsTask {
   onDidWriteLine: vscode.Event<OnDidWriteLine>;
   eventsDone: Promise<void>;
   finished: Promise<boolean | undefined>;
+  terminate: () => void;
 }
 
 type OnDidWriteData = IpcMessage;
@@ -102,6 +103,8 @@ export function runAsTask({
   const eventsDonePromise = new Promise<void>(
     (resolve) => (eventsDone = resolve)
   );
+
+  const terminateTokenSource = new vscode.CancellationTokenSource();
 
   const taskPromise = vscode.window.withProgress(
     {
@@ -217,6 +220,7 @@ export function runAsTask({
 
         if (
           token.isCancellationRequested ||
+          terminateTokenSource.token.isCancellationRequested ||
           cancellationToken?.isCancellationRequested
         ) {
           cancelTask();
@@ -224,6 +228,7 @@ export function runAsTask({
         }
 
         token.onCancellationRequested(cancelTask);
+        terminateTokenSource.token.onCancellationRequested(cancelTask);
         cancellationToken?.onCancellationRequested(cancelTask);
       }).finally(() => {
         taskExecution.terminate();
@@ -250,5 +255,6 @@ export function runAsTask({
         }
       }
     }),
+    terminate: () => terminateTokenSource.cancel(),
   };
 }
