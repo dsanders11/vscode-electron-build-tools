@@ -132,7 +132,7 @@ export function createTestController(
         run.enqueued(test);
       }
 
-      let testRunError = false;
+      let testRunError: vscode.TestMessage | undefined;
 
       const task = runAsTask({
         context,
@@ -216,23 +216,27 @@ export function createTestController(
 
       task.onDidWriteErrorLine(({ line }) => {
         if (/^An error occurred while running the spec runner\s*$/.test(line)) {
-          testRunError = true;
+          testRunError = new vscode.TestMessage(
+            "An error occurred while running the spec runner"
+          );
         }
       });
 
       try {
         const cleanExit = await task.finished;
-        testRunError = testRunError || cleanExit === false;
 
-        // Ensure all events are done before ending the test run
-        await task.eventsDone;
+        if (cleanExit === false && !testRunError) {
+          testRunError = new vscode.TestMessage("Error during test execution");
+        }
+
+        if (!testRunError) {
+          // Ensure all events are done before ending the test run
+          await task.eventsDone;
+        }
 
         if (testRunError) {
           for (const test of testsById.values()) {
-            run.errored(
-              test,
-              new vscode.TestMessage("Error during test execution")
-            );
+            run.errored(test, testRunError);
           }
         }
       } finally {
