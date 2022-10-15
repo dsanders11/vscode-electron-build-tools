@@ -76,172 +76,181 @@ export function createTestController(
     }
   };
 
+  async function runTests(
+    request: vscode.TestRunRequest,
+    token: vscode.CancellationToken
+  ) {
+    const extraArgs = request.profile
+      ? runProfileData.get(request.profile)
+      : undefined;
+    const run = testController.createTestRun(request);
+
+    const testRegexes: string[] = [];
+    const testsById = new Map<string, vscode.TestItem>();
+
+    // To process test results we need a map of all test IDs to the TestItem
+    // Don't map suites, since VS Code acts buggy if you set state for them
+    // since it tries to apply state based on what the children are doing
+    function addTests(testItem: vscode.TestItem) {
+      if (testItem.children.size > 0) {
+        testItem.children.forEach(addTests);
+      } else {
+        testsById.set(testItem.id, testItem);
+      }
+    }
+
+    if (!request.include) {
+      if (request.exclude) {
+        // If no request.include, include all top-level tests which aren't excluded
+        for (const [, test] of testController.items) {
+          if (!request.exclude?.includes(test)) {
+            addTests(test);
+            testRegexes.push(`'${escapeStringForRegex(test.id)}`);
+          } else {
+            testsById.delete(test.id);
+          }
+        }
+      }
+    } else {
+      request.include.forEach((test) => {
+        addTests(test);
+        testRegexes.push(escapeStringForRegex(test.id));
+      });
+    }
+
+    let command = `${buildToolsExecutable} test --runners=main`;
+
+    if (testRegexes.length) {
+      command += ` -g '${testRegexes.join("|")}'`;
+    }
+
+    if (extraArgs) {
+      command += ` ${extraArgs}`;
+    }
+
+    // Mark all tests we're about to run as enqueued
+    for (const test of testsById.values()) {
+      run.enqueued(test);
+    }
+
+    let testRunError: vscode.TestMessage | undefined;
+
+    const task = runAsTask({
+      context,
+      operationName: "Electron Build Tools - Running Test(s)",
+      taskName: "test",
+      command,
+      cancellationToken: token,
+      shellOptions: {
+        cwd: electronRoot.fsPath,
+        env: {
+          MOCHA_REPORTER: "mocha-multi-reporters",
+          MOCHA_MULTI_REPORTERS: `${context.asAbsolutePath(
+            "out/electron/mocha-reporter.js"
+          )}, spec`,
+          ELECTRON_ROOT: electronRoot.fsPath,
+        },
+      },
+      // Ignore non-zero exit codes, there's no way to
+      // distinguish from normal test failures
+      suppressExitCode: true,
+    });
+
+    task.onDidWriteLine(({ line }) => {
+      run.appendOutput(`${line}\r\n`);
+    });
+
+    task.onDidWriteData(({ stream, data }) => {
+      if (stream === "mocha-test-results") {
+        const [eventName, details]: MochaEvent = data;
+        const test = testsById.get(details.fullTitle);
+
+        if (test) {
+          if (eventName === "pass") {
+            testsById.delete(details.fullTitle);
+            run.passed(test, details.duration);
+          } else if (eventName === "fail") {
+            testsById.delete(details.fullTitle);
+
+            let testMessage: vscode.TestMessage;
+
+            if (details.err) {
+              testMessage = new vscode.TestMessage(details.err.message);
+              testMessage.actualOutput = details.err.actual;
+              testMessage.expectedOutput = details.err.expected;
+            } else {
+              testMessage = new vscode.TestMessage(
+                "Couldn't parse failure output"
+              );
+            }
+
+            // Pull file position details if they're available
+            if (test.uri && details.err && details.stack) {
+              const failureDetails = /^.*\((.*):(\d+):(\d+)\)\s*$/m.exec(
+                details.stack
+              );
+
+              if (
+                failureDetails &&
+                test.uri.fsPath.endsWith(failureDetails[1])
+              ) {
+                testMessage.location = new vscode.Location(
+                  test.uri,
+                  new vscode.Position(
+                    parseInt(failureDetails[2]) - 1,
+                    parseInt(failureDetails[3]) - 1
+                  )
+                );
+              }
+            }
+
+            run.failed(test, testMessage, details.duration);
+          } else if (eventName === "pending") {
+            testsById.delete(details.fullTitle);
+            run.skipped(test);
+          } else if (eventName === "test-start") {
+            run.started(test);
+          }
+        }
+      }
+    });
+
+    task.onDidWriteErrorLine(({ line }) => {
+      if (/^An error occurred while running the spec runner\s*$/.test(line)) {
+        testRunError = new vscode.TestMessage(
+          "An error occurred while running the spec runner"
+        );
+      }
+    });
+
+    try {
+      const cleanExit = await task.finished;
+
+      if (cleanExit === false && !testRunError) {
+        testRunError = new vscode.TestMessage("Error during test execution");
+      }
+
+      if (!testRunError) {
+        // Ensure all events are done before ending the test run
+        await task.eventsDone;
+      }
+
+      if (testRunError) {
+        for (const test of testsById.values()) {
+          run.errored(test, testRunError);
+        }
+      }
+    } finally {
+      run.end();
+    }
+  }
+
   // TODO - Add a debug profile
   const runProfile = testController.createRunProfile(
     "Run",
     vscode.TestRunProfileKind.Run,
     async (request, token) => {
-      const extraArgs = runProfileData.get(runProfile);
-      const run = testController.createTestRun(request);
-
-      const testRegexes: string[] = [];
-      const testsById = new Map<string, vscode.TestItem>();
-
-      // To process test results we need a map of all test IDs to the TestItem
-      // Don't map suites, since VS Code acts buggy if you set state for them
-      // since it tries to apply state based on what the children are doing
-      function addTests(testItem: vscode.TestItem) {
-        if (testItem.children.size > 0) {
-          testItem.children.forEach(addTests);
-        } else {
-          testsById.set(testItem.id, testItem);
-        }
-      }
-
-      if (!request.include) {
-        if (request.exclude) {
-          // If no request.include, include all top-level tests which aren't excluded
-          for (const [, test] of testController.items) {
-            if (!request.exclude?.includes(test)) {
-              addTests(test);
-              testRegexes.push(`'${escapeStringForRegex(test.id)}`);
-            } else {
-              testsById.delete(test.id);
-            }
-          }
-        }
-      } else {
-        request.include.forEach((test) => {
-          addTests(test);
-          testRegexes.push(escapeStringForRegex(test.id));
-        });
-      }
-
-      let command = `${buildToolsExecutable} test --runners=main`;
-
-      if (testRegexes.length) {
-        command += ` -g '${testRegexes.join("|")}'`;
-      }
-
-      if (extraArgs) {
-        command += ` ${extraArgs}`;
-      }
-
-      // Mark all tests we're about to run as enqueued
-      for (const test of testsById.values()) {
-        run.enqueued(test);
-      }
-
-      let testRunError: vscode.TestMessage | undefined;
-
-      const task = runAsTask({
-        context,
-        operationName: "Electron Build Tools - Running Test(s)",
-        taskName: "test",
-        command,
-        cancellationToken: token,
-        shellOptions: {
-          cwd: electronRoot.fsPath,
-          env: {
-            MOCHA_REPORTER: "mocha-multi-reporters",
-            MOCHA_MULTI_REPORTERS: `${context.asAbsolutePath(
-              "out/electron/mocha-reporter.js"
-            )}, spec`,
-            ELECTRON_ROOT: electronRoot.fsPath,
-          },
-        },
-        // Ignore non-zero exit codes, there's no way to
-        // distinguish from normal test failures
-        suppressExitCode: true,
-      });
-
-      task.onDidWriteLine(({ line }) => {
-        run.appendOutput(`${line}\r\n`);
-      });
-
-      task.onDidWriteData(({ stream, data }) => {
-        if (stream === "mocha-test-results") {
-          const [eventName, details]: MochaEvent = data;
-          const test = testsById.get(details.fullTitle);
-
-          if (test) {
-            if (eventName === "pass") {
-              testsById.delete(details.fullTitle);
-              run.passed(test, details.duration);
-            } else if (eventName === "fail") {
-              testsById.delete(details.fullTitle);
-
-              let testMessage: vscode.TestMessage;
-
-              if (details.err) {
-                testMessage = new vscode.TestMessage(details.err.message);
-                testMessage.actualOutput = details.err.actual;
-                testMessage.expectedOutput = details.err.expected;
-              } else {
-                testMessage = new vscode.TestMessage(
-                  "Couldn't parse failure output"
-                );
-              }
-
-              // Pull file position details if they're available
-              if (test.uri && details.err && details.stack) {
-                const failureDetails = /^.*\((.*):(\d+):(\d+)\)\s*$/m.exec(
-                  details.stack
-                );
-
-                if (
-                  failureDetails &&
-                  test.uri.fsPath.endsWith(failureDetails[1])
-                ) {
-                  testMessage.location = new vscode.Location(
-                    test.uri,
-                    new vscode.Position(
-                      parseInt(failureDetails[2]) - 1,
-                      parseInt(failureDetails[3]) - 1
-                    )
-                  );
-                }
-              }
-
-              run.failed(test, testMessage, details.duration);
-            } else if (eventName === "pending") {
-              testsById.delete(details.fullTitle);
-              run.skipped(test);
-            } else if (eventName === "test-start") {
-              run.started(test);
-            }
-          }
-        }
-      });
-
-      task.onDidWriteErrorLine(({ line }) => {
-        if (/^An error occurred while running the spec runner\s*$/.test(line)) {
-          testRunError = new vscode.TestMessage(
-            "An error occurred while running the spec runner"
-          );
-        }
-      });
-
-      try {
-        const cleanExit = await task.finished;
-
-        if (cleanExit === false && !testRunError) {
-          testRunError = new vscode.TestMessage("Error during test execution");
-        }
-
-        if (!testRunError) {
-          // Ensure all events are done before ending the test run
-          await task.eventsDone;
-        }
-
-        if (testRunError) {
-          for (const test of testsById.values()) {
-            run.errored(test, testRunError);
-          }
-        }
-      } finally {
-        run.end();
-      }
+      return runTests(request, token);
     }
   );
 
