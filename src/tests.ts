@@ -144,6 +144,7 @@ export function createTestController(
         command,
         cancellationToken: token,
         shellOptions: {
+          cwd: electronRoot.fsPath,
           env: {
             MOCHA_REPORTER: "mocha-multi-reporters",
             MOCHA_MULTI_REPORTERS: `${context.asAbsolutePath(
