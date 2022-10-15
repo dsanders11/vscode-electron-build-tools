@@ -12,6 +12,7 @@ import {
   HeadingContent,
 } from "@electron/docs-parser/dist/markdown-helpers";
 import { Octokit } from "@octokit/rest";
+import * as Diff from "diff";
 import MarkdownIt from "markdown-it";
 import type MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
@@ -672,4 +673,15 @@ export function positionAt(content: string, offset: number) {
   const lastLine = lines.slice(-1)[0][1];
 
   return new vscode.Position(lines.length - 1, lastLine.length);
+}
+
+export function applyPatch(source: string, patch: string) {
+  const patchedResult = Diff.applyPatch(source, patch);
+
+  // BUG - Diff can return false, even though that's not documented in @types/diff
+  if ((patchedResult as string | boolean) === false) {
+    throw new Error("Malformed patch");
+  }
+
+  return patchedResult;
 }

@@ -2,10 +2,9 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import * as Diff from "diff";
-
 import { pullRequestScheme } from "./constants";
 import {
+  applyPatch,
   getContentForFileIndex,
   patchedFilenameRegex,
   patchOverviewMarkdown,
@@ -65,7 +64,7 @@ export class TextDocumentContentProvider
             }
 
             content = Buffer.from(
-              Diff.applyPatch(unpatchedContents, filePatch)
+              applyPatch(unpatchedContents, filePatch)
             ).toString();
           } else {
             throw err;

@@ -2,13 +2,13 @@ import * as path from "path";
 
 import * as vscode from "vscode";
 
-import * as Diff from "diff";
 import type { RestEndpointMethodTypes } from "@octokit/rest";
 
 type PullsListFilesResponseData =
   RestEndpointMethodTypes["pulls"]["listFiles"]["response"]["data"];
 
 import {
+  applyPatch,
   ensurePosixSeparators,
   getCheckoutDirectoryForPatchDirectory,
   getContentForFileIndex,
@@ -188,7 +188,7 @@ export class ElectronPullRequestFileSystemProvider
         file.checkoutDirectory.fsPath
       );
 
-      return Buffer.from(Diff.applyPatch(unpatchedContents, file.patch));
+      return Buffer.from(applyPatch(unpatchedContents, file.patch));
     }
   }
 
