@@ -32,7 +32,7 @@ const exec = promisify(childProcess.exec);
 const fsReadFile = promisify(fs.readFile);
 
 export const patchedFilenameRegex =
-  /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:new file mode \d+[\r\n]+)?index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|$)/gs;
+  /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:new file mode \d+[\r\n]+)?index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|(?=\s--\s.+$)|$)/gs;
 
 export interface DocLink {
   description: string;
