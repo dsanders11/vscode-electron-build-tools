@@ -11,6 +11,7 @@ process.once("uncaughtException", (err) => {
   process.exit(1);
 });
 
+// @ts-ignore
 import { app } from "electron";
 
 const { SourceMapConsumer } = require(path.resolve(
