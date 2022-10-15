@@ -312,7 +312,10 @@ async function discoverTests(
     ExtensionState.isOperationRunning(ExtensionOperation.LOAD_TESTS)
   );
 
-  createTestItems(testController, testSuites, testController.items);
+  // CancellationToken may have been used
+  if (testSuites) {
+    createTestItems(testController, testSuites, testController.items);
+  }
 }
 
 // TODO - Determine why Electron doesn't exit on task terminate
@@ -321,7 +324,7 @@ async function getElectronTests(
   electronRoot: vscode.Uri,
   token?: vscode.CancellationToken,
   files?: vscode.Uri[]
-): Promise<ParsedTestSuite> {
+): Promise<ParsedTestSuite | void> {
   if (!files) {
     files = await vscode.workspace.findFiles(
       new vscode.RelativePattern(electronRoot, `spec/**/*-spec.{js,ts}`),
@@ -374,7 +377,7 @@ async function getElectronTests(
     clear: true,
   };
 
-  return new Promise(async (resolve, reject) => {
+  return new Promise<ParsedTestSuite | void>(async (resolve, reject) => {
     let result = "";
 
     const socketServer = net.createServer().listen(socketName);
@@ -412,7 +415,7 @@ async function getElectronTests(
         if (execution === taskExecution) {
           if (exitCode === undefined) {
             // Task terminated
-            reject();
+            resolve();
             socketServer.close();
           } else {
             await socketClosedPromise;
