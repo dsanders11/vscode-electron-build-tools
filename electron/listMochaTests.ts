@@ -38,7 +38,7 @@ function positionAt(content: string, offset: number) {
   return { line: lines.length - 1, character: lastLine.length };
 }
 
-function mapFnBodyToSourceRange(file: string, body: string) {
+function mapFnBodyToSourceRange(file: string, body?: string) {
   if (body) {
     let sourceMap = sourceMapConsumers.get(file);
 
@@ -91,6 +91,9 @@ function parseTestSuites(suite: Suite) {
     fullTitle: suite.fullTitle(),
     file: suite.file,
     pending: suite.pending,
+    range: suite.file
+      ? (mapFnBodyToSourceRange(suite.file, (suite as any)?.body) as any)
+      : null,
     suites: [],
     tests: suite.tests.map((test: Test) => ({
       title: test.title,
@@ -131,7 +134,9 @@ app
       "mocha"
     ));
 
-    const mocha: MochaType = new Mocha();
+    const mocha: MochaType = new Mocha({
+      ui: path.resolve(__dirname, "mocha-interface.js"),
+    });
 
     // Use a socket to pass filenames rather than command line
     // arguments since there's a max length on Windows which

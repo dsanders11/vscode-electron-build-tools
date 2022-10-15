@@ -18,15 +18,12 @@ interface ParsedTestData {
   fullTitle: string;
   file?: string;
   pending: boolean;
+  range: vscode.Range | null;
 }
 
 export interface ParsedTestSuite extends ParsedTestData {
   suites: ParsedTestSuite[];
-  tests: ParsedTest[];
-}
-
-interface ParsedTest extends ParsedTestData {
-  range: vscode.Range | null;
+  tests: ParsedTestData[];
 }
 
 interface MochaTestEvent {
@@ -263,7 +260,7 @@ function createTestItems(
   suite: ParsedTestSuite,
   collection: vscode.TestItemCollection
 ) {
-  const tests: ParsedTest[] = [];
+  const tests: ParsedTestData[] = [];
 
   for (const [idx, parsedTest] of suite.tests.entries()) {
     const test = testController.createTestItem(
@@ -288,6 +285,11 @@ function createTestItems(
     );
     // Suites run after tests, so sort accordingly
     testSuite.sortText = `b${idx}`;
+
+    if (parsedSuite.range) {
+      testSuite.range = parsedSuite.range;
+    }
+
     collection.add(testSuite);
 
     tests.push(
@@ -362,6 +364,7 @@ async function getElectronTests(
         TS_NODE_CACHE: "false",
         TS_NODE_COMPILER: tsNodeCompiler,
         ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
+        ELECTRON_ROOT: electronRoot.fsPath,
       },
     })
   );

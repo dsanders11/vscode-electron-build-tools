@@ -591,6 +591,7 @@
     "compile": "tsc -p ./",
     "esbuild:extension": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
     "esbuild:list-tests": "esbuild ./electron/listMochaTests.ts --bundle --outfile=out/electron/listMochaTests.js --external:electron --format=cjs --platform=node",
+    "esbuild:mocha-interface": "esbuild ./electron/mocha-interface.ts --bundle --outfile=out/electron/mocha-interface.js --format=cjs --platform=node",
     "esbuild:mocha-reporter": "esbuild ./electron/mocha-reporter.ts --bundle --outfile=out/electron/mocha-reporter.js --format=cjs --platform=node",
     "esbuild:ts-compiler": "esbuild ./electron/electron-build-tools-typescript.ts --bundle --outfile=out/electron/electron-build-tools-typescript.js --format=cjs --platform=node",
     "esbuild:echo-to-socket": "esbuild ./scripts/echo-to-socket.ts --bundle --outfile=out/scripts/echo-to-socket.js --format=cjs --platform=node",
