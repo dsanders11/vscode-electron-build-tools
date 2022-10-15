@@ -78,7 +78,8 @@ export function createTestController(
 
   async function runTests(
     request: vscode.TestRunRequest,
-    token: vscode.CancellationToken
+    token: vscode.CancellationToken,
+    debug: boolean = false
   ) {
     const extraArgs = request.profile
       ? runProfileData.get(request.profile)
@@ -126,6 +127,10 @@ export function createTestController(
 
     if (extraArgs) {
       command += ` ${extraArgs}`;
+    }
+
+    if (debug) {
+      command += ` --inspect-brk`;
     }
 
     // Mark all tests we're about to run as enqueued
@@ -223,6 +228,26 @@ export function createTestController(
       }
     });
 
+    if (debug) {
+      const debuggingSession = await vscode.debug.startDebugging(
+        vscode.workspace.workspaceFolders![0],
+        {
+          name: "Debug Electron",
+          type: "node",
+          request: "attach",
+          port: 9229,
+          continueOnAttach: true,
+        }
+      );
+
+      if (!debuggingSession) {
+        testRunError = new vscode.TestMessage(
+          "Couldn't start debugging session"
+        );
+        task.terminate();
+      }
+    }
+
     try {
       const cleanExit = await task.finished;
 
@@ -245,28 +270,39 @@ export function createTestController(
     }
   }
 
-  // TODO - Add a debug profile
   const runProfile = testController.createRunProfile(
     "Run",
     vscode.TestRunProfileKind.Run,
     async (request, token) => {
       return runTests(request, token);
-    }
+    },
+    true
   );
 
-  runProfile.configureHandler = async () => {
-    const extraArgs = await vscode.window.showInputBox({
-      title: "Electron Test Runner",
-      placeHolder: "Extra args to pass to the test runner",
-      value: runProfileData.get(runProfile),
-    });
+  const debugProfile = testController.createRunProfile(
+    "Debug",
+    vscode.TestRunProfileKind.Debug,
+    async (request, token) => {
+      return runTests(request, token, true);
+    },
+    false
+  );
 
-    if (extraArgs === "") {
-      runProfileData.delete(runProfile);
-    } else if (extraArgs) {
-      runProfileData.set(runProfile, extraArgs);
-    }
-  };
+  for (const profile of [runProfile, debugProfile]) {
+    profile.configureHandler = async () => {
+      const extraArgs = await vscode.window.showInputBox({
+        title: "Electron Test Runner",
+        placeHolder: "Extra args to pass to the test runner",
+        value: runProfileData.get(profile),
+      });
+
+      if (extraArgs === "") {
+        runProfileData.delete(profile);
+      } else if (extraArgs) {
+        runProfileData.set(profile, extraArgs);
+      }
+    };
+  }
 
   return testController;
 }
