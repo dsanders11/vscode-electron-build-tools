@@ -38,10 +38,7 @@ export class ElectronPatchesProvider
   private readonly rootDirectory: vscode.Uri;
   private readonly viewPullRequestTreeItem: ViewPullRequestPatchTreeItem;
 
-  constructor(
-    private readonly _electronRoot: vscode.Uri,
-    patchesConfig: vscode.Uri
-  ) {
+  constructor(_electronRoot: vscode.Uri, patchesConfig: vscode.Uri) {
     this.rootDirectory = vscode.Uri.joinPath(_electronRoot, "..", "..");
     this.patchesConfig = parsePatchConfig(patchesConfig);
 
