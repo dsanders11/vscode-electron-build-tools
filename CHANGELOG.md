@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.12.0 (10-15-2022)
+
+* feat: debug test run profile
+* fix: allow clearing test profile extra args
+* fix: don't show error when canceling tests refresh
+* chore: get source ranges for test suites and skipped tests
+* fix: handle patches with trailing info
+* chore: better handle applying malformed patches
+* chore: handle empty .patches files correctly
+* fix: use selected target in advanced build
+
 ## 0.11.0 (10-13-2022)
 
 * feat: build settings option for new config
