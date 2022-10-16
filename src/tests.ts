@@ -274,7 +274,11 @@ export function createTestController(
     "Run",
     vscode.TestRunProfileKind.Run,
     async (request, token) => {
-      return runTests(request, token);
+      return ExtensionState.runOperation(
+        ExtensionOperation.RUN_TESTS,
+        () => runTests(request, token),
+        ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS)
+      );
     },
     true
   );
@@ -283,7 +287,11 @@ export function createTestController(
     "Debug",
     vscode.TestRunProfileKind.Debug,
     async (request, token) => {
-      return runTests(request, token, true);
+      return ExtensionState.runOperation(
+        ExtensionOperation.RUN_TESTS,
+        () => runTests(request, token, true),
+        ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS)
+      );
     },
     false
   );
