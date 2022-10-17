@@ -13,6 +13,7 @@ import {
 } from "@electron/docs-parser/dist/markdown-helpers";
 import { Octokit } from "@octokit/rest";
 import * as Diff from "diff";
+import LRU from "lru-cache";
 import MarkdownIt from "markdown-it";
 import type MarkdownToken from "markdown-it/lib/token";
 import { v4 as uuidv4 } from "uuid";
@@ -30,6 +31,12 @@ import type { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const exec = promisify(childProcess.exec);
 const fsReadFile = promisify(fs.readFile);
+
+const remoteFileContentCache = new LRU<string, string>({
+  max: 500,
+  maxSize: 10485760,
+  sizeCalculation: (value) => value.length,
+});
 
 export const patchedFilenameRegex =
   /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:new file mode \d+[\r\n]+)?index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|(?=\s--\s.+$)|$)/gs;
@@ -434,6 +441,11 @@ export async function getContentForFileIndex(
     return "";
   }
 
+  // Check cache first
+  if (remoteFileContentCache.has(fileIndex)) {
+    return remoteFileContentCache.get(fileIndex)!;
+  }
+
   try {
     const { stdout } = await exec(`git show ${fileIndex}`, {
       encoding: "utf8",
@@ -473,14 +485,21 @@ export async function getContentForFileIndex(
         const octokit = await getOctokit();
 
         try {
-          // TODO - Cache responses to avoid rate-limiting
           const response = await octokit.rest.git.getBlob({
             ...ghRepo,
             // eslint-disable-next-line @typescript-eslint/naming-convention
             file_sha: fileIndex,
           });
 
-          return Buffer.from(response.data.content, "base64").toString();
+          const content = Buffer.from(
+            response.data.content,
+            "base64"
+          ).toString();
+
+          // Cache responses to avoid rate-limiting
+          remoteFileContentCache.set(fileIndex, content);
+
+          return content;
         } catch (err) {
           throw new ContentNotFoundError(
             `Couldn't load content for ${fileIndex}`
