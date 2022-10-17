@@ -55,8 +55,3 @@ const socket = net.createConnection(socketPath, () => {
 cp.on("exit", (exitCode, signal) => {
   process.exit(suppressExitCode ? 0 : exitCode || 0);
 });
-
-// Send signals down to the wrapped child
-process.on("SIGHUP", cp.kill);
-process.on("SIGINT", cp.kill);
-process.on("SIGTERM", cp.kill);
