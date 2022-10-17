@@ -5,16 +5,12 @@ out/test/**
 src/**
 .gitignore
 .yarnrc
-vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
 **/.commitlintrc.json
 **/*.map
 **/*.ts
 .github
-node_modules/typescript-cached-transpile/.cache/
 docs
 electron
 node_modules
-TODO.md
-VSCODE.md
