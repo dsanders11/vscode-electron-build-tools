@@ -39,7 +39,7 @@ const remoteFileContentCache = new LRU<string, string>({
 });
 
 export const patchedFilenameRegex =
-  /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:new file mode \d+[\r\n]+)?index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|(?=\s--\s.+$)|$)/gs;
+  /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:[\w \t]+ mode \d+[\r\n]+)*index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|(?=\s--\s.+$)|$)/gs;
 
 export interface DocLink {
   description: string;
