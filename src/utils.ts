@@ -414,7 +414,7 @@ export function parseMarkdownHeader(line: string) {
   }
 }
 
-async function getOctokit() {
+export async function getOctokit() {
   try {
     const ghAuthSession = await ExtensionState.getGitHubAuthenticationSession();
     return new Octokit({ auth: ghAuthSession.accessToken });

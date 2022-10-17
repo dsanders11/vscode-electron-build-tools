@@ -5,8 +5,6 @@ import { promisify } from "util";
 
 import * as vscode from "vscode";
 
-import { Octokit } from "@octokit/rest";
-
 import {
   buildToolsExecutable,
   commandPrefix,
@@ -19,7 +17,7 @@ import {
 } from "../extensionState";
 import Logger from "../logging";
 import type { ElectronPullRequestFileSystemProvider } from "../pullRequestFileSystemProvider";
-import { FileInPatch, startProgress } from "../utils";
+import { FileInPatch, getOctokit, startProgress } from "../utils";
 import type {
   ElectronPatchesProvider,
   Patch,
@@ -164,7 +162,7 @@ export function registerPatchesCommands(
         });
 
         if (prNumber) {
-          const octokit = new Octokit();
+          const octokit = await getOctokit();
           const prDetails = {
             owner: "electron",
             repo: "electron",
