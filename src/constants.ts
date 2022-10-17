@@ -33,7 +33,7 @@ export const patchDirectoryPrettyNames = Object.freeze<ElectronPatchesConfig>({
 });
 
 export const checkoutDirectoryGitHubRepo = Object.freeze<{
-  [k: string]: { owner: string; repo: string };
+  [k: string]: { owner: string; repo: string } | undefined;
 }>({
   src: { owner: "chromium", repo: "chromium" },
   "src/third_party/boringssl/src": { owner: "google", repo: "boringssl" },
@@ -63,7 +63,7 @@ export const checkoutDirectoryGitHubRepo = Object.freeze<{
 
 export const virtualDocumentScheme = "electron-build-tools";
 
-export const pullRequestScheme = "electron-pull-request";
+export const virtualFsScheme = "electron-build-tools-fs";
 
 export const buildToolsRepository = "https://github.com/electron/build-tools";
 

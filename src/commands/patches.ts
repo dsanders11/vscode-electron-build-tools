@@ -1,6 +1,5 @@
 import * as childProcess from "child_process";
 import * as path from "path";
-import * as querystring from "querystring";
 import { promisify } from "util";
 
 import * as vscode from "vscode";
@@ -10,14 +9,20 @@ import {
   commandPrefix,
   viewIds,
   virtualDocumentScheme,
+  virtualFsScheme,
 } from "../constants";
 import {
   default as ExtensionState,
   ExtensionOperation,
 } from "../extensionState";
 import Logger from "../logging";
-import type { ElectronPullRequestFileSystemProvider } from "../pullRequestFileSystemProvider";
-import { FileInPatch, getOctokit, startProgress } from "../utils";
+import {
+  getOctokit,
+  hasContentForBlobId,
+  querystringParse,
+  setContentForBlobId,
+  startProgress,
+} from "../utils";
 import type {
   ElectronPatchesProvider,
   Patch,
@@ -31,17 +36,26 @@ export function registerPatchesCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   patchesProvider: ElectronPatchesProvider,
-  patchesView: vscode.TreeView<vscode.TreeItem>,
-  pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
+  patchesView: vscode.TreeView<vscode.TreeItem>
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       `${commandPrefix}.openPatch`,
       (patchTreeItem: Patch) => {
-        return vscode.commands.executeCommand(
-          "vscode.open",
-          patchTreeItem.resourceUri
-        );
+        let uri = patchTreeItem.resourceUri;
+
+        // This is just about aesthetics - when loaded from FS
+        // it will have a lock icon in the editor title bar
+        if (uri.scheme === virtualFsScheme) {
+          const queryParams = new URLSearchParams(uri.query);
+          queryParams.set("view", "contents");
+          uri = uri.with({
+            scheme: virtualDocumentScheme,
+            query: queryParams.toString(),
+          });
+        }
+
+        return vscode.commands.executeCommand("vscode.open", uri);
       }
     ),
     ExtensionState.registerExtensionOperationCommand(
@@ -81,49 +95,51 @@ export function registerPatchesCommands(
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.showPatchedFileDiff`,
-      (
-        checkoutDirectory: vscode.Uri,
-        patch: vscode.Uri,
-        metadata: FileInPatch,
-        patchedFilename: string
-      ) => {
-        const patchedFile = metadata.file.with({
+      (file: vscode.Uri, patchedFilename: string) => {
+        const { blobIdA, blobIdB, patch } = querystringParse(file.query);
+
+        if (!blobIdA || !blobIdB || !patch) {
+          throw new Error("Required query params missing");
+        }
+
+        const patchedQueryParams = new URLSearchParams(file.query);
+        patchedQueryParams.delete("blobIdA");
+        patchedQueryParams.delete("blobIdB");
+        patchedQueryParams.set("blobId", blobIdB);
+        patchedQueryParams.set("unpatchedBlobId", blobIdA);
+        patchedQueryParams.set("view", "contents");
+
+        const patchedFile = file.with({
           scheme: virtualDocumentScheme,
-          query: querystring.stringify({
-            ...querystring.parse(metadata.file.query),
-            view: "contents",
-            fileIndex: metadata.fileIndexB,
-            checkoutPath: checkoutDirectory.fsPath,
-            unpatchedFileIndex: metadata.fileIndexA,
-            patch: patch.fsPath,
-          }),
+          query: patchedQueryParams.toString(),
         });
 
-        if (/^[0]+$/.test(metadata.fileIndexA)) {
+        if (/^[0]+$/.test(blobIdA)) {
           // Show added files as readonly, there's not much point
           // in doing a side-by-side diff where one side is blank
           return vscode.commands.executeCommand(
             "vscode.open",
             patchedFile,
             undefined,
-            `${path.basename(patch.path)} - ${patchedFilename}` // TODO - This isn't used?
+            `${path.basename(patch)} - ${patchedFilename}` // TODO - This isn't used?
           );
         } else {
-          const originalFile = metadata.file.with({
+          const queryParams = new URLSearchParams(file.query);
+          queryParams.delete("blobIdA");
+          queryParams.delete("blobIdB");
+          queryParams.set("blobId", blobIdA);
+          queryParams.set("view", "contents");
+
+          const originalFile = file.with({
             scheme: virtualDocumentScheme,
-            query: querystring.stringify({
-              ...querystring.parse(metadata.file.query),
-              view: "contents",
-              fileIndex: metadata.fileIndexA,
-              checkoutPath: checkoutDirectory.fsPath,
-            }),
+            query: queryParams.toString(),
           });
 
           return vscode.commands.executeCommand(
             "vscode.diff",
             originalFile,
             patchedFile,
-            `${path.basename(patch.path)} - ${patchedFilename}`
+            `${path.basename(patch)} - ${patchedFilename}`
           );
         }
       }
@@ -137,14 +153,14 @@ export function registerPatchesCommands(
     vscode.commands.registerCommand(
       `${commandPrefix}.showPatchOverview`,
       (patch: vscode.Uri) => {
+        const queryParams = new URLSearchParams(patch.query);
+        queryParams.set("view", "patch-overview");
+
         return vscode.commands.executeCommand(
           "markdown.showPreview",
           patch.with({
             scheme: virtualDocumentScheme,
-            query: querystring.stringify({
-              ...querystring.parse(patch.query),
-              view: "patch-overview",
-            }),
+            query: queryParams.toString(),
           })
         );
       }
@@ -162,52 +178,91 @@ export function registerPatchesCommands(
         });
 
         if (prNumber) {
-          const octokit = await getOctokit();
-          const prDetails = {
-            owner: "electron",
-            repo: "electron",
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            pull_number: parseInt(prNumber),
-          };
-          const prResponse = await octokit.pulls.get(prDetails);
-          const prFilesResponse = await octokit.pulls.listFiles(prDetails);
+          return vscode.window.withProgress(
+            { location: { viewId: viewIds.PATCHES } },
+            async () => {
+              const octokit = await getOctokit();
+              const prDetails = {
+                owner: "electron",
+                repo: "electron",
+                // eslint-disable-next-line @typescript-eslint/naming-convention
+                pull_number: parseInt(prNumber),
+              };
+              const prResponse = await octokit.pulls.get(prDetails);
+              const prFilesResponse = await octokit.pulls.listFiles(prDetails);
 
-          if (prResponse.status === 200 && prFilesResponse.status === 200) {
-            const pullRequest = prResponse.data;
-            const pulRequestFiles = prFilesResponse.data;
-            const patchDirectoryRegex = /^patches\/(\S*)\/.patches$/;
-            const patchDirectories: string[] = [];
+              if (prResponse.status === 200 && prFilesResponse.status === 200) {
+                const pullRequest = prResponse.data;
+                const repo = pullRequest.base.repo;
+                const [repoOwner, repoName] = repo.full_name.split("/");
+                const pulRequestFiles = prFilesResponse.data;
+                const patchRegex = /^patches\/(\S*)\/.+\.patch$/;
+                const patches = new Map<string, Set<vscode.Uri>>();
 
-            for (const file of pulRequestFiles) {
-              const matches = patchDirectoryRegex.exec(file.filename);
+                for (const file of pulRequestFiles) {
+                  const matches = patchRegex.exec(file.filename);
 
-              if (matches) {
-                patchDirectories.push(`src/electron/patches/${matches[1]}`);
+                  if (matches) {
+                    const patchDirectory = `src/electron/patches/${matches[1]}`;
+                    const patchesInDirectory =
+                      patches.get(patchDirectory) ?? new Set<vscode.Uri>();
+
+                    const queryParams = new URLSearchParams({
+                      isPatch: "1",
+                      status: file.status,
+                      blobId: file.sha,
+                      repoOwner,
+                      repo: repoName,
+                    });
+
+                    // Populate the blob cache here so it's fast when the user expands tree items
+                    if (!hasContentForBlobId(file.sha)) {
+                      const response = await octokit.rest.git.getBlob({
+                        owner: repoOwner,
+                        repo: repoName,
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
+                        file_sha: file.sha,
+                      });
+
+                      setContentForBlobId(
+                        file.sha,
+                        Buffer.from(response.data.content, "base64").toString()
+                      );
+                    }
+
+                    patchesInDirectory.add(
+                      vscode.Uri.joinPath(electronRoot, file.filename).with({
+                        scheme: virtualFsScheme,
+                        query: queryParams.toString(),
+                      })
+                    );
+
+                    patches.set(patchDirectory, patchesInDirectory);
+                  }
+                }
+
+                if (patches.size > 0) {
+                  const patchTreeItem = patchesProvider.showPr({
+                    prNumber,
+                    title: pullRequest.title,
+                    repo: { owner: repoOwner, repo: repoName },
+                    patches,
+                  });
+
+                  patchesView.reveal(patchTreeItem, {
+                    select: false,
+                    expand: true,
+                  });
+                } else {
+                  vscode.window.showWarningMessage(
+                    "No patches in pull request"
+                  );
+                }
+              } else {
+                vscode.window.showErrorMessage("Couldn't find pull request");
               }
             }
-
-            if (patchDirectories.length > 0) {
-              await pullRequestFileSystemProvider.addPullRequestFiles(
-                prNumber,
-                pulRequestFiles
-              );
-
-              const patchTreeItem = patchesProvider.showPr({
-                prNumber,
-                title: pullRequest.title,
-                patchDirectories,
-              });
-
-              patchesView.reveal(patchTreeItem, {
-                select: false,
-                expand: true,
-              });
-            } else {
-              vscode.window.showWarningMessage("No patches in pull request");
-            }
-          } else {
-            vscode.window.showErrorMessage("Couldn't find pull request");
-          }
+          );
         }
       }
     )

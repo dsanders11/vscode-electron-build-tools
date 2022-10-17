@@ -5,14 +5,12 @@ import * as vscode from "vscode";
 import {
   commandPrefix,
   patchDirectoryPrettyNames,
-  pullRequestScheme,
   virtualDocumentScheme,
 } from "../constants";
 import Logger from "../logging";
 import type { ElectronPatchesConfig } from "../types";
 import {
   ensurePosixSeparators,
-  FileInPatch,
   getCheckoutDirectoryForPatchDirectory,
   getFilesInPatch,
   getPatches,
@@ -22,10 +20,25 @@ import {
   truncateToLength,
 } from "../utils";
 
-export interface PullRequestWithPatch {
+interface PullRequestWithPatch {
   prNumber: string;
   title: string;
-  patchDirectories: string[];
+  repo: { owner: string; repo: string };
+  patches: Map<string, Set<vscode.Uri>>;
+}
+
+function sortPatchDirectories(children: vscode.TreeItem[]) {
+  try {
+    children.sort((a, b) => {
+      if (a instanceof PatchDirectory && b instanceof PatchDirectory) {
+        return a.label.localeCompare(b.label);
+      } else {
+        throw new Error("Expected only PatchDirectory files");
+      }
+    });
+  } catch (err) {
+    Logger.error(err instanceof Error ? err : String(err));
+  }
 }
 
 export class ElectronPatchesProvider
@@ -122,17 +135,7 @@ export class ElectronPatchesProvider
       }
 
       // Sort by label to make it easier to visually browse
-      try {
-        children.sort((a, b) => {
-          if (a instanceof PatchDirectory && b instanceof PatchDirectory) {
-            return a.label.localeCompare(b.label);
-          } else {
-            throw new Error("Expected only PatchDirectory files");
-          }
-        });
-      } catch (err) {
-        Logger.error(err instanceof Error ? err : String(err));
-      }
+      sortPatchDirectories(children);
 
       // Also include the node for viewing patches in pull requests
       children.push(this.viewPullRequestTreeItem);
@@ -140,13 +143,20 @@ export class ElectronPatchesProvider
       element.collapsibleState !== vscode.TreeItemCollapsibleState.None
     ) {
       if (element instanceof PatchDirectory) {
-        const patchFilenames = await getPatches(element.resourceUri);
+        let patchFilenames: vscode.Uri[];
+
+        if (element instanceof PullRequestPatchDirectory) {
+          patchFilenames = element.patches;
+        } else {
+          patchFilenames = await getPatches(element.resourceUri);
+        }
 
         // Use the patch subject line for a more human-friendly label
         for (const filename of patchFilenames) {
           const label =
             (await getPatchSubjectLine(filename)) ||
             path.basename(filename.fsPath);
+
           children.push(
             new Patch(truncateToLength(label, 50), filename, element)
           );
@@ -169,34 +179,31 @@ export class ElectronPatchesProvider
 
         children.push(
           ...patchedFilenames.map(
-            (metadata) =>
+            (file) =>
               new FileInPatchTreeItem(
-                element.resourceUri,
-                checkoutDirectory,
-                metadata
+                file.with({ scheme: virtualDocumentScheme }),
+                checkoutDirectory
               )
           )
         );
       } else if (element instanceof ViewPullRequestPatchTreeItem) {
         children.push(...element.pullRequests.values());
       } else if (element instanceof PullRequestTreeItem) {
-        for (const patchDirectory of element.pullRequest.patchDirectories) {
+        for (const patchDirectory of element.pullRequest.patches.keys()) {
           const patchDirectoryBasename = path.basename(patchDirectory);
           const uri = vscode.Uri.joinPath(this.rootDirectory, patchDirectory);
           const label =
             patchDirectoryPrettyNames[patchDirectory] ?? patchDirectoryBasename;
 
           children.push(
-            new PatchDirectory(
-              label,
-              uri.with({
-                scheme: pullRequestScheme,
-                query: `pullRequest=${element.pullRequest.prNumber}`,
-              }),
-              patchDirectoryBasename
-            )
+            new PullRequestPatchDirectory(label, uri, patchDirectoryBasename, [
+              ...element.pullRequest.patches.get(patchDirectory)!.values(),
+            ])
           );
         }
+
+        // Sort by label to make it easier to visually browse
+        sortPatchDirectories(children);
       }
     }
 
@@ -213,8 +220,20 @@ export class PatchDirectory extends vscode.TreeItem {
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
     this.iconPath = new vscode.ThemeIcon("repo");
-    this.contextValue =
-      resourceUri.scheme === pullRequestScheme ? "pull-request-repo" : "repo";
+    this.contextValue = "repo";
+  }
+}
+
+class PullRequestPatchDirectory extends PatchDirectory {
+  constructor(
+    label: string,
+    resourceUri: vscode.Uri,
+    name: string,
+    public patches: vscode.Uri[]
+  ) {
+    super(label, resourceUri, name);
+
+    this.contextValue = "pull-request-repo";
   }
 }
 
@@ -246,25 +265,19 @@ class PatchOverview extends vscode.TreeItem {
 }
 
 class FileInPatchTreeItem extends vscode.TreeItem {
-  constructor(
-    patch: vscode.Uri,
-    checkoutDirectory: vscode.Uri,
-    metadata: FileInPatch
-  ) {
-    super(
-      metadata.file.with({ scheme: virtualDocumentScheme }),
-      vscode.TreeItemCollapsibleState.None
+  constructor(public resourceUri: vscode.Uri, checkoutDirectory: vscode.Uri) {
+    // Label it with the path within the checkout directory to avoid duplicate names
+    const label = ensurePosixSeparators(
+      path.relative(checkoutDirectory.path, resourceUri.path)
     );
 
-    // Label it with the path within the checkout directory to avoid duplicate names
-    this.label = ensurePosixSeparators(
-      path.relative(checkoutDirectory.path, metadata.file.path)
-    );
-    this.tooltip = this.label;
+    super(label, vscode.TreeItemCollapsibleState.None);
+
+    this.tooltip = label;
 
     this.command = {
       command: `${commandPrefix}.showPatchedFileDiff`,
-      arguments: [checkoutDirectory, patch, metadata, this.label],
+      arguments: [this.resourceUri, this.label],
       title: "Show Patched File Diff",
     };
   }
