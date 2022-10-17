@@ -89,15 +89,6 @@ export function registerPatchesCommands(
         metadata: FileInPatch,
         patchedFilename: string
       ) => {
-        const originalFile = metadata.file.with({
-          scheme: virtualDocumentScheme,
-          query: querystring.stringify({
-            ...querystring.parse(metadata.file.query),
-            view: "contents",
-            fileIndex: metadata.fileIndexA,
-            checkoutPath: checkoutDirectory.fsPath,
-          }),
-        });
         const patchedFile = metadata.file.with({
           scheme: virtualDocumentScheme,
           query: querystring.stringify({
@@ -110,12 +101,33 @@ export function registerPatchesCommands(
           }),
         });
 
-        return vscode.commands.executeCommand(
-          "vscode.diff",
-          originalFile,
-          patchedFile,
-          `${path.basename(patch.path)} - ${patchedFilename}`
-        );
+        if (/^[0]+$/.test(metadata.fileIndexA)) {
+          // Show added files as readonly, there's not much point
+          // in doing a side-by-side diff where one side is blank
+          return vscode.commands.executeCommand(
+            "vscode.open",
+            patchedFile,
+            undefined,
+            `${path.basename(patch.path)} - ${patchedFilename}` // TODO - This isn't used?
+          );
+        } else {
+          const originalFile = metadata.file.with({
+            scheme: virtualDocumentScheme,
+            query: querystring.stringify({
+              ...querystring.parse(metadata.file.query),
+              view: "contents",
+              fileIndex: metadata.fileIndexA,
+              checkoutPath: checkoutDirectory.fsPath,
+            }),
+          });
+
+          return vscode.commands.executeCommand(
+            "vscode.diff",
+            originalFile,
+            patchedFile,
+            `${path.basename(patch.path)} - ${patchedFilename}`
+          );
+        }
       }
     ),
     vscode.commands.registerCommand(`${commandPrefix}.showPatchesDocs`, () => {

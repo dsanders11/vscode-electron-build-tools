@@ -157,11 +157,16 @@ export async function getFilesInPatch(
   const regexMatches = patchContents.matchAll(patchedFilenameRegex);
 
   for (const [_, filename, fileIndexA, fileIndexB] of regexMatches) {
+    // Retain the scheme and query params from the patch URI, but add a few params
+    const queryParams = new URLSearchParams(patch.query);
+    queryParams.set("isPatchFile", "1");
+    queryParams.set("fileIndexA", fileIndexA);
+    queryParams.set("fileIndexB", fileIndexB);
+
     patchedFiles.push({
-      // Retain the scheme and query parameters from the patch URI
       file: vscode.Uri.joinPath(baseDirectory, filename).with({
         scheme: patch.scheme,
-        query: patch.query,
+        query: queryParams.toString(),
       }),
       fileIndexA,
       fileIndexB,

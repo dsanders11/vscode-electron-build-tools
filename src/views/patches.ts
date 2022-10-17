@@ -6,6 +6,7 @@ import {
   commandPrefix,
   patchDirectoryPrettyNames,
   pullRequestScheme,
+  virtualDocumentScheme,
 } from "../constants";
 import Logger from "../logging";
 import type { ElectronPatchesConfig } from "../types";
@@ -250,7 +251,10 @@ class FileInPatchTreeItem extends vscode.TreeItem {
     checkoutDirectory: vscode.Uri,
     metadata: FileInPatch
   ) {
-    super(metadata.file, vscode.TreeItemCollapsibleState.None);
+    super(
+      metadata.file.with({ scheme: virtualDocumentScheme }),
+      vscode.TreeItemCollapsibleState.None
+    );
 
     // Label it with the path within the checkout directory to avoid duplicate names
     this.label = ensurePosixSeparators(

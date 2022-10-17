@@ -18,6 +18,7 @@ import { DocsHoverProvider } from "./docsHoverProvider";
 import { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { setupDocsLinting } from "./docsLinting";
 import ExtensionState from "./extensionState";
+import { ElectronFileDecorationProvider } from "./fileDecorationProvider";
 import { GnFormattingProvider } from "./gnFormattingProvider";
 import { GnLinkProvider } from "./gnLinkProvider";
 import Logger from "./logging";
@@ -269,6 +270,9 @@ export async function activate(context: vscode.ExtensionContext) {
           pullRequestScheme,
           pullRequestFileSystemProvider,
           { isReadonly: true }
+        ),
+        vscode.window.registerFileDecorationProvider(
+          new ElectronFileDecorationProvider()
         ),
         vscode.languages.registerHoverProvider(
           {
