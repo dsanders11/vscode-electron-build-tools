@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.12.1 (10-17-2022)
+
+* fix: correct match target in encodeNewlines
+* fix: improve regex for patch files
+* chore: add revealInElectronSidebar to editor/title/context
+* chore: cache blob responses from GitHub
+* chore: use authenticated Octokit for view PR patch
+* chore: add file decorations to files in patches
+* chore: run tests inside extension operation
+
 ## 0.12.0 (10-15-2022)
 
 * feat: debug test run profile
