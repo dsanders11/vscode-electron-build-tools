@@ -25,7 +25,7 @@ cp.stderr!.pipe(process.stderr);
 
 // Encode any newlines so we can use newline as a delimeter
 function encodeNewlines(value: string) {
-  return value.replace(/%|\n/g, (match) => {
+  return value.replace(/%%|\n/g, (match) => {
     switch (match) {
       case "%%":
         return "%25";
