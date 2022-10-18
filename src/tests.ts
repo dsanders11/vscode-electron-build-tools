@@ -100,24 +100,31 @@ export function createTestController(
       }
     }
 
-    if (!request.include) {
-      if (request.exclude) {
+    let testsToAdd:
+      | vscode.TestItemCollection
+      | readonly vscode.TestItem[]
+      | undefined;
+
+    if (!request.include?.length) {
+      if (request.exclude?.length) {
         // If no request.include, include all top-level tests which aren't excluded
-        for (const [, test] of testController.items) {
-          if (!request.exclude?.includes(test)) {
-            addTests(test);
-            testRegexes.push(`'${escapeStringForRegex(test.id)}`);
-          } else {
-            testsById.delete(test.id);
-          }
-        }
+        testsToAdd = testController.items;
+      } else {
+        // No includes or excludes, add all tests, but no regexes
+        testController.items.forEach((test) => addTests(test));
       }
     } else {
-      request.include.forEach((test) => {
+      testsToAdd = request.include;
+    }
+
+    testsToAdd?.forEach((test) => {
+      if (!request.exclude?.includes(test)) {
         addTests(test);
         testRegexes.push(escapeStringForRegex(test.id));
-      });
-    }
+      } else {
+        testsById.delete(test.id);
+      }
+    });
 
     let command = `${buildToolsExecutable} test --runners=main`;
 
