@@ -9,9 +9,9 @@ import type MarkdownIt from "markdown-it";
 import {
   buildToolsExecutable,
   commandPrefix,
-  pullRequestScheme,
   viewIds,
   virtualDocumentScheme,
+  virtualFsScheme,
 } from "./constants";
 import { TextDocumentContentProvider } from "./documentContentProvider";
 import { DocsHoverProvider } from "./docsHoverProvider";
@@ -19,6 +19,7 @@ import { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { setupDocsLinting } from "./docsLinting";
 import ExtensionState from "./extensionState";
 import { ElectronFileDecorationProvider } from "./fileDecorationProvider";
+import { ElectronFileSystemProvider } from "./fileSystemProvider";
 import { GnFormattingProvider } from "./gnFormattingProvider";
 import { GnLinkProvider } from "./gnLinkProvider";
 import Logger from "./logging";
@@ -43,7 +44,6 @@ import {
   PatchDirectory,
 } from "./views/patches";
 import { HelpTreeDataProvider } from "./views/help";
-import { ElectronPullRequestFileSystemProvider } from "./pullRequestFileSystemProvider";
 import { registerHelperCommands } from "./commands/helpers";
 import { registerConfigsCommands } from "./commands/configs";
 import { registerPatchesCommands } from "./commands/patches";
@@ -58,17 +58,10 @@ function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   patchesProvider: ElectronPatchesProvider,
-  patchesView: vscode.TreeView<vscode.TreeItem>,
-  pullRequestFileSystemProvider: ElectronPullRequestFileSystemProvider
+  patchesView: vscode.TreeView<vscode.TreeItem>
 ) {
   registerBuildCommands(context);
-  registerPatchesCommands(
-    context,
-    electronRoot,
-    patchesProvider,
-    patchesView,
-    pullRequestFileSystemProvider
-  );
+  registerPatchesCommands(context, electronRoot, patchesProvider, patchesView);
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -246,8 +239,6 @@ export async function activate(context: vscode.ExtensionContext) {
         showCollapseAll: true,
         treeDataProvider: patchesProvider,
       });
-      const pullRequestFileSystemProvider =
-        new ElectronPullRequestFileSystemProvider(electronRoot, patchesConfig);
       const linkableProvider = new DocsLinkablesProvider(electronRoot);
 
       context.subscriptions.push(
@@ -262,13 +253,34 @@ export async function activate(context: vscode.ExtensionContext) {
           viewIds.ELECTRON,
           new ElectronViewProvider(electronRoot)
         ),
+        // There are two custom schemes used:
+        //   * electron-build-tools
+        //   * electron-build-tools-fs
+        //
+        // `electron-build-tools` is for providing read-only content to show
+        // the user in an editor, e.g. files inside a patch, patch overview,
+        // content from a pull request, etc. It could also be used to show
+        // any random markdown documentation we might want to show the user.
+        //
+        // `electron-build-tools-fs` also provides read-only content, based on
+        // optional blob IDs. It can also apply a provided patch to the content
+        // of a file on the fly. If a blob Id is provided, it will check for
+        // the blob on disk first, then fall back to remote content, and will
+        // cache remote content for fast subsequent lookups. The role of
+        // `electron-build-tools` could also be accomplished with this
+        // `FileSystemProvider`, but there are a few downsides to that, which
+        // is why both exist. Namely, VS Code displays a lock icon for
+        // read-only content served by a `FileSystemProvider` (undesirable),
+        // and any open editor to that content will cause constant hits to the
+        // `stat`method on the `FileSystemProvider`, which is unnecessary for
+        // our needs.
         vscode.workspace.registerTextDocumentContentProvider(
           virtualDocumentScheme,
           new TextDocumentContentProvider()
         ),
         vscode.workspace.registerFileSystemProvider(
-          pullRequestScheme,
-          pullRequestFileSystemProvider,
+          virtualFsScheme,
+          new ElectronFileSystemProvider(),
           { isReadonly: true }
         ),
         vscode.window.registerFileDecorationProvider(
@@ -307,8 +319,7 @@ export async function activate(context: vscode.ExtensionContext) {
         context,
         electronRoot,
         patchesProvider,
-        patchesView,
-        pullRequestFileSystemProvider
+        patchesView
       );
       registerDocsCommands(context, linkableProvider);
       registerHelperCommands(context);

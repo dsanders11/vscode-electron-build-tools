@@ -2,7 +2,6 @@ import * as childProcess from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import * as querystring from "querystring";
 import { promisify } from "util";
 
 import * as vscode from "vscode";
@@ -22,7 +21,6 @@ import type { PromisifiedExecError } from "./common";
 import {
   buildToolsExecutable,
   checkoutDirectoryGitHubRepo,
-  commandPrefix,
   contextKeyPrefix,
 } from "./constants";
 import ExtensionState from "./extensionState";
@@ -53,12 +51,6 @@ export interface DocSection {
   parent?: DocSection;
   sections: DocSection[];
   links: DocLink[];
-}
-
-export interface FileInPatch {
-  file: vscode.Uri;
-  fileIndexA: string;
-  fileIndexB: string;
 }
 
 export class ContentNotFoundError extends Error {}
@@ -158,26 +150,32 @@ export async function getPatches(directory: vscode.Uri): Promise<vscode.Uri[]> {
 export async function getFilesInPatch(
   baseDirectory: vscode.Uri,
   patch: vscode.Uri
-): Promise<FileInPatch[]> {
+): Promise<vscode.Uri[]> {
   const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
-  const patchedFiles: FileInPatch[] = [];
+  const patchedFiles: vscode.Uri[] = [];
   const regexMatches = patchContents.matchAll(patchedFilenameRegex);
 
-  for (const [_, filename, fileIndexA, fileIndexB] of regexMatches) {
-    // Retain the scheme and query params from the patch URI, but add a few params
+  for (const [_, filename, blobIdA, blobIdB] of regexMatches) {
+    // Retain the scheme and query params from the patch URI, but tweak a few params
     const queryParams = new URLSearchParams(patch.query);
-    queryParams.set("isPatchFile", "1");
-    queryParams.set("fileIndexA", fileIndexA);
-    queryParams.set("fileIndexB", fileIndexB);
+    queryParams.set("patch", patch.toString());
+    queryParams.delete("blobId");
+    queryParams.set("blobIdA", blobIdA);
+    queryParams.set("blobIdB", blobIdB);
 
-    patchedFiles.push({
-      file: vscode.Uri.joinPath(baseDirectory, filename).with({
+    const ghRepo = checkoutDirectoryGitHubRepo[baseDirectory.path];
+
+    if (ghRepo) {
+      queryParams.set("repoOwner", ghRepo.owner);
+      queryParams.set("repo", ghRepo.repo);
+    }
+
+    patchedFiles.push(
+      vscode.Uri.joinPath(baseDirectory, filename).with({
         scheme: patch.scheme,
         query: queryParams.toString(),
-      }),
-      fileIndexA,
-      fileIndexB,
-    });
+      })
+    );
   }
 
   return patchedFiles;
@@ -264,8 +262,10 @@ export async function patchTooltipMarkdown(patch: vscode.Uri) {
   return markdown;
 }
 
-export async function patchOverviewMarkdown(patch: vscode.Uri) {
-  const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
+export function patchOverviewMarkdown(
+  patch: vscode.Uri,
+  patchContents: string
+) {
   const patchMetadata = parsePatchMetadata(patchContents);
 
   const markdown = new vscode.MarkdownString(undefined, true);
@@ -432,24 +432,89 @@ export async function getOctokit() {
   }
 }
 
-export async function getContentForFileIndex(
-  fileIndex: string,
-  checkoutPath: string
-) {
-  if (/^[0]+$/.test(fileIndex)) {
+async function getCheckoutDirectoryForUri(
+  uri: vscode.Uri
+): Promise<vscode.Uri> {
+  const { stdout } = await exec("git rev-parse --show-toplevel", {
+    encoding: "utf8",
+    cwd: path.dirname(uri.fsPath),
+  });
+
+  return vscode.Uri.file(stdout.trim());
+}
+
+export async function getContentForUri(uri: vscode.Uri): Promise<string> {
+  const { blobId, patch, unpatchedBlobId, repo, repoOwner } = querystringParse(
+    uri.query
+  );
+
+  if (!blobId) {
+    // If there's no blobId, only choice is to read the path from disk
+    return (await vscode.workspace.fs.readFile(uri)).toString();
+  }
+
+  const ghRepo = repo && repoOwner ? { owner: repoOwner, repo } : undefined;
+  const checkoutDirectory = await getCheckoutDirectoryForUri(uri);
+
+  if (patch && unpatchedBlobId) {
+    // If it's a patched file, apply the patch if the unpatched content is found
+    const unpatchedContents = await getContentForBlobId(
+      unpatchedBlobId,
+      checkoutDirectory,
+      ghRepo
+    );
+    const patchContents = (
+      await vscode.workspace.fs.readFile(vscode.Uri.parse(patch, true))
+    ).toString();
+
+    const regexMatches = patchContents.matchAll(patchedFilenameRegex);
+    let filePatch: string | undefined = undefined;
+
+    for (const [patch, filename] of regexMatches) {
+      if (filename === path.relative(checkoutDirectory.path, uri.path)) {
+        filePatch = patch;
+        break;
+      }
+    }
+
+    // Patch was provided, but it doesn't modify the provided URI... programming error
+    if (!filePatch) {
+      throw new ContentNotFoundError(`Couldn't load content for ${blobId}`);
+    }
+
+    return Buffer.from(applyPatch(unpatchedContents, filePatch)).toString();
+  }
+
+  return getContentForBlobId(blobId, checkoutDirectory, ghRepo);
+}
+
+export async function hasContentForBlobId(blobId: string) {
+  remoteFileContentCache.has(blobId);
+}
+
+export async function setContentForBlobId(blobId: string, content: string) {
+  remoteFileContentCache.set(blobId, content);
+}
+
+async function getContentForBlobId(
+  blobId: string,
+  checkoutDirectory: vscode.Uri,
+  ghRepo?: { owner: string; repo: string }
+): Promise<string> {
+  if (/^[0]+$/.test(blobId)) {
     // Special case where it's all zeroes, so it's an empty file
     return "";
   }
 
   // Check cache first
-  if (remoteFileContentCache.has(fileIndex)) {
-    return remoteFileContentCache.get(fileIndex)!;
+  if (remoteFileContentCache.has(blobId)) {
+    return remoteFileContentCache.get(blobId)!;
   }
 
   try {
-    const { stdout } = await exec(`git show ${fileIndex}`, {
+    const { stdout } = await exec(`git show ${blobId}`, {
       encoding: "utf8",
-      cwd: checkoutPath,
+      cwd: checkoutDirectory.fsPath,
     });
 
     return stdout.trim();
@@ -458,37 +523,18 @@ export async function getContentForFileIndex(
       err instanceof Error &&
       Object.prototype.hasOwnProperty.call(err, "code")
     ) {
-      const errorWithCode = err as PromisifiedExecError;
-      if (errorWithCode.code === 128) {
-        // Couldn't find content locally (might not be synced)
-        // so instead pull it from GitHub where it hopefully is
-        // TODO - Replace this with plumbing the root dir down to this point
-        const rootDir = await vscode.commands.executeCommand<string>(
-          `${commandPrefix}.show.root`
-        )!;
-
-        if (!checkoutPath.startsWith(rootDir)) {
-          throw new ContentNotFoundError(
-            `Couldn't load content for ${fileIndex}`
-          );
-        }
-
-        const ghRepo =
-          checkoutDirectoryGitHubRepo[path.relative(rootDir, checkoutPath)];
-
+      if ((err as PromisifiedExecError).code === 128) {
         if (!ghRepo) {
-          throw new ContentNotFoundError(
-            `Couldn't load content for ${fileIndex}`
-          );
+          throw new ContentNotFoundError(`Couldn't load content for ${blobId}`);
         }
-
-        const octokit = await getOctokit();
 
         try {
+          const octokit = await getOctokit();
+
           const response = await octokit.rest.git.getBlob({
             ...ghRepo,
             // eslint-disable-next-line @typescript-eslint/naming-convention
-            file_sha: fileIndex,
+            file_sha: blobId,
           });
 
           const content = Buffer.from(
@@ -497,13 +543,11 @@ export async function getContentForFileIndex(
           ).toString();
 
           // Cache responses to avoid rate-limiting
-          remoteFileContentCache.set(fileIndex, content);
+          remoteFileContentCache.set(blobId, content);
 
           return content;
         } catch (err) {
-          throw new ContentNotFoundError(
-            `Couldn't load content for ${fileIndex}`
-          );
+          throw new ContentNotFoundError(`Couldn't load content for ${blobId}`);
         }
       }
     }
@@ -512,13 +556,8 @@ export async function getContentForFileIndex(
   }
 }
 
-export function querystringParse(
-  str: string,
-  sep?: string | undefined,
-  eq?: string | undefined,
-  options?: querystring.ParseOptions | undefined
-) {
-  const parsedUrlQuery = querystring.parse(str, sep, eq, options);
+export function querystringParse(str: string) {
+  const parsedUrlQuery = Object.fromEntries(new URLSearchParams(str).entries());
 
   for (const param in parsedUrlQuery) {
     const value = parsedUrlQuery[param];
@@ -532,7 +571,7 @@ export function querystringParse(
     }
   }
 
-  return parsedUrlQuery as Record<string, string>;
+  return parsedUrlQuery as Record<string, string | undefined>;
 }
 
 export async function findElectronRoot(
