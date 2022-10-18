@@ -148,11 +148,18 @@ app
         input: socket,
       });
 
+      const files: string[] = [];
+
       rl.on("line", async (line: string) => {
         if (line !== "DONE") {
-          mocha.addFile(line);
+          files.push(line);
         } else {
           try {
+            // Electron sorts the files before adding them
+            files.sort().forEach((file) => {
+              mocha.addFile(file);
+            });
+
             // @ts-ignore
             await mocha.loadFiles();
             const parsedSuites = parseTestSuites(mocha.suite);
