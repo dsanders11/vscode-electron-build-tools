@@ -236,16 +236,13 @@ export function createTestController(
     });
 
     if (debug) {
-      const debuggingSession = await vscode.debug.startDebugging(
-        vscode.workspace.workspaceFolders![0],
-        {
-          name: "Debug Electron",
-          type: "node",
-          request: "attach",
-          port: 9229,
-          continueOnAttach: true,
-        }
-      );
+      const debuggingSession = await vscode.debug.startDebugging(undefined, {
+        name: "Debug Electron",
+        type: "node",
+        request: "attach",
+        port: 9229,
+        continueOnAttach: true,
+      });
 
       if (!debuggingSession) {
         testRunError = new vscode.TestMessage(
