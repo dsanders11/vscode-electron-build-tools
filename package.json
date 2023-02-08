@@ -299,10 +299,6 @@
     ],
     "jsonValidation": [
       {
-        "fileMatch": "evm.*.json",
-        "url": "./schemas/evm-config.schema.json"
-      },
-      {
         "fileMatch": "patches/config.json",
         "url": "./schemas/patches-config.schema.json"
       }
