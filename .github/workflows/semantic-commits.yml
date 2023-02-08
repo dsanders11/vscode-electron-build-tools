@@ -12,14 +12,14 @@ permissions:
 
 jobs:
   main:
+    permissions:
+      pull-requests: read  # for amannn/action-semantic-pull-request to analyze PRs
+      statuses: write  # for amannn/action-semantic-pull-request to mark status of analyzed PR
     name: Validate PR Title
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
-      statuses: write
     steps:
       - name: semantic-pull-request
-        uses: amannn/action-semantic-pull-request@505e44b4f33b4c801f063838b3f053990ee46ea7  # v4.6
+        uses: amannn/action-semantic-pull-request@01d5fd8a8ebb9aafe902c40c53f0f4744f7381eb # v5.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
