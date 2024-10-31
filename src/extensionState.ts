@@ -146,7 +146,8 @@ class ExtensionStateTracker {
     operation: ExtensionOperation,
     command: string,
     operationDeniedCallback: () => void,
-    callback: (...args: unknown[]) => unknown,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    callback: (...args: any[]) => unknown,
     thisArg?: unknown,
   ): vscode.Disposable {
     return vscode.commands.registerCommand(
