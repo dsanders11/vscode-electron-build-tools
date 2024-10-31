@@ -6,11 +6,9 @@ import * as path from "path";
 
 export async function setupSpecRunner(electronRoot: string) {
   const fs = require(path.resolve(electronRoot, "node_modules", "fs-extra"));
-  const { hashElement } = require(path.resolve(
-    electronRoot,
-    "node_modules",
-    "folder-hash"
-  ));
+  const { hashElement } = require(
+    path.resolve(electronRoot, "node_modules", "folder-hash"),
+  );
 
   const SCRIPT_DIR = path.resolve(electronRoot, "script");
 
@@ -28,11 +26,11 @@ export async function setupSpecRunner(electronRoot: string) {
         cwd: electronRoot,
         stdio: "inherit",
         shell: true,
-      }
+      },
     );
     if (status !== 0) {
       throw new Error(
-        `Electron typescript definition generation failed with exit code: ${status}.`
+        `Electron typescript definition generation failed with exit code: ${status}.`,
       );
     }
   }
@@ -42,13 +40,13 @@ export async function setupSpecRunner(electronRoot: string) {
       (async () => {
         const hasher = crypto.createHash("SHA256");
         hasher.update(
-          fs.readFileSync(path.resolve(electronRoot, "spec", "package.json"))
+          fs.readFileSync(path.resolve(electronRoot, "spec", "package.json")),
         );
         hasher.update(
-          fs.readFileSync(path.resolve(electronRoot, "spec", "yarn.lock"))
+          fs.readFileSync(path.resolve(electronRoot, "spec", "yarn.lock")),
         );
         hasher.update(
-          fs.readFileSync(path.resolve(SCRIPT_DIR, "spec-runner.js"))
+          fs.readFileSync(path.resolve(SCRIPT_DIR, "spec-runner.js")),
         );
         return hasher.digest("hex");
       })(),
@@ -56,7 +54,7 @@ export async function setupSpecRunner(electronRoot: string) {
         const specNodeModulesPath = path.resolve(
           electronRoot,
           "spec",
-          "node_modules"
+          "node_modules",
         );
         if (!fs.existsSync(specNodeModulesPath)) {
           return null;
@@ -80,7 +78,7 @@ export async function setupSpecRunner(electronRoot: string) {
 
     const nodeDir = path.resolve(
       BASE,
-      `out/${utils.getOutDir({ shouldLog: true })}/gen/node_headers`
+      `out/${utils.getOutDir({ shouldLog: true })}/gen/node_headers`,
     );
     const env = {
       ...process.env,
@@ -99,7 +97,7 @@ export async function setupSpecRunner(electronRoot: string) {
         env,
         cwd: dir,
         stdio: "inherit",
-      }
+      },
     );
     if (status !== 0 && !process.env.IGNORE_YARN_INSTALL_ERROR) {
       console.log(`Failed to yarn install in '${dir}'`);

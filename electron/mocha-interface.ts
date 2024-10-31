@@ -6,28 +6,32 @@ import * as path from "path";
 import type { Func, Suite, Test as TestType } from "mocha";
 import type { CommonFunctions } from "mocha/lib/interfaces/common";
 
-const Test: typeof TestType = require(path.resolve(
-  process.env["ELECTRON_ROOT"]!,
-  "spec",
-  "node_modules",
-  "mocha",
-  "lib",
-  "test"
-));
+const Test: typeof TestType = require(
+  path.resolve(
+    process.env["ELECTRON_ROOT"]!,
+    "spec",
+    "node_modules",
+    "mocha",
+    "lib",
+    "test",
+  ),
+);
 
 function Interface(suite: Suite) {
   const suites = [suite];
 
   suite.on("pre-require", (context, file, mocha) => {
-    const common: CommonFunctions = require(path.resolve(
-      process.env["ELECTRON_ROOT"]!,
-      "spec",
-      "node_modules",
-      "mocha",
-      "lib",
-      "interfaces",
-      "common"
-    ))(suites, context, mocha);
+    const common: CommonFunctions = require(
+      path.resolve(
+        process.env["ELECTRON_ROOT"]!,
+        "spec",
+        "node_modules",
+        "mocha",
+        "lib",
+        "interfaces",
+        "common",
+      ),
+    )(suites, context, mocha);
 
     context.before = common.before;
     context.after = common.after;
@@ -42,7 +46,7 @@ function Interface(suite: Suite) {
      */
     (context.describe as any) = (context.context as any) = (
       title: string,
-      fn: (this: Suite) => void
+      fn: (this: Suite) => void,
     ) => {
       const suite = common.suite.create({ title, file, fn });
 
@@ -72,7 +76,7 @@ function Interface(suite: Suite) {
      */
     (context.describe.only as any) = (
       title: string,
-      fn: (this: Suite) => void
+      fn: (this: Suite) => void,
     ) => {
       const suite = common.suite.only({ title, file, fn });
 
@@ -89,7 +93,7 @@ function Interface(suite: Suite) {
      */
     (context.it as any) = (context.specify as any) = (
       title: string,
-      fn?: Func
+      fn?: Func,
     ) => {
       const suite = suites[0];
       if (suite.isPending()) {

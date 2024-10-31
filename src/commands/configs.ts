@@ -44,7 +44,7 @@ function handleError(err: unknown, errorMessage: string) {
 export function registerConfigsCommands(
   context: vscode.ExtensionContext,
   configsCollector: ConfigCollector,
-  configsProvider: ElectronBuildToolsConfigsProvider
+  configsProvider: ElectronBuildToolsConfigsProvider,
 ) {
   context.subscriptions.push(
     ExtensionState.registerExtensionOperationCommand(
@@ -52,7 +52,7 @@ export function registerConfigsCommands(
       `${commandPrefix}.newConfig`,
       () => {
         vscode.window.showErrorMessage(
-          "Can't create new config, other work in-progress"
+          "Can't create new config, other work in-progress",
         );
       },
       async () => {
@@ -84,7 +84,7 @@ export function registerConfigsCommands(
                 }
               });
               configNameInput.show();
-            }
+            },
           );
 
           if (configName === undefined) {
@@ -198,11 +198,11 @@ export function registerConfigsCommands(
             .map((option) => `--${option.optionName}`);
           cliOptions.push(
             `--root ${vscode.Uri.joinPath(rootPath[0], "electron").fsPath}`,
-            `-i ${buildSettings.value}`
+            `-i ${buildSettings.value}`,
           );
 
           const useFork = options.find(
-            (quickPickItem) => quickPickItem.label === "Add Fork"
+            (quickPickItem) => quickPickItem.label === "Add Fork",
           );
 
           if (useFork) {
@@ -233,7 +233,7 @@ export function registerConfigsCommands(
                   }
                 });
                 forkNameInput.show();
-              }
+              },
             );
 
             if (forkName === undefined) {
@@ -248,39 +248,38 @@ export function registerConfigsCommands(
             async () => {
               await exec(
                 `${buildToolsExecutable} init ${cliOptions.join(
-                  " "
-                )} ${configName}`
+                  " ",
+                )} ${configName}`,
               );
               await configsCollector.refreshConfigs();
-            }
+            },
           );
         } catch (err) {
           handleError(err, "Failed to create new config");
         }
-      }
+      },
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.openConfig`,
       async (configName: string) => {
         const configFilePath = path.join(
           getConfigsFilePath(),
-          `evm.${configName}.json`
+          `evm.${configName}.json`,
         );
         try {
-          const document = await vscode.workspace.openTextDocument(
-            configFilePath
-          );
+          const document =
+            await vscode.workspace.openTextDocument(configFilePath);
           await vscode.window.showTextDocument(document);
         } catch (err) {
           Logger.error(err instanceof Error ? err : String(err));
         }
 
         return configFilePath;
-      }
+      },
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.useConfig.quickPick`,
-      () => vscode.commands.executeCommand(`${commandPrefix}.useConfig`)
+      () => vscode.commands.executeCommand(`${commandPrefix}.useConfig`),
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.removeConfig`,
@@ -294,7 +293,7 @@ export function registerConfigsCommands(
           handleError(err, "Failed to remove config");
           configsProvider.refresh();
         }
-      }
+      },
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.sanitizeConfig`,
@@ -307,14 +306,14 @@ export function registerConfigsCommands(
         } catch (err) {
           handleError(err, "Failed to sanitize config");
         }
-      }
+      },
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.CHANGE_CONFIG,
       `${commandPrefix}.useConfig`,
       () => {
         vscode.window.showErrorMessage(
-          "Can't change configs, other work in-progress"
+          "Can't change configs, other work in-progress",
         );
       },
       async (value: { label: string } | string | undefined) => {
@@ -325,7 +324,7 @@ export function registerConfigsCommands(
             configs.map((config) => ({
               label: config,
               description: config === activeConfig ? "Active" : undefined,
-            }))
+            })),
           );
 
           if (value === undefined || value.label === activeConfig) {
@@ -343,12 +342,12 @@ export function registerConfigsCommands(
         } catch (err) {
           Logger.error(err instanceof Error ? err : String(err));
           vscode.window.showErrorMessage(
-            "Failed to set active Electron build-tools config"
+            "Failed to set active Electron build-tools config",
           );
           configsProvider.setActive(null);
           configsProvider.refresh();
         }
-      }
-    )
+      },
+    ),
   );
 }

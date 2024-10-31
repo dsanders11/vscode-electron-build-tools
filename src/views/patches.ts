@@ -69,7 +69,7 @@ export class ElectronPatchesProvider
         vscode.TreeItemCollapsibleState.Expanded;
       this.viewPullRequestTreeItem.pullRequests.set(
         pullRequest.prNumber,
-        new PullRequestTreeItem(pullRequest)
+        new PullRequestTreeItem(pullRequest),
       );
 
       this._onDidChangeTreeData.fire(this.viewPullRequestTreeItem);
@@ -97,8 +97,8 @@ export class ElectronPatchesProvider
 
   async resolveTreeItem(
     element: vscode.TreeItem,
-    item: vscode.TreeItem
-  ): Promise<any> {
+    item: vscode.TreeItem,
+  ): Promise<vscode.TreeItem> {
     if (element instanceof Patch) {
       item.tooltip = await patchTooltipMarkdown(element.resourceUri);
     }
@@ -158,23 +158,23 @@ export class ElectronPatchesProvider
             path.basename(filename.fsPath);
 
           children.push(
-            new Patch(truncateToLength(label, 50), filename, element)
+            new Patch(truncateToLength(label, 50), filename, element),
           );
         }
       } else if (element instanceof Patch) {
         children.push(new PatchOverview(element.resourceUri));
 
         const patchDirectory = vscode.Uri.file(
-          path.dirname(element.resourceUri.fsPath)
+          path.dirname(element.resourceUri.fsPath),
         );
         const checkoutDirectory = getCheckoutDirectoryForPatchDirectory(
           this.rootDirectory,
           await this.patchesConfig,
-          patchDirectory
+          patchDirectory,
         );
         const patchedFilenames = await getFilesInPatch(
           checkoutDirectory,
-          element.resourceUri
+          element.resourceUri,
         );
 
         children.push(
@@ -182,9 +182,9 @@ export class ElectronPatchesProvider
             (file) =>
               new FileInPatchTreeItem(
                 file.with({ scheme: virtualDocumentScheme }),
-                checkoutDirectory
-              )
-          )
+                checkoutDirectory,
+              ),
+          ),
         );
       } else if (element instanceof ViewPullRequestPatchTreeItem) {
         children.push(...element.pullRequests.values());
@@ -198,7 +198,7 @@ export class ElectronPatchesProvider
           children.push(
             new PullRequestPatchDirectory(label, uri, patchDirectoryBasename, [
               ...element.pullRequest.patches.get(patchDirectory)!.values(),
-            ])
+            ]),
           );
         }
 
@@ -215,7 +215,7 @@ export class PatchDirectory extends vscode.TreeItem {
   constructor(
     public label: string,
     public resourceUri: vscode.Uri,
-    public name: string
+    public name: string,
   ) {
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
@@ -229,7 +229,7 @@ class PullRequestPatchDirectory extends PatchDirectory {
     label: string,
     resourceUri: vscode.Uri,
     name: string,
-    public patches: vscode.Uri[]
+    public patches: vscode.Uri[],
   ) {
     super(label, resourceUri, name);
 
@@ -241,7 +241,7 @@ export class Patch extends vscode.TreeItem {
   constructor(
     public label: string,
     public resourceUri: vscode.Uri,
-    public readonly parent: PatchDirectory
+    public readonly parent: PatchDirectory,
   ) {
     super(resourceUri, vscode.TreeItemCollapsibleState.Collapsed);
 
@@ -265,10 +265,13 @@ class PatchOverview extends vscode.TreeItem {
 }
 
 class FileInPatchTreeItem extends vscode.TreeItem {
-  constructor(public resourceUri: vscode.Uri, checkoutDirectory: vscode.Uri) {
+  constructor(
+    public resourceUri: vscode.Uri,
+    checkoutDirectory: vscode.Uri,
+  ) {
     // Label it with the path within the checkout directory to avoid duplicate names
     const label = ensurePosixSeparators(
-      path.relative(checkoutDirectory.path, resourceUri.path)
+      path.relative(checkoutDirectory.path, resourceUri.path),
     );
 
     super(label, vscode.TreeItemCollapsibleState.None);
@@ -298,7 +301,7 @@ export class PullRequestTreeItem extends vscode.TreeItem {
   constructor(public readonly pullRequest: PullRequestWithPatch) {
     super(
       `#${pullRequest.prNumber} - ${pullRequest.title}`,
-      vscode.TreeItemCollapsibleState.Expanded
+      vscode.TreeItemCollapsibleState.Expanded,
     );
 
     this.tooltip = this.label as string;

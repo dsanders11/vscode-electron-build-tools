@@ -35,7 +35,7 @@ function linkablesAreEqual(a: DocsLinkable[], b: DocsLinkable[]) {
     const sortedB = sortLinkables(b);
 
     return sortedA.every((linkable, idx) =>
-      isSameLinkable(linkable, sortedB[idx])
+      isSameLinkable(linkable, sortedB[idx]),
     );
   }
 
@@ -63,7 +63,7 @@ export class DocsLinkablesProvider extends vscode.Disposable {
     const linkables: DocsLinkable[] = [];
 
     const filename = ensurePosixSeparators(
-      path.relative(this.docsRoot.fsPath, uri.fsPath)
+      path.relative(this.docsRoot.fsPath, uri.fsPath),
     );
     const fileLines = (await vscode.workspace.fs.readFile(uri))
       .toString()
@@ -96,7 +96,7 @@ export class DocsLinkablesProvider extends vscode.Disposable {
     if (this._linkables.size === 0) {
       const docsGlobPattern = new vscode.RelativePattern(
         this._electronRoot,
-        "docs/**/*.md"
+        "docs/**/*.md",
       );
 
       const files = await vscode.workspace.findFiles(docsGlobPattern);
@@ -123,7 +123,7 @@ export class DocsLinkablesProvider extends vscode.Disposable {
         docsWatcher,
         docsWatcher.onDidChange(onDocsChanged),
         docsWatcher.onDidCreate(onDocsChanged),
-        docsWatcher.onDidDelete(onDocsChanged)
+        docsWatcher.onDidDelete(onDocsChanged),
       );
     }
 

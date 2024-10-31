@@ -13,14 +13,14 @@ export class GnFormattingProvider
     this._gnFormatScript = vscode.Uri.joinPath(
       _electronRoot,
       "script",
-      "run-gn-format.py"
+      "run-gn-format.py",
     );
   }
 
   provideDocumentFormattingEdits(
     document: vscode.TextDocument,
-    options: vscode.FormattingOptions,
-    token: vscode.CancellationToken
+    _options: vscode.FormattingOptions,
+    token: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.TextEdit[]> {
     const text = document.getText();
     let formattedText = "";
@@ -31,7 +31,7 @@ export class GnFormattingProvider
         [this._gnFormatScript.fsPath, "--stdin"],
         {
           cwd: this._electronRoot.fsPath,
-        }
+        },
       );
 
       cp.stdout.on("data", (data: Buffer | string) => {
@@ -50,9 +50,9 @@ export class GnFormattingProvider
               vscode.TextEdit.replace(
                 new vscode.Range(
                   document.positionAt(0),
-                  document.positionAt(text.length)
+                  document.positionAt(text.length),
                 ),
-                formattedText
+                formattedText,
               ),
             ]);
           } else {

@@ -113,12 +113,12 @@ export async function getConfigDefaultTarget(): Promise<string | undefined> {
     `${buildToolsExecutable} show current --filename --no-name`,
     {
       encoding: "utf8",
-    }
+    },
   );
   const configFilename = stdout.trim();
 
   const config: EVMConfig = JSON.parse(
-    await fsReadFile(configFilename, { encoding: "utf8" })
+    await fsReadFile(configFilename, { encoding: "utf8" }),
   );
 
   return config.defaultTarget;
@@ -143,13 +143,13 @@ export async function getPatches(directory: vscode.Uri): Promise<vscode.Uri[]> {
   return patchListFileContent
     .split("\n")
     .map((patchFilename) =>
-      vscode.Uri.joinPath(directory, patchFilename.trim())
+      vscode.Uri.joinPath(directory, patchFilename.trim()),
     );
 }
 
 export async function getFilesInPatch(
   baseDirectory: vscode.Uri,
-  patch: vscode.Uri
+  patch: vscode.Uri,
 ): Promise<vscode.Uri[]> {
   const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
   const patchedFiles: vscode.Uri[] = [];
@@ -174,7 +174,7 @@ export async function getFilesInPatch(
       vscode.Uri.joinPath(baseDirectory, filename).with({
         scheme: patch.scheme,
         query: queryParams.toString(),
-      })
+      }),
     );
   }
 
@@ -182,7 +182,7 @@ export async function getFilesInPatch(
 }
 
 export async function parsePatchConfig(
-  config: vscode.Uri
+  config: vscode.Uri,
 ): Promise<ElectronPatchesConfig> {
   return JSON.parse((await vscode.workspace.fs.readFile(config)).toString());
 }
@@ -190,10 +190,10 @@ export async function parsePatchConfig(
 export function getCheckoutDirectoryForPatchDirectory(
   rootDirectory: vscode.Uri,
   config: ElectronPatchesConfig,
-  patchDirectory: vscode.Uri
+  patchDirectory: vscode.Uri,
 ) {
   for (const [patchDirectoryTail, checkoutDirectory] of Object.entries(
-    config
+    config,
   )) {
     if (patchDirectory.path.endsWith(patchDirectoryTail)) {
       return vscode.Uri.joinPath(rootDirectory, checkoutDirectory);
@@ -232,7 +232,7 @@ export function parsePatchMetadata(patchContents: string) {
       .join(" "),
     description: subjectAndDescription![2],
     filenames: Array.from(patchContents.matchAll(patchedFilenameRegex)).map(
-      (match) => match[1]
+      (match) => match[1],
     ),
   };
 }
@@ -249,13 +249,13 @@ export async function patchTooltipMarkdown(patch: vscode.Uri) {
       day: "numeric",
       month: "short",
       year: "numeric",
-    })}\n\n`
+    })}\n\n`,
   );
   markdown.appendMarkdown(`${patchMetadata.subject}`);
 
   if (patchMetadata.description) {
     markdown.appendMarkdown(
-      `\n\n${truncateToLength(patchMetadata.description, 100)}`
+      `\n\n${truncateToLength(patchMetadata.description, 100)}`,
     );
   }
 
@@ -264,7 +264,7 @@ export async function patchTooltipMarkdown(patch: vscode.Uri) {
 
 export function patchOverviewMarkdown(
   patch: vscode.Uri,
-  patchContents: string
+  patchContents: string,
 ) {
   const patchMetadata = parsePatchMetadata(patchContents);
 
@@ -277,7 +277,7 @@ export function patchOverviewMarkdown(
       day: "numeric",
       month: "short",
       year: "numeric",
-    })}\n\n`
+    })}\n\n`,
   );
   markdown.appendMarkdown(`## ${patchMetadata.subject}\n\n`);
   markdown.appendMarkdown(`${patchMetadata.description}\n\n`);
@@ -295,12 +295,12 @@ export function patchOverviewMarkdown(
 export async function parseDocsSections(electronRoot: vscode.Uri) {
   const docsRoot = vscode.Uri.joinPath(electronRoot, "docs");
   const readmeContent = await vscode.workspace.fs.readFile(
-    vscode.Uri.joinPath(docsRoot, "README.md")
+    vscode.Uri.joinPath(docsRoot, "README.md"),
   );
 
   const md = new MarkdownIt();
   const parsedHeadings = headingsAndContent(
-    md.parse(readmeContent.toString(), {}) as any
+    md.parse(readmeContent.toString(), {}),
   );
   const rootHeading = parsedHeadings[0];
 
@@ -318,7 +318,7 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
             // Mixed separators will mess with things, so make sure it's
             // POSIX since that's what links in the docs will be using
             const filePath = ensurePosixSeparators(
-              path.resolve(docsRoot.fsPath, href)
+              path.resolve(docsRoot.fsPath, href),
             );
 
             // These links have fragments in them, so don't
@@ -347,7 +347,7 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
 
   const walkSections = (
     parent: DocSection | undefined,
-    headings: HeadingContent[]
+    headings: HeadingContent[],
   ) => {
     if (headings.length === 0) {
       return;
@@ -365,7 +365,7 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
         level,
         parent,
         sections: [],
-        links: parseLinks(content as any),
+        links: parseLinks(content),
       });
     } else {
       throw new Error("Malformed document layout");
@@ -380,7 +380,7 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
 }
 
 export function alphabetizeByLabel<T extends vscode.TreeItem>(
-  treeItems: T[]
+  treeItems: T[],
 ): T[] {
   return treeItems.sort((a, b) => {
     if (typeof a.label === "string" && typeof b.label === "string") {
@@ -433,7 +433,7 @@ export async function getOctokit() {
 }
 
 async function getCheckoutDirectoryForUri(
-  uri: vscode.Uri
+  uri: vscode.Uri,
 ): Promise<vscode.Uri> {
   const { stdout } = await exec("git rev-parse --show-toplevel", {
     encoding: "utf8",
@@ -445,7 +445,7 @@ async function getCheckoutDirectoryForUri(
 
 export async function getContentForUri(uri: vscode.Uri): Promise<string> {
   const { blobId, patch, unpatchedBlobId, repo, repoOwner } = querystringParse(
-    uri.query
+    uri.query,
   );
 
   if (!blobId) {
@@ -461,7 +461,7 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
     const unpatchedContents = await getContentForBlobId(
       unpatchedBlobId,
       checkoutDirectory,
-      ghRepo
+      ghRepo,
     );
     const patchContents = (
       await vscode.workspace.fs.readFile(vscode.Uri.parse(patch, true))
@@ -499,7 +499,7 @@ export async function setContentForBlobId(blobId: string, content: string) {
 async function getContentForBlobId(
   blobId: string,
   checkoutDirectory: vscode.Uri,
-  ghRepo?: { owner: string; repo: string }
+  ghRepo?: { owner: string; repo: string },
 ): Promise<string> {
   if (/^[0]+$/.test(blobId)) {
     // Special case where it's all zeroes, so it's an empty file
@@ -539,14 +539,14 @@ async function getContentForBlobId(
 
           const content = Buffer.from(
             response.data.content,
-            "base64"
+            "base64",
           ).toString();
 
           // Cache responses to avoid rate-limiting
           remoteFileContentCache.set(blobId, content);
 
           return content;
-        } catch (err) {
+        } catch {
           throw new ContentNotFoundError(`Couldn't load content for ${blobId}`);
         }
       }
@@ -575,7 +575,7 @@ export function querystringParse(str: string) {
 }
 
 export async function findElectronRoot(
-  workspaceFolder: vscode.WorkspaceFolder
+  workspaceFolder: vscode.WorkspaceFolder,
 ): Promise<vscode.Uri | undefined> {
   // Support opening the src/electron folder, as well as src/
   const possiblePackageRoots = [".", "electron"];
@@ -584,13 +584,12 @@ export async function findElectronRoot(
     const rootPackageFilename = vscode.Uri.joinPath(
       workspaceFolder.uri,
       possibleRoot,
-      "package.json"
+      "package.json",
     );
 
     try {
-      const rootPackageFile = await vscode.workspace.fs.readFile(
-        rootPackageFilename
-      );
+      const rootPackageFile =
+        await vscode.workspace.fs.readFile(rootPackageFilename);
 
       const { name } = JSON.parse(rootPackageFile.toString()) as Record<
         string,
@@ -606,19 +605,19 @@ export async function findElectronRoot(
   }
 }
 
-export function makeCommandUri(command: string, ...args: any[]) {
+export function makeCommandUri(command: string, ...args: unknown[]) {
   const commandArgs = encodeURIComponent(JSON.stringify(args));
   return vscode.Uri.parse(`command:${command}?${commandArgs}`);
 }
 
 export async function setContext<ValueType>(
   key: string,
-  value: ValueType
-): Promise<any> {
+  value: ValueType,
+): Promise<unknown> {
   return await vscode.commands.executeCommand(
     "setContext",
     `${contextKeyPrefix}:${key}`,
-    value
+    value,
   );
 }
 
@@ -640,7 +639,7 @@ export class OptionalFeature<T> extends vscode.Disposable {
   constructor(
     configSection: string,
     settingName: string,
-    setupFeature: (settingValue: T) => vscode.Disposable | void
+    setupFeature: (settingValue: T) => vscode.Disposable | void,
   ) {
     super(() => {
       this._disposable?.dispose();
@@ -653,7 +652,7 @@ export class OptionalFeature<T> extends vscode.Disposable {
 
       if (settingValue === undefined) {
         Logger.error(
-          `Failed to read setting value for "${configSection}.${settingName}"`
+          `Failed to read setting value for "${configSection}.${settingName}"`,
         );
         throw new Error("Setting could not be read");
       }
@@ -678,7 +677,7 @@ export async function drillDown(
   treeDataProvider: vscode.TreeDataProvider<vscode.TreeItem>,
   callback: (
     element: vscode.TreeItem | undefined,
-    children: vscode.TreeItem[]
+    children: vscode.TreeItem[],
   ) =>
     | Promise<{ item: vscode.TreeItem | undefined; done: boolean }>
     | { item: vscode.TreeItem | undefined; done: boolean },
@@ -686,9 +685,9 @@ export async function drillDown(
     select?: boolean | undefined;
     focus?: boolean | undefined;
     expand?: number | boolean | undefined;
-  }
+  },
 ): Promise<void> {
-  let parentChain: vscode.TreeItem[] = [];
+  const parentChain: vscode.TreeItem[] = [];
   let children: vscode.TreeItem[] | null | undefined =
     await treeDataProvider.getChildren();
 
@@ -713,7 +712,7 @@ export async function drillDown(
     } else {
       if (!item.collapsibleState) {
         throw new Error(
-          "Drill down tried to continue, but returned item has no children"
+          "Drill down tried to continue, but returned item has no children",
         );
       }
 
@@ -731,7 +730,7 @@ export function sleep(timeMs: number) {
 
 export function positionAt(content: string, offset: number) {
   const lines = Array.from(
-    content.slice(0, offset).matchAll(/^(.*)(?:\r\n|$)/gm)
+    content.slice(0, offset).matchAll(/^(.*)(?:\r\n|$)/gm),
   );
   const lastLine = lines.slice(-1)[0][1];
 
@@ -741,8 +740,7 @@ export function positionAt(content: string, offset: number) {
 export function applyPatch(source: string, patch: string) {
   const patchedResult = Diff.applyPatch(source, patch);
 
-  // BUG - Diff can return false, even though that's not documented in @types/diff
-  if ((patchedResult as string | boolean) === false) {
+  if (patchedResult === false) {
     throw new Error("Malformed patch");
   }
 

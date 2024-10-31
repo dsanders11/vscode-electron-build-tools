@@ -35,14 +35,14 @@ export class BuildToolsConfigCollector
       _extensionContext.globalState.get<string[]>("cachedConfigs");
 
     const configWatcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(getConfigsFilePath(), "**")
+      new vscode.RelativePattern(getConfigsFilePath(), "**"),
     );
 
     this._disposables.push(
       configWatcher,
       configWatcher.onDidChange(() => this.refreshConfigs()),
       configWatcher.onDidCreate(() => this.refreshConfigs()),
-      configWatcher.onDidDelete(() => this.refreshConfigs())
+      configWatcher.onDidDelete(() => this.refreshConfigs()),
     );
   }
 
@@ -58,7 +58,7 @@ export class BuildToolsConfigCollector
 
     await this._extensionContext.globalState.update(
       "cachedConfigs",
-      this._configs
+      this._configs,
     );
   }
 
@@ -144,8 +144,8 @@ export class ElectronBuildToolsConfigsProvider
           new ConfigTreeItem(
             configName,
             configName === activeConfig,
-            vscode.TreeItemCollapsibleState.None
-          )
+            vscode.TreeItemCollapsibleState.None,
+          ),
         );
       }
 
@@ -162,7 +162,7 @@ export class ConfigTreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
     isActive: boolean,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState
+    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
   ) {
     super(label, collapsibleState);
 

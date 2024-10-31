@@ -36,7 +36,7 @@ export function registerPatchesCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   patchesProvider: ElectronPatchesProvider,
-  patchesView: vscode.TreeView<vscode.TreeItem>
+  patchesView: vscode.TreeView<vscode.TreeItem>,
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -56,18 +56,18 @@ export function registerPatchesCommands(
         }
 
         return vscode.commands.executeCommand("vscode.open", uri);
-      }
+      },
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.REFRESH_PATCHES,
       `${commandPrefix}.refreshPatches`,
       () => {
         vscode.window.showErrorMessage(
-          "Can't refresh patches, other work in-progress"
+          "Can't refresh patches, other work in-progress",
         );
       },
       async (arg: PatchDirectory | string | undefined) => {
-        const target = typeof arg === "string" ? arg : arg?.name ?? "all";
+        const target = typeof arg === "string" ? arg : (arg?.name ?? "all");
 
         const endProgress = startProgress({
           location: { viewId: viewIds.PATCHES },
@@ -85,13 +85,13 @@ export function registerPatchesCommands(
         } finally {
           endProgress();
         }
-      }
+      },
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.removePullRequestPatch`,
       (treeItem: PullRequestTreeItem) => {
         patchesProvider.removePr(treeItem.pullRequest);
-      }
+      },
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.showPatchedFileDiff`,
@@ -121,7 +121,7 @@ export function registerPatchesCommands(
             "vscode.open",
             patchedFile,
             undefined,
-            `${path.basename(patch)} - ${patchedFilename}` // TODO - This isn't used?
+            `${path.basename(patch)} - ${patchedFilename}`, // TODO - This isn't used?
           );
         } else {
           const queryParams = new URLSearchParams(file.query);
@@ -139,15 +139,15 @@ export function registerPatchesCommands(
             "vscode.diff",
             originalFile,
             patchedFile,
-            `${path.basename(patch)} - ${patchedFilename}`
+            `${path.basename(patch)} - ${patchedFilename}`,
           );
         }
-      }
+      },
     ),
     vscode.commands.registerCommand(`${commandPrefix}.showPatchesDocs`, () => {
       return vscode.commands.executeCommand(
         "markdown.showPreview",
-        vscode.Uri.joinPath(electronRoot, "docs", "development", "patches.md")
+        vscode.Uri.joinPath(electronRoot, "docs", "development", "patches.md"),
       );
     }),
     vscode.commands.registerCommand(
@@ -161,9 +161,9 @@ export function registerPatchesCommands(
           patch.with({
             scheme: virtualDocumentScheme,
             query: queryParams.toString(),
-          })
+          }),
         );
-      }
+      },
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.viewPullRequestPatch`,
@@ -226,7 +226,7 @@ export function registerPatchesCommands(
 
                       setContentForBlobId(
                         file.sha,
-                        Buffer.from(response.data.content, "base64").toString()
+                        Buffer.from(response.data.content, "base64").toString(),
                       );
                     }
 
@@ -234,7 +234,7 @@ export function registerPatchesCommands(
                       vscode.Uri.joinPath(electronRoot, file.filename).with({
                         scheme: virtualFsScheme,
                         query: queryParams.toString(),
-                      })
+                      }),
                     );
 
                     patches.set(patchDirectory, patchesInDirectory);
@@ -255,16 +255,16 @@ export function registerPatchesCommands(
                   });
                 } else {
                   vscode.window.showWarningMessage(
-                    "No patches in pull request"
+                    "No patches in pull request",
                   );
                 }
               } else {
                 vscode.window.showErrorMessage("Couldn't find pull request");
               }
-            }
+            },
           );
         }
-      }
-    )
+      },
+    ),
   );
 }

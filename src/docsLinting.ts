@@ -37,7 +37,7 @@ export function setupDocsLinting(context: vscode.ExtensionContext) {
 
           Logger.info("Docs relative link linting disabled");
         }
-      }
-    )
+      },
+    ),
   );
 }

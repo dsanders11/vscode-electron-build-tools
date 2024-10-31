@@ -12,7 +12,6 @@ export class GnLinkProvider implements vscode.DocumentLinkProvider {
 
   provideDocumentLinks(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.DocumentLink[]> {
     const links: vscode.DocumentLink[] = [];
     const text = document.getText();
@@ -25,7 +24,7 @@ export class GnLinkProvider implements vscode.DocumentLinkProvider {
 
           const linkRange = new vscode.Range(
             document.positionAt(match.index + linkIdx),
-            document.positionAt(match.index + linkIdx + link.length)
+            document.positionAt(match.index + linkIdx + link.length),
           );
 
           if (link.startsWith("//")) {
@@ -33,8 +32,8 @@ export class GnLinkProvider implements vscode.DocumentLinkProvider {
             links.push(
               new vscode.DocumentLink(
                 linkRange,
-                vscode.Uri.joinPath(this._electronRoot, "..", link.slice(2))
-              )
+                vscode.Uri.joinPath(this._electronRoot, "..", link.slice(2)),
+              ),
             );
           } else {
             // Relative to the document's location
@@ -43,9 +42,9 @@ export class GnLinkProvider implements vscode.DocumentLinkProvider {
               new vscode.DocumentLink(
                 linkRange,
                 vscode.Uri.file(
-                  path.join(path.dirname(document.uri.fsPath), link)
-                )
-              )
+                  path.join(path.dirname(document.uri.fsPath), link),
+                ),
+              ),
             );
           }
         }

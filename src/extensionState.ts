@@ -24,19 +24,19 @@ class ExtensionStateTracker {
       setContext("canBuild", this.canRunOperation(ExtensionOperation.BUILD)),
       setContext(
         "canChangeConfig",
-        this.canRunOperation(ExtensionOperation.CHANGE_CONFIG)
+        this.canRunOperation(ExtensionOperation.CHANGE_CONFIG),
       ),
       setContext(
         "canLoadTests",
-        this.canRunOperation(ExtensionOperation.LOAD_TESTS)
+        this.canRunOperation(ExtensionOperation.LOAD_TESTS),
       ),
       setContext(
         "canRefreshPatches",
-        this.canRunOperation(ExtensionOperation.REFRESH_PATCHES)
+        this.canRunOperation(ExtensionOperation.REFRESH_PATCHES),
       ),
       setContext(
         "canRunTests",
-        this.canRunOperation(ExtensionOperation.RUN_TESTS)
+        this.canRunOperation(ExtensionOperation.RUN_TESTS),
       ),
       setContext("canSync", this.canRunOperation(ExtensionOperation.SYNC)),
     ]);
@@ -44,7 +44,11 @@ class ExtensionStateTracker {
 
   private async _updateState(operation: ExtensionOperation, running: boolean) {
     const ops = this._runningOperations;
-    running ? ops.add(operation) : ops.delete(operation);
+    if (running) {
+      ops.add(operation);
+    } else {
+      ops.delete(operation);
+    }
 
     // Update contexts for use in UI
     await this._updateContexts();
@@ -57,7 +61,7 @@ class ExtensionStateTracker {
 
   isOperationRunning(...ops: ExtensionOperation[]) {
     return ops.some((op: ExtensionOperation) =>
-      this._runningOperations.has(op)
+      this._runningOperations.has(op),
     );
   }
 
@@ -84,7 +88,7 @@ class ExtensionStateTracker {
           LOAD_TESTS,
           REFRESH_PATCHES,
           RUN_TESTS,
-          SYNC
+          SYNC,
         );
 
       case LOAD_TESTS:
@@ -94,7 +98,7 @@ class ExtensionStateTracker {
           LOAD_TESTS,
           REFRESH_PATCHES,
           RUN_TESTS,
-          SYNC
+          SYNC,
         );
 
       case REFRESH_PATCHES:
@@ -113,7 +117,7 @@ class ExtensionStateTracker {
   async runOperation<T>(
     operation: ExtensionOperation,
     workFn: () => Promise<T> | T,
-    runOnlyWorkFn: boolean = false
+    runOnlyWorkFn: boolean = false,
   ): Promise<T> {
     // TODO - This is a short-circuit to get around reentrancy issues.
     //        In future VS Code versions, AsyncLocalStorage should be
@@ -123,7 +127,7 @@ class ExtensionStateTracker {
     } else {
       if (!this.canRunOperation(operation)) {
         Logger.error(
-          `ExtensionState.runOperation denied operation ${operation}`
+          `ExtensionState.runOperation denied operation ${operation}`,
         );
         throw new Error("Can't run operation");
       }
@@ -142,19 +146,19 @@ class ExtensionStateTracker {
     operation: ExtensionOperation,
     command: string,
     operationDeniedCallback: () => void,
-    callback: (...args: any[]) => any,
-    thisArg?: any
+    callback: (...args: unknown[]) => unknown,
+    thisArg?: unknown,
   ): vscode.Disposable {
     return vscode.commands.registerCommand(
       command,
-      (...args: any[]): any => {
+      (...args: unknown[]): unknown => {
         if (!this.canRunOperation(operation)) {
           return operationDeniedCallback();
         }
 
         return this.runOperation(operation, () => callback(...args));
       },
-      thisArg
+      thisArg,
     );
   }
 
@@ -163,7 +167,7 @@ class ExtensionStateTracker {
       this._ghAuthenticationSession = await vscode.authentication.getSession(
         "github",
         [],
-        { createIfNone: true }
+        { createIfNone: true },
       );
     }
 

@@ -1,14 +1,14 @@
 export interface IpcMessage {
   stream: string;
-  data: any;
+  data: unknown;
 }
 
-export namespace Markdown {
+export const Markdown = {
   // From vscode's source
-  export const linkPattern =
-    /(\[((!\[[^\]]*?\]\(\s*)([^\s\(\)]+?)\s*\)\]|(?:\\\]|[^\]])*\])\(\s*)(([^\s\(\)]|\(\S*?\))*)\s*(".*?")?\)/g;
-  export const definitionPattern = /^([\t ]*\[((?:\\\]|[^\]])+)\]:\s*)(\S+)/gm;
-}
+  linkPattern:
+    /(\[((!\[[^\]]*?\]\(\s*)([^\s\(\)]+?)\s*\)\]|(?:\\\]|[^\]])*\])\(\s*)(([^\s\(\)]|\(\S*?\))*)\s*(".*?")?\)/g,
+  definitionPattern: /^([\t ]*\[((?:\\\]|[^\]])+)\]:\s*)(\S+)/gm,
+};
 
 export interface PromisifiedExecError extends Error {
   code?: number;

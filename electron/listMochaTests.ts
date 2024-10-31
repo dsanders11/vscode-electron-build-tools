@@ -14,20 +14,15 @@ process.once("uncaughtException", (err) => {
 // @ts-ignore
 import { app } from "electron";
 
-const { SourceMapConsumer } = require(path.resolve(
-  process.cwd(),
-  "node_modules",
-  "source-map"
-));
-const { retrieveSourceMap } = require(path.resolve(
-  process.cwd(),
-  "node_modules",
-  "source-map-support"
-));
-const { getFileContent } = require(path.resolve(
-  __dirname,
-  "electron-build-tools-typescript"
-));
+const { SourceMapConsumer } = require(
+  path.resolve(process.cwd(), "node_modules", "source-map"),
+);
+const { retrieveSourceMap } = require(
+  path.resolve(process.cwd(), "node_modules", "source-map-support"),
+);
+const { getFileContent } = require(
+  path.resolve(__dirname, "electron-build-tools-typescript"),
+);
 
 const sourceMapConsumers = new Map<string, any>();
 
@@ -127,12 +122,9 @@ app
     require(path.resolve(process.cwd(), "node_modules", "ts-node/register"));
 
     // Don't load Mocha until after setting up ts-node
-    const Mocha = require(path.resolve(
-      process.cwd(),
-      "spec",
-      "node_modules",
-      "mocha"
-    ));
+    const Mocha = require(
+      path.resolve(process.cwd(), "spec", "node_modules", "mocha"),
+    );
 
     const mocha: MochaType = new Mocha({
       ui: path.resolve(__dirname, "mocha-interface.js"),
@@ -164,7 +156,7 @@ app
             await mocha.loadFiles();
             const parsedSuites = parseTestSuites(mocha.suite);
             socket.write(JSON.stringify(parsedSuites, undefined, 4), () =>
-              process.exit(0)
+              process.exit(0),
             );
           } catch (err: any) {
             console.error(err);

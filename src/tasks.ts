@@ -76,9 +76,9 @@ export function runAsTask({
           EBT_SOCKET_PATH: socketName,
           ...shellOptions?.env,
         },
-      }
+      },
     ),
-    problemMatchers
+    problemMatchers,
   );
 
   if (presentationOptions) {
@@ -101,7 +101,7 @@ export function runAsTask({
   let eventsStarted = false;
   let eventsDone: (value: void) => void;
   const eventsDonePromise = new Promise<void>(
-    (resolve) => (eventsDone = resolve)
+    (resolve) => (eventsDone = resolve),
   );
 
   const terminateTokenSource = new vscode.CancellationTokenSource();
@@ -174,17 +174,17 @@ export function runAsTask({
         socket.once("end", socketDone);
 
         stderr.on("line", (line) =>
-          onDidWriteErrorLineEmitter.fire({ progress, line })
+          onDidWriteErrorLineEmitter.fire({ progress, line }),
         );
         stdout.on("line", (line) =>
-          onDidWriteLineEmitter.fire({ progress, line })
+          onDidWriteLineEmitter.fire({ progress, line }),
         );
       });
 
       const taskExecution = await vscode.tasks.executeTask(task);
       const disposables: vscode.Disposable[] = [];
 
-      return new Promise<boolean | undefined>(async (resolve, reject) => {
+      return new Promise<boolean | undefined>((resolve, reject) => {
         socketServer.once("error", () => reject("Socket server error"));
 
         vscode.tasks.onDidEndTask(({ execution }) => {
@@ -203,7 +203,7 @@ export function runAsTask({
 
               if (exitCode !== 0 && !handled) {
                 vscode.window.showErrorMessage(
-                  `'${operationName}' failed with exit code ${exitCode}`
+                  `'${operationName}' failed with exit code ${exitCode}`,
                 );
               }
             } else {
@@ -234,7 +234,7 @@ export function runAsTask({
         taskExecution.terminate();
         disposables.forEach((disposable) => disposable.dispose());
       });
-    }
+    },
   );
 
   return {
@@ -242,6 +242,7 @@ export function runAsTask({
     onDidWriteErrorLine: onDidWriteErrorLineEmitter.event,
     onDidWriteLine: onDidWriteLineEmitter.event,
     eventsDone: eventsDonePromise,
+    // eslint-disable-next-line no-async-promise-executor
     finished: new Promise(async (resolve) => {
       try {
         resolve(await taskPromise);

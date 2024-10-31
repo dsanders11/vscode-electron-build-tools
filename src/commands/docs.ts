@@ -20,7 +20,7 @@ const activeColumnButton: vscode.QuickInputButton = {
 
 export function registerDocsCommands(
   context: vscode.ExtensionContext,
-  linkableProvider: DocsLinkablesProvider
+  linkableProvider: DocsLinkablesProvider,
 ) {
   context.subscriptions.push(
     vscode.commands.registerCommand(`${commandPrefix}.searchDocs`, async () => {
@@ -38,7 +38,7 @@ export function registerDocsCommands(
             filename: linkable.filename,
             urlFragment: linkable.urlFragment,
           };
-        }
+        },
       );
       quickPick.onDidAccept(() => {
         const selectedItem = quickPick.selectedItems[0];
@@ -50,8 +50,8 @@ export function registerDocsCommands(
             : "markdown.showLockedPreviewToSide",
           vscode.Uri.joinPath(
             linkableProvider.docsRoot,
-            selectedItem.filename
-          ).with({ fragment: selectedItem.urlFragment })
+            selectedItem.filename,
+          ).with({ fragment: selectedItem.urlFragment }),
         );
       });
       quickPick.onDidHide(() => quickPick.dispose());
@@ -62,7 +62,7 @@ export function registerDocsCommands(
         docsSearchOpenToSide = button === activeColumnButton;
         await context.globalState.update(
           "docsSearchOpenToSide",
-          docsSearchOpenToSide
+          docsSearchOpenToSide,
         );
 
         quickPick.buttons = [
@@ -70,6 +70,6 @@ export function registerDocsCommands(
         ];
       });
       quickPick.show();
-    })
+    }),
   );
 }

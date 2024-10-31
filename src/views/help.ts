@@ -15,10 +15,10 @@ export class HelpTreeDataProvider
     if (!element) {
       const reportIssueTreeItem = new vscode.TreeItem(
         "Report Issue",
-        vscode.TreeItemCollapsibleState.None
+        vscode.TreeItemCollapsibleState.None,
       );
       reportIssueTreeItem.iconPath = new vscode.ThemeIcon(
-        "remote-explorer-report-issues"
+        "remote-explorer-report-issues",
       );
       reportIssueTreeItem.command = {
         command: "vscode.openIssueReporter",
@@ -30,7 +30,7 @@ export class HelpTreeDataProvider
         new LinkHelpTreeItem(
           "Extension Documentation",
           new vscode.ThemeIcon("remote-explorer-documentation"),
-          vscode.Uri.parse(`${repositoryUrl}/wiki`)
+          vscode.Uri.parse(`${repositoryUrl}/wiki`),
         ),
         new LinkHelpTreeItem(
           "Electron Build Tools",
@@ -40,22 +40,22 @@ export class HelpTreeDataProvider
               "resources",
               "icons",
               "dark",
-              "electron.svg"
+              "electron.svg",
             ),
             light: vscode.Uri.joinPath(
               this.extensionUri,
               "resources",
               "icons",
               "light",
-              "electron.svg"
+              "electron.svg",
             ),
           },
-          vscode.Uri.parse(buildToolsRepository)
+          vscode.Uri.parse(buildToolsRepository),
         ),
         new LinkHelpTreeItem(
           "Review Issues",
           new vscode.ThemeIcon("remote-explorer-review-issues"),
-          vscode.Uri.parse(`${repositoryUrl}/issues`)
+          vscode.Uri.parse(`${repositoryUrl}/issues`),
         ),
         reportIssueTreeItem,
       ];
@@ -74,7 +74,7 @@ class LinkHelpTreeItem extends vscode.TreeItem {
           light: vscode.Uri;
           dark: vscode.Uri;
         },
-    public readonly url: vscode.Uri
+    public readonly url: vscode.Uri,
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
 

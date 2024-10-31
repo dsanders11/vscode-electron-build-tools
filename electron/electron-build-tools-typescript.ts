@@ -13,7 +13,7 @@ const exports: typeof typescript = {
         const output = service.getEmitOutput(
           fileName,
           emitOnlyDtsFiles,
-          forceDtsEmit
+          forceDtsEmit,
         );
         contentMap.set(fileName, output.outputFiles[1].text);
 

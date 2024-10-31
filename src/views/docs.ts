@@ -22,14 +22,14 @@ export class DocsTreeDataProvider implements TreeDataProvider<TreeItem> {
           return new DocumentTreeItem(
             section.heading,
             new ThemeIcon("file"),
-            section.links[0].destination
+            section.links[0].destination,
           );
         }
 
         return new GroupingTreeItem(
           section.heading,
           new ThemeIcon("library"),
-          section
+          section,
         );
       });
 
@@ -48,8 +48,8 @@ export class DocsTreeDataProvider implements TreeDataProvider<TreeItem> {
             link.description,
             new ThemeIcon("file"),
             link.destination,
-            nestedLinks
-          )
+            nestedLinks,
+          ),
         );
       }
 
@@ -64,8 +64,8 @@ export class DocsTreeDataProvider implements TreeDataProvider<TreeItem> {
           new DocumentTreeItem(
             link.description,
             new ThemeIcon("file"),
-            link.destination
-          )
+            link.destination,
+          ),
       );
     }
 
@@ -78,13 +78,13 @@ class DocumentTreeItem extends TreeItem {
     label: string,
     public readonly iconPath: ThemeIcon,
     public readonly resourceUri: vscode.Uri,
-    public readonly nestedLinks: DocLink[] = []
+    public readonly nestedLinks: DocLink[] = [],
   ) {
     super(
       label,
       nestedLinks.length === 0
         ? vscode.TreeItemCollapsibleState.None
-        : vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.Collapsed,
     );
 
     this.command = {
@@ -99,7 +99,7 @@ class GroupingTreeItem extends TreeItem {
   constructor(
     label: string,
     public readonly iconPath: vscode.ThemeIcon | undefined,
-    public docSection: DocSection
+    public docSection: DocSection,
   ) {
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
   }

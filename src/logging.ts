@@ -40,7 +40,7 @@ export class OutputChannelLogger extends vscode.Disposable implements ILogger {
   error(errOrMessage: Error | string): void {
     this._logMessage(
       "error",
-      errOrMessage instanceof Error ? errOrMessage.message : errOrMessage
+      errOrMessage instanceof Error ? errOrMessage.message : errOrMessage,
     );
   }
 

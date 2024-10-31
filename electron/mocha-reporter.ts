@@ -3,15 +3,17 @@ import * as path from "path";
 
 import type { reporters, Runner, Test } from "mocha";
 
-const Base: reporters.Base = require(path.resolve(
-  process.env["ELECTRON_ROOT"]!,
-  "spec",
-  "node_modules",
-  "mocha",
-  "lib",
-  "reporters",
-  "base"
-));
+const Base: reporters.Base = require(
+  path.resolve(
+    process.env["ELECTRON_ROOT"]!,
+    "spec",
+    "node_modules",
+    "mocha",
+    "lib",
+    "reporters",
+    "base",
+  ),
+);
 
 // Encode any newlines so we can use newline as a delimeter
 function encodeNewlines(value: string) {
@@ -42,7 +44,7 @@ function Reporter(runner: Runner) {
         JSON.stringify({
           stream: "mocha-test-results",
           data: ["start", { total: runner.total }],
-        })
+        }),
       );
     });
 
@@ -51,7 +53,7 @@ function Reporter(runner: Runner) {
         JSON.stringify({
           stream: "mocha-test-results",
           data: ["test-start", clean(test)],
-        })
+        }),
       );
     });
 
@@ -60,7 +62,7 @@ function Reporter(runner: Runner) {
         JSON.stringify({
           stream: "mocha-test-results",
           data: ["test-end", clean(test)],
-        })
+        }),
       );
     });
 
@@ -69,7 +71,7 @@ function Reporter(runner: Runner) {
         JSON.stringify({
           stream: "mocha-test-results",
           data: ["pass", clean(test)],
-        })
+        }),
       );
     });
 
@@ -78,7 +80,7 @@ function Reporter(runner: Runner) {
         JSON.stringify({
           stream: "mocha-test-results",
           data: ["pending", clean(test)],
-        })
+        }),
       );
     });
 
@@ -87,7 +89,10 @@ function Reporter(runner: Runner) {
       (output as any).err = err;
       (output as any).stack = err.stack || null;
       writeToSocket(
-        JSON.stringify({ stream: "mocha-test-results", data: ["fail", output] })
+        JSON.stringify({
+          stream: "mocha-test-results",
+          data: ["fail", output],
+        }),
       );
     });
 
@@ -97,7 +102,7 @@ function Reporter(runner: Runner) {
           stream: "mocha-test-results",
           // @ts-ignore
           data: ["end", this.stats],
-        })
+        }),
       );
     });
   });

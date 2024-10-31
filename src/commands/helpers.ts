@@ -33,7 +33,7 @@ const targetLineLength = 80;
 function getLinesForSelection(
   document: vscode.TextDocument,
   selection: vscode.Selection,
-  allowEmptySelections = true
+  allowEmptySelections = true,
 ) {
   const lines: vscode.TextLine[] = [];
 
@@ -87,7 +87,7 @@ function wrapLine(text: string) {
 export function registerHelperCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode.copyToClipboard", (value: string) =>
-      vscode.env.clipboard.writeText(value)
+      vscode.env.clipboard.writeText(value),
     ),
     vscode.commands.registerCommand(
       "vscode.window.showOpenDialog",
@@ -97,7 +97,7 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
         if (results) {
           return results[0].fsPath;
         }
-      }
+      },
     ),
     vscode.commands.registerTextEditorCommand(
       "markdown.prettifyTable",
@@ -141,7 +141,7 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
                   } else {
                     return MarkdownTableColumnAlignment.LEFT;
                   }
-                })
+                }),
               );
             }
           }
@@ -181,15 +181,16 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
                     prettifiedColumn = column.padEnd(targetLength, " ");
                     break;
 
-                  case MarkdownTableColumnAlignment.CENTER:
+                  case MarkdownTableColumnAlignment.CENTER: {
                     const padLeft = Math.ceil(
-                      (targetLength - column.length) / 2
+                      (targetLength - column.length) / 2,
                     );
                     const padRight = targetLength - column.length - padLeft;
                     prettifiedColumn = `${" ".repeat(
-                      padLeft
+                      padLeft,
                     )}${column}${" ".repeat(padRight)}`;
                     break;
+                  }
 
                   case MarkdownTableColumnAlignment.RIGHT:
                     prettifiedColumn = column.padStart(targetLength, " ");
@@ -207,13 +208,13 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
         } else {
           vscode.window.setStatusBarMessage("No markdown table selected");
         }
-      }
+      },
     ),
     vscode.commands.registerTextEditorCommand(
       "markdown.rewrapSelections",
       (
         { document, selections }: vscode.TextEditor,
-        edit: vscode.TextEditorEdit
+        edit: vscode.TextEditorEdit,
       ) => {
         for (const selection of selections) {
           const originalText = document.getText(selection);
@@ -222,7 +223,7 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
           if (lines === null) {
             Logger.warn("User tried to rewrap empty or partial line selection");
             vscode.window.setStatusBarMessage(
-              "Can't rewrap empty or partial line selection"
+              "Can't rewrap empty or partial line selection",
             );
             continue;
           }
@@ -234,13 +235,13 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
             edit.replace(selection, rewrappedText);
           }
         }
-      }
+      },
     ),
     vscode.commands.registerTextEditorCommand(
       "markdown.wrapLines",
       (
         { document, selections }: vscode.TextEditor,
-        edit: vscode.TextEditorEdit
+        edit: vscode.TextEditorEdit,
       ) => {
         for (const selection of selections) {
           const lines = getLinesForSelection(document, selection);
@@ -248,7 +249,7 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
           if (lines === null) {
             Logger.warn("User tried to wrap line with partial line selection");
             vscode.window.setStatusBarMessage(
-              "Can't wrap line with partial line selection"
+              "Can't wrap line with partial line selection",
             );
             continue;
           }
@@ -269,7 +270,7 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
             }
           }
         }
-      }
-    )
+      },
+    ),
   );
 }

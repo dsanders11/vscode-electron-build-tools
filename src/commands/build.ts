@@ -26,16 +26,16 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
         const operationName = "Electron Build Tools - Building";
 
         const buildConfig = vscode.workspace.getConfiguration(
-          "electronBuildTools.build"
+          "electronBuildTools.build",
         );
         let options = Object.entries(
-          buildConfig.get<ExtensionConfig.BuildOptions>("buildOptions")!
+          buildConfig.get<ExtensionConfig.BuildOptions>("buildOptions")!,
         ).reduce((opts, [key, value]) => {
           opts.push(`${key} ${value}`.trim());
           return opts;
         }, [] as string[]);
         let ninjaArgs = Object.entries(
-          buildConfig.get<ExtensionConfig.NinjaArgs>("ninjaArgs")!
+          buildConfig.get<ExtensionConfig.NinjaArgs>("ninjaArgs")!,
         ).reduce((opts, [key, value]) => {
           opts.push(`${key} ${value}`.trim());
           return opts;
@@ -213,10 +213,10 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
         });
 
         await task.finished;
-      }
+      },
     ),
     vscode.commands.registerCommand(`${commandPrefix}.buildAdvanced`, () => {
       return vscode.commands.executeCommand(`${commandPrefix}.build`, true);
-    })
+    }),
   );
 }

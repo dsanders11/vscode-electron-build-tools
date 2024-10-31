@@ -32,18 +32,18 @@ export class ElectronFileSystemProvider implements vscode.FileSystemProvider {
     };
   }
 
-  readDirectory(uri: vscode.Uri): [string, vscode.FileType][] {
+  readDirectory(): [string, vscode.FileType][] {
     throw new vscode.FileSystemError("Method not implemented.");
   }
 
-  createDirectory(uri: vscode.Uri): void {
+  createDirectory(): void {
     throw new vscode.FileSystemError("Method not implemented.");
   }
 
   async readFile(uri: vscode.Uri): Promise<Uint8Array> {
     return Buffer.from(
       await getContentForUri(uri.with({ scheme: "file" })),
-      "utf8"
+      "utf8",
     );
   }
 

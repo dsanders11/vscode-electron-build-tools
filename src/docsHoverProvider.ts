@@ -6,7 +6,6 @@ export class DocsHoverProvider implements vscode.HoverProvider {
   provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Hover> {
     const line = document.lineAt(position);
     const urlFragment = parseMarkdownHeader(line.text)?.urlFragment;
@@ -17,12 +16,12 @@ export class DocsHoverProvider implements vscode.HoverProvider {
 
       const commandUri = makeCommandUri(
         "vscode.copyToClipboard",
-        `#${urlFragment}`
+        `#${urlFragment}`,
       );
       const commandText = "Copy URL Fragment to Clipboard";
       content.appendMarkdown(`$(link) #${urlFragment}\r\n\r\n`);
       content.appendMarkdown(
-        `[${commandText}](${commandUri} "${commandText}")`
+        `[${commandText}](${commandUri} "${commandText}")`,
       );
 
       return new vscode.Hover(content, line.range);

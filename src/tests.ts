@@ -47,13 +47,13 @@ type MochaEvent =
 
 export function createTestController(
   context: vscode.ExtensionContext,
-  electronRoot: vscode.Uri
+  electronRoot: vscode.Uri,
 ) {
   const runProfileData = new WeakMap<vscode.TestRunProfile, string>();
 
   const testController = vscode.tests.createTestController(
     "electron-build-tools-tests",
-    "Electron Tests"
+    "Electron Tests",
   );
 
   testController.resolveHandler = async (test?: vscode.TestItem) => {
@@ -79,7 +79,7 @@ export function createTestController(
   async function runTests(
     request: vscode.TestRunRequest,
     token: vscode.CancellationToken,
-    debug: boolean = false
+    debug: boolean = false,
   ) {
     const extraArgs = request.profile
       ? runProfileData.get(request.profile)
@@ -158,7 +158,7 @@ export function createTestController(
         env: {
           MOCHA_REPORTER: "mocha-multi-reporters",
           MOCHA_MULTI_REPORTERS: `${context.asAbsolutePath(
-            "out/electron/mocha-reporter.js"
+            "out/electron/mocha-reporter.js",
           )}, spec`,
           ELECTRON_ROOT: electronRoot.fsPath,
         },
@@ -174,7 +174,7 @@ export function createTestController(
 
     task.onDidWriteData(({ stream, data }) => {
       if (stream === "mocha-test-results") {
-        const [eventName, details]: MochaEvent = data;
+        const [eventName, details] = data as MochaEvent;
         const test = testsById.get(details.fullTitle);
 
         if (test) {
@@ -192,14 +192,14 @@ export function createTestController(
               testMessage.expectedOutput = details.err.expected;
             } else {
               testMessage = new vscode.TestMessage(
-                "Couldn't parse failure output"
+                "Couldn't parse failure output",
               );
             }
 
             // Pull file position details if they're available
             if (test.uri && details.err && details.stack) {
               const failureDetails = /^.*\((.*):(\d+):(\d+)\)\s*$/m.exec(
-                details.stack
+                details.stack,
               );
 
               if (
@@ -210,8 +210,8 @@ export function createTestController(
                   test.uri,
                   new vscode.Position(
                     parseInt(failureDetails[2]) - 1,
-                    parseInt(failureDetails[3]) - 1
-                  )
+                    parseInt(failureDetails[3]) - 1,
+                  ),
                 );
               }
             }
@@ -230,7 +230,7 @@ export function createTestController(
     task.onDidWriteErrorLine(({ line }) => {
       if (/^An error occurred while running the spec runner\s*$/.test(line)) {
         testRunError = new vscode.TestMessage(
-          "An error occurred while running the spec runner"
+          "An error occurred while running the spec runner",
         );
       }
     });
@@ -246,7 +246,7 @@ export function createTestController(
 
       if (!debuggingSession) {
         testRunError = new vscode.TestMessage(
-          "Couldn't start debugging session"
+          "Couldn't start debugging session",
         );
         task.terminate();
       }
@@ -281,10 +281,10 @@ export function createTestController(
       return ExtensionState.runOperation(
         ExtensionOperation.RUN_TESTS,
         () => runTests(request, token),
-        ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS)
+        ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
       );
     },
-    true
+    true,
   );
 
   const debugProfile = testController.createRunProfile(
@@ -294,10 +294,10 @@ export function createTestController(
       return ExtensionState.runOperation(
         ExtensionOperation.RUN_TESTS,
         () => runTests(request, token, true),
-        ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS)
+        ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
       );
     },
-    false
+    false,
   );
 
   for (const profile of [runProfile, debugProfile]) {
@@ -322,7 +322,7 @@ export function createTestController(
 function createTestItems(
   testController: vscode.TestController,
   suite: ParsedTestSuite,
-  collection: vscode.TestItemCollection
+  collection: vscode.TestItemCollection,
 ) {
   const tests: ParsedTestData[] = [];
 
@@ -330,7 +330,7 @@ function createTestItems(
     const test = testController.createTestItem(
       parsedTest.fullTitle,
       parsedTest.title,
-      parsedTest.file ? vscode.Uri.file(parsedTest.file) : undefined
+      parsedTest.file ? vscode.Uri.file(parsedTest.file) : undefined,
     );
     test.sortText = `a${idx}`;
 
@@ -345,7 +345,7 @@ function createTestItems(
     const testSuite = testController.createTestItem(
       parsedSuite.fullTitle,
       parsedSuite.title,
-      parsedSuite.file ? vscode.Uri.file(parsedSuite.file) : undefined
+      parsedSuite.file ? vscode.Uri.file(parsedSuite.file) : undefined,
     );
     // Suites run after tests, so sort accordingly
     testSuite.sortText = `b${idx}`;
@@ -357,7 +357,7 @@ function createTestItems(
     collection.add(testSuite);
 
     tests.push(
-      ...createTestItems(testController, parsedSuite, testSuite.children)
+      ...createTestItems(testController, parsedSuite, testSuite.children),
     );
   }
 
@@ -368,12 +368,12 @@ async function discoverTests(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   testController: vscode.TestController,
-  token?: vscode.CancellationToken
+  token?: vscode.CancellationToken,
 ) {
   const testSuites = await ExtensionState.runOperation(
     ExtensionOperation.LOAD_TESTS,
     () => getElectronTests(context, electronRoot, token),
-    ExtensionState.isOperationRunning(ExtensionOperation.LOAD_TESTS)
+    ExtensionState.isOperationRunning(ExtensionOperation.LOAD_TESTS),
   );
 
   // CancellationToken may have been used
@@ -387,12 +387,12 @@ async function getElectronTests(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   token?: vscode.CancellationToken,
-  files?: vscode.Uri[]
+  files?: vscode.Uri[],
 ): Promise<ParsedTestSuite | void> {
   if (!files) {
     files = await vscode.workspace.findFiles(
       new vscode.RelativePattern(electronRoot, `spec/**/*-spec.{js,ts}`),
-      "**/node_modules/**"
+      "**/node_modules/**",
     );
   }
 
@@ -400,11 +400,11 @@ async function getElectronTests(
   await setupSpecRunner(electronRoot.fsPath);
 
   const electronExe = await vscode.commands.executeCommand<string>(
-    `${commandPrefix}.show.exe`
+    `${commandPrefix}.show.exe`,
   )!;
   const scriptName = context.asAbsolutePath("out/electron/listMochaTests.js");
   const tsNodeCompiler = context.asAbsolutePath(
-    "out/electron/electron-build-tools-typescript.js"
+    "out/electron/electron-build-tools-typescript.js",
   );
   const socketName = generateSocketName();
 
@@ -421,8 +421,8 @@ async function getElectronTests(
         // to pick up the other handy stuff like debugger auto-attach
         ...Object.fromEntries(
           Object.entries(process.env).filter(
-            ([key]) => !key.startsWith("ELECTRON_")
-          )
+            ([key]) => !key.startsWith("ELECTRON_"),
+          ),
         ),
         TS_NODE_PROJECT: vscode.Uri.joinPath(electronRoot, "tsconfig.spec.json")
           .fsPath,
@@ -433,7 +433,7 @@ async function getElectronTests(
         ELECTRON_DISABLE_SECURITY_WARNINGS: "true",
         ELECTRON_ROOT: electronRoot.fsPath,
       },
-    })
+    }),
   );
   task.presentationOptions = {
     reveal: vscode.TaskRevealKind.Silent,
@@ -441,6 +441,7 @@ async function getElectronTests(
     clear: true,
   };
 
+  // eslint-disable-next-line no-async-promise-executor
   return new Promise<ParsedTestSuite | void>(async (resolve, reject) => {
     let result = "";
 

@@ -58,7 +58,7 @@ function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   patchesProvider: ElectronPatchesProvider,
-  patchesView: vscode.TreeView<vscode.TreeItem>
+  patchesView: vscode.TreeView<vscode.TreeItem>,
 ) {
   registerBuildCommands(context);
   registerPatchesCommands(context, electronRoot, patchesProvider, patchesView);
@@ -76,7 +76,7 @@ function registerElectronBuildToolsCommands(
 
           const patchDir = path.relative(
             patchesRoot.path,
-            path.dirname(file.path)
+            path.dirname(file.path),
           );
 
           try {
@@ -85,11 +85,11 @@ function registerElectronBuildToolsCommands(
               patchesProvider,
               async (
                 element: vscode.TreeItem | undefined,
-                children: vscode.TreeItem[]
+                children: vscode.TreeItem[],
               ) => {
                 if (!element) {
                   const item = (children as PatchDirectory[]).find(
-                    (child) => child.name === patchDir
+                    (child) => child.name === patchDir,
                   );
 
                   if (item) {
@@ -99,7 +99,7 @@ function registerElectronBuildToolsCommands(
                   }
                 } else {
                   const item = (children as Patch[]).find(
-                    (child) => child.resourceUri.fsPath === file.fsPath
+                    (child) => child.resourceUri.fsPath === file.fsPath,
                   );
 
                   if (item) {
@@ -109,14 +109,14 @@ function registerElectronBuildToolsCommands(
                   }
                 }
               },
-              { expand: true, focus: true }
+              { expand: true, focus: true },
             );
           } catch (err) {
             Logger.error(err instanceof Error ? err : String(err));
             vscode.window.showErrorMessage("Couldn't reveal patch in sidebar");
           }
         }
-      }
+      },
     ),
     vscode.commands.registerCommand(`${commandPrefix}.show.exe`, async () => {
       const { stdout } = await exec(`${buildToolsExecutable} show exe`, {
@@ -134,10 +134,10 @@ function registerElectronBuildToolsCommands(
           `${buildToolsExecutable} show out --path`,
           {
             encoding: "utf8",
-          }
+          },
         );
         return stdout.trim();
-      }
+      },
     ),
     vscode.commands.registerCommand(`${commandPrefix}.show.root`, async () => {
       const { stdout } = await exec(`${buildToolsExecutable} show root`, {
@@ -150,7 +150,7 @@ function registerElectronBuildToolsCommands(
         encoding: "utf8",
       });
       return stdout.trim();
-    })
+    }),
   );
 }
 
@@ -163,8 +163,8 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(
       viewIds.HELP,
-      new HelpTreeDataProvider(context.extensionUri)
-    )
+      new HelpTreeDataProvider(context.extensionUri),
+    ),
   );
 
   const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -183,7 +183,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const configsCollector = new BuildToolsConfigCollector(context);
     const configsProvider = new ElectronBuildToolsConfigsProvider(
-      configsCollector
+      configsCollector,
     );
     const configsView = vscode.window.createTreeView(viewIds.CONFIGS, {
       treeDataProvider: configsProvider,
@@ -209,9 +209,9 @@ export async function activate(context: vscode.ExtensionContext) {
             } catch {
               configsView.message = "Couldn't get configs.";
             }
-          }
+          },
         );
-      }
+      },
     );
 
     registerConfigsCommands(context, configsCollector, configsProvider);
@@ -233,7 +233,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const patchesConfig = getPatchesConfigFile(electronRoot);
       const patchesProvider = new ElectronPatchesProvider(
         electronRoot,
-        patchesConfig
+        patchesConfig,
       );
       const patchesView = vscode.window.createTreeView(viewIds.PATCHES, {
         showCollapseAll: true,
@@ -251,7 +251,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }),
         vscode.window.registerTreeDataProvider(
           viewIds.ELECTRON,
-          new ElectronViewProvider(electronRoot)
+          new ElectronViewProvider(electronRoot),
         ),
         // There are two custom schemes used:
         //   * electron-build-tools
@@ -276,35 +276,35 @@ export async function activate(context: vscode.ExtensionContext) {
         // our needs.
         vscode.workspace.registerTextDocumentContentProvider(
           virtualDocumentScheme,
-          new TextDocumentContentProvider()
+          new TextDocumentContentProvider(),
         ),
         vscode.workspace.registerFileSystemProvider(
           virtualFsScheme,
           new ElectronFileSystemProvider(),
-          { isReadonly: true }
+          { isReadonly: true },
         ),
         vscode.window.registerFileDecorationProvider(
-          new ElectronFileDecorationProvider()
+          new ElectronFileDecorationProvider(),
         ),
         vscode.languages.registerHoverProvider(
           {
             language: "markdown",
             pattern: new vscode.RelativePattern(electronRoot, "docs/**/*.md"),
           },
-          new DocsHoverProvider()
+          new DocsHoverProvider(),
         ),
         vscode.languages.registerDocumentLinkProvider(
           { language: "gn" },
-          new GnLinkProvider(electronRoot)
+          new GnLinkProvider(electronRoot),
         ),
         vscode.languages.registerDocumentFormattingEditProvider(
           { language: "gn" },
-          new GnFormattingProvider(electronRoot)
+          new GnFormattingProvider(electronRoot),
         ),
         vscode.languages.registerCompletionItemProvider(
           SnippetProvider.DOCUMENT_SELECTOR,
           new SnippetProvider(),
-          ...SnippetProvider.TRIGGER_CHARACTERS
+          ...SnippetProvider.TRIGGER_CHARACTERS,
         ),
         vscode.languages.registerCompletionItemProvider(
           {
@@ -312,14 +312,14 @@ export async function activate(context: vscode.ExtensionContext) {
             pattern: new vscode.RelativePattern(electronRoot, "docs/**/*.md"),
           },
           new DocsLinkCompletionProvider(linkableProvider),
-          ...DocsLinkCompletionProvider.TRIGGER_CHARACTERS
-        )
+          ...DocsLinkCompletionProvider.TRIGGER_CHARACTERS,
+        ),
       );
       registerElectronBuildToolsCommands(
         context,
         electronRoot,
         patchesProvider,
-        patchesView
+        patchesView,
       );
       registerDocsCommands(context, linkableProvider);
       registerHelperCommands(context);
@@ -328,6 +328,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
       // Render emojis in Markdown
       result.extendMarkdownIt = (md: MarkdownIt) =>
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         md.use(require("markdown-it-emoji"));
     }
   }

@@ -23,7 +23,7 @@ export class DocsLinkCompletionProvider
     document: vscode.TextDocument,
     position: vscode.Position,
     token: vscode.CancellationToken,
-    context: vscode.CompletionContext
+    context: vscode.CompletionContext,
   ): Promise<vscode.CompletionList<vscode.CompletionItem>> {
     const baseDir = path.dirname(document.uri.path);
     const completions: vscode.CompletionItem[] = [];
@@ -34,8 +34,8 @@ export class DocsLinkCompletionProvider
     if (linkMatches.length) {
       for (const linkWordMatch of linkMatches) {
         const fullLinkText = linkWordMatch[0];
-        const linkText = linkWordMatch[5];
-        const hashIdx = linkText.indexOf("#");
+        // const linkText = linkWordMatch[5];
+        // const hashIdx = linkText.indexOf("#");
 
         const matchIdx = linkWordMatch.index || 0;
         const positionWithinLink = position.character - matchIdx;
@@ -53,32 +53,35 @@ export class DocsLinkCompletionProvider
             const files = await vscode.workspace.findFiles(
               new vscode.RelativePattern(
                 this._linkablesProvider.docsRoot,
-                "**/*"
+                "**/*",
               ),
               new vscode.RelativePattern(
                 this._linkablesProvider.docsRoot,
-                "fiddles"
+                "fiddles",
               ),
               undefined,
-              token
+              token,
             );
 
             for (const file of files) {
               const relativePath = ensurePosixSeparators(
-                path.relative(baseDir, file.path)
+                path.relative(baseDir, file.path),
               );
 
               const completion = new vscode.CompletionItem(
                 relativePath,
-                vscode.CompletionItemKind.File
+                vscode.CompletionItemKind.File,
               );
               completion.detail = "Electron";
               completion.range = new vscode.Range(
                 new vscode.Position(
                   position.line,
-                  matchIdx + linkDefinitionBegin + 1
+                  matchIdx + linkDefinitionBegin + 1,
                 ),
-                new vscode.Position(position.line, matchIdx + linkDefinitionEnd)
+                new vscode.Position(
+                  position.line,
+                  matchIdx + linkDefinitionEnd,
+                ),
               );
               // Feels awkward to have the "../" completions at the start, so push them to the end
               completion.sortText = relativePath.startsWith(".")

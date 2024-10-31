@@ -12,8 +12,6 @@ export class SnippetProvider implements vscode.CompletionItemProvider {
   provideCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken,
-    context: vscode.CompletionContext
   ): vscode.ProviderResult<
     vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem>
   > {
@@ -42,27 +40,27 @@ export class SnippetProvider implements vscode.CompletionItemProvider {
 
   private _commentCompletions(
     document: vscode.TextDocument,
-    position: vscode.Position
+    position: vscode.Position,
   ) {
     const range = document.getWordRangeAtPosition(
       position,
-      /[\/]{1,2}(?:$|\s+[FfTt]*)/
+      /[\/]{1,2}(?:$|\s+[FfTt]*)/,
     );
 
     if (range !== undefined) {
       const fixMeComment = new vscode.CompletionItem(
         "// FIXME",
-        vscode.CompletionItemKind.Snippet
+        vscode.CompletionItemKind.Snippet,
       );
       fixMeComment.detail = "A '// FIXME(...):' comment.";
       fixMeComment.insertText = new vscode.SnippetString(
-        "// FIXME(${1}): ${2}"
+        "// FIXME(${1}): ${2}",
       );
       fixMeComment.range = range;
 
       const todoComment = new vscode.CompletionItem(
         "// TODO",
-        vscode.CompletionItemKind.Snippet
+        vscode.CompletionItemKind.Snippet,
       );
       todoComment.detail = "A '// TODO(...):' comment.";
       todoComment.insertText = new vscode.SnippetString("// TODO(${1}): ${2}");

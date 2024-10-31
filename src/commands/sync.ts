@@ -64,7 +64,7 @@ class SyncProgressWatcher {
     // Load stored reference run, otherwise fall back to the embedded one
     const storedReferenceRun =
       this._extensionContext.globalState.get<ReferenceSyncRun>(
-        "referenceSyncRun"
+        "referenceSyncRun",
       );
     this._referenceRun = [...(storedReferenceRun || embeddedReferenceRun)];
   }
@@ -81,12 +81,12 @@ class SyncProgressWatcher {
       (milestone) => ({
         line: milestone.line,
         progress: Math.floor((100 * milestone.timestamp) / elapsedTime),
-      })
+      }),
     );
 
     await this._extensionContext.globalState.update(
       "referenceSyncRun",
-      referenceRun
+      referenceRun,
     );
   }
 
@@ -110,7 +110,7 @@ class SyncProgressWatcher {
 
     if (milestone) {
       const idx = this._referenceRun.findIndex(
-        (referenceMilestone) => referenceMilestone.line === milestone!.line
+        (referenceMilestone) => referenceMilestone.line === milestone!.line,
       );
 
       if (idx !== -1) {
@@ -166,7 +166,7 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
                   if (value && value === confirm) {
                     vscode.commands.executeCommand(
                       `${commandPrefix}.sync`,
-                      true
+                      true,
                     );
                   }
                 });
@@ -189,10 +189,10 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
             await progressWatcher.finishRun();
           }
         }
-      }
+      },
     ),
     vscode.commands.registerCommand(`${commandPrefix}.sync.force`, () => {
       return vscode.commands.executeCommand(`${commandPrefix}.sync`, true);
-    })
+    }),
   );
 }

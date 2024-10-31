@@ -12,13 +12,13 @@ export class TextDocumentContentProvider
     if (view === "contents") {
       return (
         await vscode.workspace.fs.readFile(
-          uri.with({ scheme: virtualFsScheme })
+          uri.with({ scheme: virtualFsScheme }),
         )
       ).toString();
     } else if (view === "patch-overview") {
       const patchContents = (
         await vscode.workspace.fs.readFile(
-          uri.with({ scheme: virtualFsScheme })
+          uri.with({ scheme: virtualFsScheme }),
         )
       ).toString();
 

@@ -9,7 +9,7 @@ const command = Buffer.from(b64command, "base64").toString();
 
 // Echo the command being run to stderr for easier debugging
 process.stderr.write(
-  `Executing "\x1b[36m${command}\x1b[0m" in \x1b[35m${process.cwd()}\x1b[0m\r\n`
+  `Executing "\x1b[36m${command}\x1b[0m" in \x1b[35m${process.cwd()}\x1b[0m\r\n`,
 );
 
 // Command was base64-encoded to prevent quotes from being mucked with
@@ -52,6 +52,6 @@ const socket = net.createConnection(socketPath, () => {
 });
 
 // We bubble up the exit code as well
-cp.on("exit", (exitCode, signal) => {
+cp.on("exit", (exitCode) => {
   process.exit(suppressExitCode ? 0 : exitCode || 0);
 });

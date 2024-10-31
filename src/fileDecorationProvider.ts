@@ -13,7 +13,6 @@ export class ElectronFileDecorationProvider
 {
   provideFileDecoration(
     uri: vscode.Uri,
-    token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.FileDecoration> {
     if (
       uri.scheme === virtualDocumentScheme ||
