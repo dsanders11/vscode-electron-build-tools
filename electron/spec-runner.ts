@@ -3,10 +3,10 @@
 
 import * as childProcess from "node:child_process";
 import * as crypto from "node:crypto";
+import * as fs from "node:fs";
 import * as path from "node:path";
 
 export async function setupSpecRunner(electronRoot: string) {
-  const fs = require(path.resolve(electronRoot, "node_modules", "fs-extra"));
   const { hashElement } = require(
     path.resolve(electronRoot, "node_modules", "folder-hash"),
   );
@@ -89,7 +89,10 @@ export async function setupSpecRunner(electronRoot: string) {
       npm_config_yes: "true",
     };
     if (fs.existsSync(path.resolve(dir, "node_modules"))) {
-      await fs.remove(path.resolve(dir, "node_modules"));
+      await fs.promises.rm(path.resolve(dir, "node_modules"), {
+        force: true,
+        recursive: true,
+      });
     }
     const { status } = childProcess.spawnSync(
       NPX_CMD,
