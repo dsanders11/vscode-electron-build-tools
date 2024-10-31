@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import * as net from "net";
 import * as path from "path";
 
@@ -86,12 +88,10 @@ function Reporter(runner: Runner) {
 
     runner.on("fail", (test, err) => {
       const output = clean(test);
-      (output as any).err = err;
-      (output as any).stack = err.stack || null;
       writeToSocket(
         JSON.stringify({
           stream: "mocha-test-results",
-          data: ["fail", output],
+          data: ["fail", { ...output, err, stack: err.stack || null }],
         }),
       );
     });

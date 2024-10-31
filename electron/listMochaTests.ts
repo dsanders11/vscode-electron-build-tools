@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import * as net from "net";
 import * as path from "path";
 import * as readline from "readline";
 
 import type { default as MochaType, Test, Suite } from "mocha";
+import type { Range } from "vscode";
 import type { ParsedTestSuite } from "../src/tests";
 
 // We want to terminate on errors, not show a dialog
@@ -24,6 +27,7 @@ const { getFileContent } = require(
   path.resolve(__dirname, "electron-build-tools-typescript"),
 );
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sourceMapConsumers = new Map<string, any>();
 
 function positionAt(content: string, offset: number) {
@@ -33,7 +37,7 @@ function positionAt(content: string, offset: number) {
   return { line: lines.length - 1, character: lastLine.length };
 }
 
-function mapFnBodyToSourceRange(file: string, body?: string) {
+function mapFnBodyToSourceRange(file: string, body?: string): Range | null {
   if (body) {
     let sourceMap = sourceMapConsumers.get(file);
 
@@ -72,12 +76,16 @@ function mapFnBodyToSourceRange(file: string, body?: string) {
         return {
           start: { line: sourceStart.line - 1, character: sourceStart.column },
           end: { line: sourceEnd.line - 1, character: sourceEnd.column },
-        };
+        } as Range;
       }
     }
   }
 
   return null;
+}
+
+interface SuiteWithBody extends Suite {
+  body: string;
 }
 
 function parseTestSuites(suite: Suite) {
@@ -87,7 +95,7 @@ function parseTestSuites(suite: Suite) {
     file: suite.file,
     pending: suite.pending,
     range: suite.file
-      ? (mapFnBodyToSourceRange(suite.file, (suite as any)?.body) as any)
+      ? mapFnBodyToSourceRange(suite.file, (suite as SuiteWithBody).body)
       : null,
     suites: [],
     tests: suite.tests.map((test: Test) => ({
@@ -95,9 +103,7 @@ function parseTestSuites(suite: Suite) {
       fullTitle: test.fullTitle(),
       file: test.file,
       pending: test.pending,
-      range: test.file
-        ? (mapFnBodyToSourceRange(test.file, test.body) as any)
-        : null,
+      range: test.file ? mapFnBodyToSourceRange(test.file, test.body) : null,
     })),
   };
 
@@ -113,7 +119,7 @@ function parseTestSuites(suite: Suite) {
 global.serviceWorkerScheme = "sw";
 global.standardScheme = "app";
 global.zoomScheme = "zoom";
-(global as any).window = {};
+(global as Record<string, unknown>).window = {};
 
 app
   .whenReady()
@@ -158,7 +164,7 @@ app
             socket.write(JSON.stringify(parsedSuites, undefined, 4), () =>
               process.exit(0),
             );
-          } catch (err: any) {
+          } catch (err: unknown) {
             console.error(err);
             process.exit(1);
           }
@@ -170,7 +176,7 @@ app
       });
     });
   })
-  .catch((err: any) => {
+  .catch((err: unknown) => {
     console.error(err);
     process.exit(1);
   });

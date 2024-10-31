@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Modified from upstream https://github.com/mochajs/mocha/blob/v5.2.0/lib/interfaces/bdd.js
 // Changes: include `body` property for suites and skipped tests so that range can be extracted
 
