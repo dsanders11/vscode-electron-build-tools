@@ -1,6 +1,6 @@
-import * as net from "net";
-import * as readline from "readline";
-import { PassThrough } from "stream";
+import * as net from "node:net";
+import * as readline from "node:readline";
+import { PassThrough } from "node:stream";
 
 import * as vscode from "vscode";
 

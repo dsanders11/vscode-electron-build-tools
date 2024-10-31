@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-require-imports */
-import * as net from "net";
-import * as path from "path";
+import * as net from "node:net";
+import * as path from "node:path";
 
 import type { reporters, Runner, Test } from "mocha";
 

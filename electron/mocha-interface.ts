@@ -4,7 +4,7 @@
 // Modified from upstream https://github.com/mochajs/mocha/blob/v5.2.0/lib/interfaces/bdd.js
 // Changes: include `body` property for suites and skipped tests so that range can be extracted
 
-import * as path from "path";
+import * as path from "node:path";
 
 import type { Func, Suite, Test as TestType } from "mocha";
 import type { CommonFunctions } from "mocha/lib/interfaces/common";

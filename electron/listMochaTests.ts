@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-require-imports */
-import * as net from "net";
-import * as path from "path";
-import * as readline from "readline";
+import * as net from "node:net";
+import * as path from "node:path";
+import * as readline from "node:readline";
 
 import type { default as MochaType, Test, Suite } from "mocha";
 import type { Range } from "vscode";

@@ -1,5 +1,5 @@
-import * as childProcess from "child_process";
-import * as net from "net";
+import * as childProcess from "node:child_process";
+import * as net from "node:net";
 
 import type { IpcMessage } from "../src/common";
 

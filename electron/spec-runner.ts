@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable @typescript-eslint/no-require-imports */
 
-import * as childProcess from "child_process";
-import * as crypto from "crypto";
-import * as path from "path";
+import * as childProcess from "node:child_process";
+import * as crypto from "node:crypto";
+import * as path from "node:path";
 
 export async function setupSpecRunner(electronRoot: string) {
   const fs = require(path.resolve(electronRoot, "node_modules", "fs-extra"));
