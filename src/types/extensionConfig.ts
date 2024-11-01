@@ -37,9 +37,9 @@ export interface ElectronBuildTools {
  */
 export interface BuildOptions {
   /**
-   * Build without goma.
+   * Build without remote execution (entirely locally).
    */
-  "--no-goma"?: "";
+  "--no-remote"?: "";
   /**
    * Force a re-run of `gn gen` before building.
    */

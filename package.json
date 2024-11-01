@@ -134,12 +134,6 @@
         "enablement": "electron-build-tools:active"
       },
       {
-        "command": "electron-build-tools.show.goma",
-        "title": "Show Goma",
-        "category": "Electron Build Tools",
-        "enablement": "electron-build-tools:build-tools-installed"
-      },
-      {
         "command": "electron-build-tools.showPatchesDocs",
         "title": "Show Patches Documentation",
         "category": "Electron Build Tools",
@@ -202,9 +196,9 @@
             "type": "string"
           },
           "properties": {
-            "--no-goma": {
+            "--no-remote": {
               "type": "string",
-              "description": "Build without goma.",
+              "description": "Build without remote execution (entirely locally).",
               "enum": [
                 ""
               ]
@@ -350,10 +344,6 @@
         {
           "command": "electron-build-tools.searchDocs",
           "when": "electron-build-tools:active"
-        },
-        {
-          "command": "electron-build-tools.show.goma",
-          "when": "electron-build-tools:build-tools-installed"
         },
         {
           "command": "electron-build-tools.showPatchesDocs",

@@ -124,9 +124,6 @@ function registerElectronBuildToolsCommands(
       });
       return stdout.trim();
     }),
-    vscode.commands.registerCommand(`${commandPrefix}.show.goma`, async () => {
-      await exec(`${buildToolsExecutable} show goma`);
-    }),
     vscode.commands.registerCommand(
       `${commandPrefix}.show.out.path`,
       async () => {
