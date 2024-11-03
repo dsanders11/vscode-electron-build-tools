@@ -324,9 +324,8 @@ export async function activate(context: vscode.ExtensionContext) {
       setupDocsLinting(context);
 
       // Render emojis in Markdown
-      result.extendMarkdownIt = (md: MarkdownIt) =>
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        md.use(require("markdown-it-emoji"));
+      const { default: emojiMarkdownIt } = await import("markdown-it-emoji");
+      result.extendMarkdownIt = (md: MarkdownIt) => md.use(emojiMarkdownIt);
     }
   }
 
