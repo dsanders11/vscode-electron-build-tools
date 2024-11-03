@@ -1,14 +1,25 @@
 {
   "title": "JSON schema for Electron patches/config.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "patternProperties": {
-    "^src\/electron\/": {
-      "type": "string",
-      "description": "Maps patch directory to source tree directory",
-      "minLength": 1,
-      "pattern": "^(?:src|src\/.+[^\/])$"
-    }
-  },
-  "additionalProperties": false
+  "description": "Maps patch directory to source tree directory",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "patch_dir": {
+        "type": "string",
+        "description": "Patch directory in the Electron source tree",
+        "minLength": 1,
+        "pattern": "^src\/electron\/"
+      },
+      "repo": {
+        "type": "string",
+        "description": "Repository directory in the Chromium checkout",
+        "minLength": 1,
+        "pattern": "^(?:src|src\/.+[^\/])$"
+      }
+    },
+    "required": ["patch_dir", "repo"],
+    "additionalProperties": false
+  }
 }

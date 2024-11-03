@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import type { ElectronPatchesConfig } from "./types";
-
 export const extensionId = "dsanders11.vscode-electron-build-tools";
 
 export const blankConfigEnumValue = "----";
@@ -17,7 +15,7 @@ export const buildTargets = Object.freeze([
 
 export const buildToolsExecutable = "electron-build-tools";
 
-export const patchDirectoryPrettyNames = Object.freeze<ElectronPatchesConfig>({
+export const patchDirectoryPrettyNames = Object.freeze({
   "src/electron/patches/boringssl": "BoringSSL",
   "src/electron/patches/chromium": "Chromium",
   "src/electron/patches/depot_tools": "depot_tools",
@@ -28,8 +26,10 @@ export const patchDirectoryPrettyNames = Object.freeze<ElectronPatchesConfig>({
   "src/electron/patches/nan": "NAN",
   "src/electron/patches/perfetto": "Perfetto",
   "src/electron/patches/ReactiveObjC": "ReactiveObjC",
+  "src/electron/patches/reclient-configs": "Reclient Configs",
   "src/electron/patches/squirrel.mac": "Squirrel.Mac",
   "src/electron/patches/v8": "V8",
+  "src/electron/patches/webrtc": "WebRTC",
 });
 
 export const checkoutDirectoryGitHubRepo = Object.freeze<{

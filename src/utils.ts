@@ -192,11 +192,9 @@ export function getCheckoutDirectoryForPatchDirectory(
   config: ElectronPatchesConfig,
   patchDirectory: vscode.Uri,
 ) {
-  for (const [patchDirectoryTail, checkoutDirectory] of Object.entries(
-    config,
-  )) {
-    if (patchDirectory.path.endsWith(patchDirectoryTail)) {
-      return vscode.Uri.joinPath(rootDirectory, checkoutDirectory);
+  for (const { patch_dir, repo } of config) {
+    if (patchDirectory.path.endsWith(patch_dir)) {
+      return vscode.Uri.joinPath(rootDirectory, repo);
     }
   }
 

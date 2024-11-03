@@ -5,12 +5,16 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface JSONSchemaForElectronPatchesConfigJson {
+/**
+ * Maps patch directory to source tree directory
+ */
+export type JSONSchemaForElectronPatchesConfigJson = {
   /**
-   * Maps patch directory to source tree directory
-   *
-   * This interface was referenced by `JSONSchemaForElectronPatchesConfigJson`'s JSON-Schema definition
-   * via the `patternProperty` "^src/electron/".
+   * Patch directory in the Electron source tree
    */
-  [k: string]: string;
-}
+  patch_dir: string;
+  /**
+   * Repository directory in the Chromium checkout
+   */
+  repo: string;
+}[];
