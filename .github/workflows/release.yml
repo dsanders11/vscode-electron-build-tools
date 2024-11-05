@@ -9,9 +9,13 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    uses: ./.github/workflows/lint.yml
+
   release:
     name: Release
     runs-on: ubuntu-latest
+    needs: lint
     environment: vsce
     permissions:
       contents: write
@@ -24,8 +28,6 @@ jobs:
           node-version: 22
       - name: Install
         run: yarn install --frozen-lockfile
-      - name: Lint
-        run: yarn lint
       - name: Release
         run: npx semantic-release
         env:
