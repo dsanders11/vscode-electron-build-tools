@@ -31,6 +31,16 @@
     "Electron",
     "build-tools"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Electron build-tools is not supported in untrusted mode."
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "Electron build-tools is not supported in virtual workspaces."
+    }
+  },
   "contributes": {
     "colors": [
       {
