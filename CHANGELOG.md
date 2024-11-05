@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.3 (11-4-2024)
+
+* docs: fix badge linking
+
 ## 0.12.2 (11-4-2024)
 
 * fix: use new(er) patches/config.json format
