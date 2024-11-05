@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.2 (11-4-2024)
+
+* fix: use new(er) patches/config.json format
+* chore: remove references to goma
+* fix: handle changed/deleted patches in PRs
+* chore: sort test files before adding like Electron does
+* fix: don't include any test regexes for run all tests
+* fix: remove signal forwarding code in echo-to-socket
+
 ## 0.12.1 (10-17-2022)
 
 * fix: correct match target in encodeNewlines
