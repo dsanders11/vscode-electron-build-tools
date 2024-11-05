@@ -1,5 +1,8 @@
 # Changelog
 
+> [!IMPORTANT]
+> See <https://github.com/dsanders11/vscode-electron-build-tools/releases> for up-to-date release notes.
+
 ## 0.12.3 (11-4-2024)
 
 * docs: fix badge linking
