@@ -588,6 +588,7 @@
     "npclaudiu.vscode-gn"
   ],
   "main": "./out/main.js",
+  "markdown": "github",
   "scripts": {
     "vscode:prepublish": "run-p \"esbuild:* -- {1}\" -- --minify",
     "esbuild": "run-p \"esbuild:* -- {1}\" -- --sourcemap",
