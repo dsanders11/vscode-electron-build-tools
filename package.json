@@ -585,6 +585,7 @@
     ]
   },
   "extensionPack": [
+    "davidanson.vscode-markdownlint",
     "npclaudiu.vscode-gn"
   ],
   "main": "./out/main.js",
