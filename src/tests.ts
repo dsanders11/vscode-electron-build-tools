@@ -392,7 +392,7 @@ async function getElectronTests(
   if (!files) {
     files = await vscode.workspace.findFiles(
       new vscode.RelativePattern(electronRoot, `spec/**/*-spec.{js,ts}`),
-      "**/node_modules/**",
+      "{**/node_modules/**,**/spec/fixtures/**}",
     );
   }
 
