@@ -110,7 +110,7 @@ export function getConfigsFilePath() {
 
 export async function getConfigDefaultTarget(): Promise<string | undefined> {
   const { stdout } = await exec(
-    `${buildToolsExecutable} show current --filename --no-name`,
+    `${buildToolsExecutable} show current --filepath --no-name`,
     {
       encoding: "utf8",
     },
