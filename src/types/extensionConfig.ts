@@ -21,12 +21,12 @@ export interface ElectronBuildTools {
    */
   "electronBuildTools.build.defaultTarget"?:
     | "----"
-    | "breakpad"
-    | "chromedriver"
+    | "third_party/breakpad:dump_syms"
+    | "electron:electron_chromedriver_zip"
     | "electron"
-    | "electron:dist"
-    | "mksnapshot"
-    | "node:headers";
+    | "electron:electron_dist_zip"
+    | "electron:electron_mksnapshot_zip"
+    | "electron:node_headers";
   "electronBuildTools.build.ninjaArgs"?: NinjaArgs;
   "electronBuildTools.build.showTargets"?: ShowTargets;
   "electronBuildTools.docs.lintRelativeLinks"?: LintRelativeLinks;

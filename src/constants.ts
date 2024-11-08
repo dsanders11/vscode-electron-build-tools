@@ -5,12 +5,12 @@ export const extensionId = "dsanders11.vscode-electron-build-tools";
 export const blankConfigEnumValue = "----";
 
 export const buildTargets = Object.freeze([
-  "breakpad",
-  "chromedriver",
+  "third_party/breakpad:dump_syms",
+  "electron:electron_chromedriver_zip",
   "electron",
-  "electron:dist",
-  "mksnapshot",
-  "node:headers",
+  "electron:electron_dist_zip",
+  "electron:electron_mksnapshot_zip",
+  "electron:node_headers",
 ]);
 
 export const buildToolsExecutable = "electron-build-tools";
