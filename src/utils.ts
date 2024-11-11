@@ -486,11 +486,11 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
   return getContentForBlobId(blobId, checkoutDirectory, ghRepo);
 }
 
-export async function hasContentForBlobId(blobId: string) {
-  remoteFileContentCache.has(blobId);
+export function hasContentForBlobId(blobId: string) {
+  return remoteFileContentCache.has(blobId);
 }
 
-export async function setContentForBlobId(blobId: string, content: string) {
+export function setContentForBlobId(blobId: string, content: string) {
   remoteFileContentCache.set(blobId, content);
 }
 
