@@ -38,7 +38,7 @@ export async function setupSpecRunner(electronRoot: string) {
 
   function getSpecHash() {
     return Promise.all([
-      (async () => {
+      (() => {
         const hasher = crypto.createHash("SHA256");
         hasher.update(
           fs.readFileSync(path.resolve(electronRoot, "spec", "package.json")),

@@ -11,7 +11,7 @@ export class HelpTreeDataProvider
     return element;
   }
 
-  async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
+  getChildren(element?: vscode.TreeItem): vscode.TreeItem[] {
     if (!element) {
       const reportIssueTreeItem = new vscode.TreeItem(
         "Report Issue",

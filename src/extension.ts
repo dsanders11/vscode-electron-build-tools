@@ -83,7 +83,7 @@ function registerElectronBuildToolsCommands(
             await drillDown(
               patchesView,
               patchesProvider,
-              async (
+              (
                 element: vscode.TreeItem | undefined,
                 children: vscode.TreeItem[],
               ) => {
@@ -176,7 +176,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // If build-tools is installed, always provide config and sync functionality
   // so that a user can fully setup Electron on a clean machine with commands
   if (buildToolsIsInstalled) {
-    ExtensionState.setInitialState();
+    await ExtensionState.setInitialState();
 
     const configsCollector = new BuildToolsConfigCollector(context);
     const configsProvider = new ElectronBuildToolsConfigsProvider(
@@ -220,10 +220,10 @@ export async function activate(context: vscode.ExtensionContext) {
   if (buildToolsIsInstalled && workspaceFolders) {
     const electronRoot = await findElectronRoot(workspaceFolders[0]);
 
-    setContext("is-electron-workspace", electronRoot !== undefined);
+    await setContext("is-electron-workspace", electronRoot !== undefined);
 
     if (electronRoot !== undefined) {
-      setContext("active", true);
+      await setContext("active", true);
 
       const testController = createTestController(context, electronRoot);
 
@@ -329,7 +329,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   }
 
-  setContext("ready", true);
+  await setContext("ready", true);
 
   return result;
 }

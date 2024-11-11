@@ -97,7 +97,7 @@ export class ElectronBuildToolsConfigsProvider
     });
 
     // Fire off an initial refresh for a better UX
-    this._configCollector.refreshConfigs();
+    void this._configCollector.refreshConfigs();
   }
 
   setActive(configName: string | null): ConfigTreeItem | undefined {

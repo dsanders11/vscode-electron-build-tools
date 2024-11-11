@@ -8,7 +8,7 @@ export class ElectronViewProvider implements TreeDataProvider<TreeItem> {
     return element;
   }
 
-  async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+  getChildren(element?: TreeItem): TreeItem[] {
     if (!element) {
       return [
         new ElectronTreeItem(
