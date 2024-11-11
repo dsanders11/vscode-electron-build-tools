@@ -120,8 +120,6 @@ export function registerPatchesCommands(
           return vscode.commands.executeCommand(
             "vscode.open",
             patchedFile,
-            undefined,
-            `${path.basename(patch)} - ${patchedFilename}`, // TODO - This isn't used?
           );
         } else {
           const queryParams = new URLSearchParams(file.query);
