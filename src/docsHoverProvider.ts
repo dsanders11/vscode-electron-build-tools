@@ -21,7 +21,7 @@ export class DocsHoverProvider implements vscode.HoverProvider {
       const commandText = "Copy URL Fragment to Clipboard";
       content.appendMarkdown(`$(link) #${urlFragment}\r\n\r\n`);
       content.appendMarkdown(
-        `[${commandText}](${commandUri} "${commandText}")`,
+        `[${commandText}](${commandUri.toString()} "${commandText}")`,
       );
 
       return new vscode.Hover(content, line.range);
