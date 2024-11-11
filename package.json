@@ -611,6 +611,7 @@
     "@commitlint/config-conventional": "^19.5.0",
     "@octokit/types": "^7.5.1",
     "@types/diff": "^5.2.1",
+    "@types/eslint__js": "^8.42.3",
     "@types/markdown-it": "^10.0.2",
     "@types/markdown-it-emoji": "^1.4.0",
     "@types/mocha": "^5.2.0",
