@@ -117,7 +117,7 @@ export class ElectronBuildToolsConfigsProvider
 
     // Take off the old label first, then apply new label
     if (oldActiveConfig) {
-      this._onDidChangeTreeData.fire(oldActiveConfig!);
+      this._onDidChangeTreeData.fire(oldActiveConfig);
     }
     this._onDidChangeTreeData.fire(newActiveConfig!);
 
