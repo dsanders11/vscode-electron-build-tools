@@ -1,5 +1,4 @@
 import * as childProcess from "node:child_process";
-import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { promisify } from "node:util";
@@ -28,7 +27,6 @@ import Logger from "./logging";
 import type { ElectronPatchesConfig, EVMConfig } from "./types";
 
 const exec = promisify(childProcess.exec);
-const fsReadFile = promisify(fs.readFile);
 
 const remoteFileContentCache = new LRU<string, string>({
   max: 500,
@@ -115,10 +113,12 @@ export async function getConfigDefaultTarget(): Promise<string | undefined> {
       encoding: "utf8",
     },
   );
-  const configFilename = stdout.trim();
+  const configFilename = vscode.Uri.file(stdout.trim());
 
   const config: EVMConfig = JSON.parse(
-    await fsReadFile(configFilename, { encoding: "utf8" }),
+    await vscode.workspace.fs
+      .readFile(configFilename)
+      .then((buffer) => buffer.toString()),
   );
 
   return config.defaultTarget;

@@ -44,7 +44,7 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
         let settingsDefaultTarget = buildConfig.get<string>("defaultTarget");
         settingsDefaultTarget =
           settingsDefaultTarget === blankConfigEnumValue
-            ? ""
+            ? undefined
             : settingsDefaultTarget;
         let target = settingsDefaultTarget;
 
