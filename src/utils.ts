@@ -214,7 +214,7 @@ export async function getPatchDescription(patch: vscode.Uri) {
 }
 
 export function truncateToLength(text: string, length: number) {
-  return text.length > length ? `${text.substr(0, length - 3)}...` : text;
+  return text.length > length ? `${text.slice(0, length - 3)}...` : text;
 }
 
 export function parsePatchMetadata(patchContents: string) {

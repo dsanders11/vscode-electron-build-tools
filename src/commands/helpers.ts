@@ -62,14 +62,14 @@ function getLinesForSelection(
 function wrapLine(text: string) {
   let initialIndent = "";
   let indent = "";
-  text = text.trimRight();
+  text = text.trimEnd();
 
   for (const { regex, linePrefix } of wrapLineRegexes) {
     if (regex.test(text)) {
       const match = text.match(regex)!;
       initialIndent = match[1];
       indent = linePrefix + " ".repeat(match[0].length - linePrefix.length);
-      text = text.slice(linePrefix.length).trimLeft();
+      text = text.slice(linePrefix.length).trimStart();
       break;
     }
   }
