@@ -117,10 +117,7 @@ export function registerPatchesCommands(
         if (/^[0]+$/.test(blobIdA)) {
           // Show added files as readonly, there's not much point
           // in doing a side-by-side diff where one side is blank
-          return vscode.commands.executeCommand(
-            "vscode.open",
-            patchedFile,
-          );
+          return vscode.commands.executeCommand("vscode.open", patchedFile);
         } else {
           const queryParams = new URLSearchParams(file.query);
           queryParams.delete("blobIdA");
