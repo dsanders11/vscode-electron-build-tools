@@ -88,10 +88,19 @@ function Reporter(runner: Runner) {
 
     runner.on("fail", (test, err) => {
       const output = clean(test);
+      // Manually destructure as err can't be JSON stringified
+      const { actual, expected, message } = err;
       writeToSocket(
         JSON.stringify({
           stream: "mocha-test-results",
-          data: ["fail", { ...output, err, stack: err.stack || null }],
+          data: [
+            "fail",
+            {
+              ...output,
+              error: { actual, expected, message },
+              stack: err.stack || null,
+            },
+          ],
         }),
       );
     });

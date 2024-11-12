@@ -31,17 +31,20 @@ interface MochaTestEvent {
   fullTitle: string;
   duration: number;
   currentRetry?: number;
-  err?: {
+}
+
+interface MochaTestFailEvent extends MochaTestEvent {
+  error: {
     message: string;
     actual?: string;
     expected?: string;
   };
-  stack?: string;
+  stack: string;
 }
 
 type MochaEvent =
   | ["pass", MochaTestEvent]
-  | ["fail", MochaTestEvent]
+  | ["fail", MochaTestFailEvent]
   | ["pending", MochaTestEvent]
   | ["test-start", MochaTestEvent];
 
@@ -186,10 +189,10 @@ export function createTestController(
 
             let testMessage: vscode.TestMessage;
 
-            if (details.err) {
-              testMessage = new vscode.TestMessage(details.err.message);
-              testMessage.actualOutput = details.err.actual;
-              testMessage.expectedOutput = details.err.expected;
+            if (details.error) {
+              testMessage = new vscode.TestMessage(details.error.message);
+              testMessage.actualOutput = details.error.actual;
+              testMessage.expectedOutput = details.error.expected;
             } else {
               testMessage = new vscode.TestMessage(
                 "Couldn't parse failure output",
@@ -197,7 +200,7 @@ export function createTestController(
             }
 
             // Pull file position details if they're available
-            if (test.uri && details.err && details.stack) {
+            if (test.uri && details.error && details.stack) {
               const failureDetails = /^.*\((.*):(\d+):(\d+)\)\s*$/m.exec(
                 details.stack,
               );
