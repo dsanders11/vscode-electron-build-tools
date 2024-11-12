@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-/* eslint-disable @typescript-eslint/no-require-imports */
 
 import * as childProcess from "node:child_process";
 import * as crypto from "node:crypto";
@@ -7,14 +6,14 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 export async function setupSpecRunner(electronRoot: string) {
-  const { hashElement } = require(
-    path.resolve(electronRoot, "node_modules", "folder-hash"),
+  const { hashElement } = await import(
+    path.resolve(electronRoot, "node_modules", "folder-hash", "index.js")
   );
 
   const SCRIPT_DIR = path.resolve(electronRoot, "script");
 
-  const utils = require(path.resolve(SCRIPT_DIR, "lib", "utils"));
-  const { YARN_VERSION } = require(path.resolve(SCRIPT_DIR, "yarn"));
+  const utils = await import(path.resolve(SCRIPT_DIR, "lib", "utils.js"));
+  const { YARN_VERSION } = await import(path.resolve(SCRIPT_DIR, "yarn.js"));
 
   const BASE = path.resolve(electronRoot, "..");
   const NPX_CMD = process.platform === "win32" ? "npx.cmd" : "npx";
