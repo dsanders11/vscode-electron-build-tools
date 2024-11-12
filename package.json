@@ -15,8 +15,8 @@
     "vscode": "^1.91.0"
   },
   "activationEvents": [
-    "workspaceContains:ELECTRON_VERSION",
-    "workspaceContains:electron/ELECTRON_VERSION"
+    "workspaceContains:electron_resources.grd",
+    "workspaceContains:electron/electron_resources.grd"
   ],
   "categories": [
     "Extension Packs",
