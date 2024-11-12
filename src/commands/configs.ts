@@ -1,5 +1,6 @@
 import * as childProcess from "node:child_process";
 import * as path from "node:path";
+import { setTimeout } from "node:timers/promises";
 import { promisify } from "node:util";
 
 import * as vscode from "vscode";
@@ -11,7 +12,7 @@ import {
   ExtensionOperation,
 } from "../extensionState";
 import Logger from "../logging";
-import { getConfigsFilePath, sleep } from "../utils";
+import { getConfigsFilePath } from "../utils";
 import type {
   ConfigCollector,
   ConfigTreeItem,
@@ -318,7 +319,7 @@ export function registerConfigsCommands(
       },
       async (value: { label: string } | string | undefined) => {
         if (value === undefined) {
-          await sleep(50); // If this is too fast it has an ugly flash in VS Code
+          await setTimeout(50); // If this is too fast it has an ugly flash in VS Code
           const { configs, activeConfig } = await configsCollector.getConfigs();
           value = await vscode.window.showQuickPick<vscode.QuickPickItem>(
             configs.map((config) => ({
