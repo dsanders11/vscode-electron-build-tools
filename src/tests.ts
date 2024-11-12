@@ -1,6 +1,7 @@
 import * as net from "node:net";
 import * as os from "node:os";
 
+import { ElectronVersions, SemVer } from "@electron/fiddle-core";
 import * as vscode from "vscode";
 
 import { setupSpecRunner } from "../electron/spec-runner";
@@ -54,10 +55,26 @@ enum DebugMode {
   NATIVE_AND_JS,
 }
 
-export function createTestController(
+const FilterReleasesQuickInputButton: vscode.QuickInputButton = {
+  iconPath: new vscode.ThemeIcon("filter"),
+  tooltip: "Filter",
+};
+
+const FilteredReleasesQuickInputButton: vscode.QuickInputButton = {
+  iconPath: new vscode.ThemeIcon("filter-filled"),
+  tooltip: "Filter",
+};
+
+const RefreshReleasesQuickInputButton: vscode.QuickInputButton = {
+  iconPath: new vscode.ThemeIcon("refresh"),
+  tooltip: "Refresh",
+};
+
+export async function createTestController(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
 ) {
+  const electronVersions = await ElectronVersions.create();
   const runProfileData = new WeakMap<vscode.TestRunProfile, string>();
 
   const testController = vscode.tests.createTestController(
@@ -88,7 +105,7 @@ export function createTestController(
   async function runTests(
     request: vscode.TestRunRequest,
     token: vscode.CancellationToken,
-    debug?: DebugMode,
+    options: { debug?: DebugMode; version?: string } = {},
   ) {
     const extraArgs = request.profile
       ? runProfileData.get(request.profile)
@@ -157,11 +174,15 @@ export function createTestController(
       command += ` ${extraArgs}`;
     }
 
-    if (debug !== undefined) {
+    if (options.version) {
+      command += ` --electronVersion=${options.version}`;
+    }
+
+    if (options.debug !== undefined) {
       command += ` --inspect-brk`;
     }
 
-    if (debug === DebugMode.NATIVE_AND_JS) {
+    if (options.debug === DebugMode.NATIVE_AND_JS) {
       command += ` --wait-for-debugger`;
       env.ELECTRON_TEST_PID_DUMP_PATH = processIdFilename.fsPath;
     }
@@ -255,7 +276,7 @@ export function createTestController(
       }
     });
 
-    if (debug === DebugMode.NATIVE_AND_JS) {
+    if (options.debug === DebugMode.NATIVE_AND_JS) {
       // Directory may not exist so create it first
       await vscode.workspace.fs.createDirectory(context.storageUri!);
 
@@ -326,7 +347,7 @@ export function createTestController(
       }
     }
 
-    if (testRunError === undefined && debug !== undefined) {
+    if (testRunError === undefined && options.debug !== undefined) {
       const debuggingSession = await vscode.debug.startDebugging(
         undefined,
         {
@@ -369,6 +390,209 @@ export function createTestController(
     }
   }
 
+  const includeNightliesStateKey = "testPrebuiltElectron.includeNightlies";
+  const includeAlphasStateKey = "testPrebuiltElectron.includeAlphas";
+  const includeBetasStateKey = "testPrebuiltElectron.includeBetas";
+
+  let includeNightlies =
+    context.globalState.get<boolean>(includeNightliesStateKey) ?? false;
+  let includeAlphas =
+    context.globalState.get<boolean>(includeAlphasStateKey) ?? false;
+  let includeBetas =
+    context.globalState.get<boolean>(includeBetasStateKey) ?? false;
+
+  async function showElectronVersionQuickPick() {
+    const getVersions = async () => {
+      const majors = [
+        ...electronVersions.supportedMajors,
+        ...electronVersions.prereleaseMajors,
+      ];
+
+      const versions: vscode.QuickPickItem[] = [...electronVersions.versions]
+        .reverse()
+        .filter((version) => {
+          if (version.prerelease.length > 0) {
+            return (
+              (includeNightlies && version.prerelease[0] === "nightly") ||
+              (includeAlphas && version.prerelease[0] === "alpha") ||
+              (includeBetas && version.prerelease[0] === "beta")
+            );
+          }
+
+          return true;
+        })
+        .map((version) => ({ label: `v${version}`, version }));
+
+      // Add a separator after the last stable major version
+      versions.splice(
+        (versions as unknown as { version: SemVer }[]).findIndex(
+          ({ version }) => !majors.includes(version.major),
+        ),
+        0,
+        {
+          label: "Unsupported Releases",
+          kind: vscode.QuickPickItemKind.Separator,
+        },
+      );
+
+      return versions;
+    };
+
+    const versions = await getVersions();
+
+    return new Promise<string | undefined>((resolve) => {
+      const title = "Electron Version";
+      const placeholder = "Select an Electron version";
+
+      const filtersApplied = includeNightlies || includeAlphas || includeBetas;
+
+      const quickPick = vscode.window.createQuickPick();
+      const setupEventListeners = () => {
+        return vscode.Disposable.from(
+          quickPick.onDidHide(() => {
+            quickPick.dispose();
+            resolve(undefined);
+          }),
+          quickPick.onDidAccept(() => {
+            resolve(quickPick.selectedItems[0].label.slice(1));
+            quickPick.dispose();
+          }),
+        );
+      };
+      quickPick.title = title;
+      quickPick.placeholder = placeholder;
+      quickPick.buttons = [
+        RefreshReleasesQuickInputButton,
+        filtersApplied
+          ? FilteredReleasesQuickInputButton
+          : FilterReleasesQuickInputButton,
+      ];
+      quickPick.items = versions;
+      let eventListeners = setupEventListeners();
+      quickPick.onDidTriggerButton(async (button) => {
+        if (button === RefreshReleasesQuickInputButton) {
+          quickPick.busy = true;
+          quickPick.items = [];
+          await electronVersions.fetch();
+          quickPick.items = await getVersions();
+          quickPick.busy = false;
+        } else if (
+          button === FilterReleasesQuickInputButton ||
+          button === FilteredReleasesQuickInputButton
+        ) {
+          const includeNightliesLabel = "Include Nightlies";
+          const includeAlphasLabel = "Include Alphas";
+          const includeBetasLabel = "Include Betas";
+
+          // Temporarily transform this quickpick into the filter quickpick
+          quickPick.enabled = false;
+          quickPick.busy = true;
+          eventListeners.dispose();
+          quickPick.buttons = [];
+          quickPick.title = "Electron Version Filters";
+          quickPick.placeholder = "Select Electron version filters";
+          const items = [
+            { label: includeNightliesLabel },
+            { label: includeAlphasLabel },
+            { label: includeBetasLabel },
+          ];
+          const selectedItems: vscode.QuickPickItem[] = [];
+          if (includeNightlies) {
+            selectedItems.push(
+              items.find(({ label }) => label === includeNightliesLabel)!,
+            );
+          }
+          if (includeAlphas) {
+            selectedItems.push(
+              items.find(({ label }) => label === includeAlphasLabel)!,
+            );
+          }
+          if (includeBetas) {
+            selectedItems.push(
+              items.find(({ label }) => label === includeBetasLabel)!,
+            );
+          }
+          quickPick.canSelectMany = true;
+          quickPick.items = items;
+          quickPick.selectedItems = selectedItems;
+          quickPick.busy = false;
+          quickPick.enabled = true;
+
+          const filters = await new Promise<
+            readonly vscode.QuickPickItem[] | undefined
+          >((resolve) => {
+            const eventListeners = vscode.Disposable.from(
+              quickPick.onDidHide(() => {
+                eventListeners.dispose();
+                resolve(undefined);
+              }),
+              quickPick.onDidAccept(() => {
+                quickPick.enabled = false;
+                quickPick.busy = true;
+                eventListeners.dispose();
+                resolve(quickPick.selectedItems);
+              }),
+            );
+          });
+
+          if (filters) {
+            includeNightlies =
+              filters.find(
+                (filter) => filter.label === includeNightliesLabel,
+              ) !== undefined;
+            includeAlphas =
+              filters.find((filter) => filter.label === includeAlphasLabel) !==
+              undefined;
+            includeBetas =
+              filters.find((filter) => filter.label === includeBetasLabel) !==
+              undefined;
+
+            await Promise.all([
+              context.globalState.update(
+                includeNightliesStateKey,
+                includeNightlies,
+              ),
+              context.globalState.update(includeAlphasStateKey, includeAlphas),
+              context.globalState.update(includeBetasStateKey, includeBetas),
+            ]);
+
+            //
+            // Restore the original quickpick
+            //
+            // NOTE - We have to hide and show it again otherwise
+            // changing `canSelectMany` will make it disappear
+            quickPick.hide();
+            quickPick.selectedItems = [];
+            quickPick.items = [];
+            quickPick.canSelectMany = false;
+            quickPick.title = title;
+            quickPick.placeholder = placeholder;
+            quickPick.items = await getVersions();
+            quickPick.buttons = [
+              RefreshReleasesQuickInputButton,
+              filters.length > 0
+                ? FilteredReleasesQuickInputButton
+                : FilterReleasesQuickInputButton,
+            ];
+            quickPick.busy = false;
+            quickPick.enabled = true;
+            // Only restore the event listeners after the change takes effect
+            const eventListener = quickPick.onDidChangeActive(() => {
+              eventListener.dispose();
+              eventListeners = setupEventListeners();
+            });
+            quickPick.show();
+          } else {
+            // User cancelled the filter quickpick
+            resolve(undefined);
+            quickPick.dispose();
+          }
+        }
+      });
+      quickPick.show();
+    });
+  }
+
   const profiles = [
     testController.createRunProfile(
       "Run",
@@ -383,12 +607,48 @@ export function createTestController(
       true,
     ),
     testController.createRunProfile(
+      "Run (Prebuilt)",
+      vscode.TestRunProfileKind.Run,
+      async (request, token) => {
+        const version = await showElectronVersionQuickPick();
+
+        if (!version) {
+          return;
+        }
+
+        return ExtensionState.runOperation(
+          ExtensionOperation.RUN_TESTS,
+          () => runTests(request, token, { version }),
+          ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
+        );
+      },
+      false,
+    ),
+    testController.createRunProfile(
       "Debug",
       vscode.TestRunProfileKind.Debug,
       async (request, token) => {
         return ExtensionState.runOperation(
           ExtensionOperation.RUN_TESTS,
-          () => runTests(request, token, DebugMode.JS),
+          () => runTests(request, token, { debug: DebugMode.JS }),
+          ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
+        );
+      },
+      false,
+    ),
+    testController.createRunProfile(
+      "Debug (Prebuilt)",
+      vscode.TestRunProfileKind.Debug,
+      async (request, token) => {
+        const version = await showElectronVersionQuickPick();
+
+        if (!version) {
+          return;
+        }
+
+        return ExtensionState.runOperation(
+          ExtensionOperation.RUN_TESTS,
+          () => runTests(request, token, { debug: DebugMode.JS, version }),
           ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
         );
       },
@@ -420,7 +680,7 @@ export function createTestController(
 
         return ExtensionState.runOperation(
           ExtensionOperation.RUN_TESTS,
-          () => runTests(request, token, DebugMode.NATIVE_AND_JS),
+          () => runTests(request, token, { debug: DebugMode.NATIVE_AND_JS }),
           ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
         );
       },

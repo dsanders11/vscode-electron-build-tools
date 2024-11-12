@@ -394,7 +394,7 @@ export async function activate(context: vscode.ExtensionContext) {
     if (electronRoot !== undefined) {
       await setContext("active", true);
 
-      const testController = createTestController(context, electronRoot);
+      const testController = await createTestController(context, electronRoot);
 
       const patchesConfig = getPatchesConfigFile(electronRoot);
       const patchesProvider = new ElectronPatchesProvider(
