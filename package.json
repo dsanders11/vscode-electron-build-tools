@@ -272,7 +272,7 @@
             "name": "Electron: C++ (Windows)",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${command:electron-build-tools.show.exe}",
+            "program": "${command:electron-build-tools.show.exec}",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${command:electron-build-tools.show.root}\\src",
@@ -304,7 +304,7 @@
           {
             "type": "cppdbg",
             "request": "launch",
-            "program": "${command:electron-build-tools.show.exe}",
+            "program": "${command:electron-build-tools.show.exec}",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${command:electron-build-tools.show.root}/src",

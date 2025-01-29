@@ -407,7 +407,7 @@ async function getElectronTests(
   await setupSpecRunner(electronRoot.fsPath);
 
   const electronExe = await vscode.commands.executeCommand<string>(
-    `${commandPrefix}.show.exe`,
+    `${commandPrefix}.show.exec`,
   );
   const scriptName = context.asAbsolutePath("out/electron/listMochaTests.js");
   const tsNodeCompiler = context.asAbsolutePath(

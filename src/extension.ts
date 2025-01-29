@@ -124,6 +124,12 @@ function registerElectronBuildToolsCommands(
       });
       return stdout.trim();
     }),
+    vscode.commands.registerCommand(`${commandPrefix}.show.exec`, async () => {
+      const { stdout } = await exec(`${buildToolsExecutable} show exec`, {
+        encoding: "utf8",
+      });
+      return stdout.trim();
+    }),
     vscode.commands.registerCommand(
       `${commandPrefix}.show.out.path`,
       async () => {
