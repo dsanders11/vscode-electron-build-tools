@@ -296,6 +296,45 @@
             }
           }
         ]
+      },
+      {
+        "type": "electron.cpp.lldb",
+        "label": "Electron: C++ (lldb)",
+        "initialConfigurations": [
+          {
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:electron-build-tools.show.exe}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${command:electron-build-tools.show.root}/src",
+            "environment": [
+              {
+                "name": "ELECTRON_ENABLE_LOGGING",
+                "value": "true"
+              },
+              {
+                "name": "ELECTRON_ENABLE_STACK_DUMPING",
+                "value": "true"
+              },
+              {
+                "name": "ELECTRON_RUN_AS_NODE",
+                "value": ""
+              }
+            ],
+            "MIMode": "lldb",
+            "externalConsole": false,
+            "setupCommands": [
+              {
+                "description": "Run Chromium lldbinit.py",
+                "text": "command script import ${cwd}/tools/lldb/lldbinit.py"
+              }
+            ],
+            "sourceFileMap": {
+              "gen/": "${command:electron-build-tools.show.out.path}/gen/"
+            }
+          }
+        ]
       }
     ],
     "jsonValidation": [
