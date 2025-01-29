@@ -65,7 +65,7 @@ function registerElectronBuildToolsCommands(
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "electron-build-tools.revealInElectronSidebar",
+      `${commandPrefix}.revealInElectronSidebar`,
       async (file: vscode.Uri) => {
         if (/.*\/electron\/patches\/.*\.patch$/.test(file.path)) {
           const patchesRoot = vscode.Uri.joinPath(electronRoot, "patches");
