@@ -273,7 +273,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:electron-build-tools.show.exec}",
-            "args": [],
+            "args": ["${command:electron-build-tools.debug.showOpenDialog}"],
             "stopAtEntry": false,
             "cwd": "${command:electron-build-tools.show.root}\\src",
             "environment": [
@@ -305,9 +305,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${command:electron-build-tools.show.exec}",
-            "args": [],
+            "args": ["${command:electron-build-tools.debug.showOpenDialog}"],
             "stopAtEntry": false,
-            "cwd": "${command:electron-build-tools.show.root}/src",
+            "cwd": "${workspaceFolder}",
             "environment": [
               {
                 "name": "ELECTRON_ENABLE_LOGGING",
@@ -327,7 +327,7 @@
             "setupCommands": [
               {
                 "description": "Run Chromium lldbinit.py",
-                "text": "command script import ${cwd}/tools/lldb/lldbinit.py"
+              "text": "command script import ${command:electron-build-tools.show.root}/src/tools/lldb/lldbinit.py"
               }
             ],
             "sourceFileMap": {

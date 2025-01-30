@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import MarkdownIt from "markdown-it";
 import wrap from "word-wrap";
 
+import { commandPrefix } from "../constants";
 import Logger from "../logging";
 
 enum MarkdownTableColumnAlignment {
@@ -97,6 +98,61 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
         if (results) {
           return results[0].fsPath;
         }
+      },
+    ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.debug.showOpenDialog`,
+      async () => {
+        const selection = await vscode.window.showQuickPick(
+          [
+            {
+              label: "Default Electron App",
+              iconPath: {
+                dark: vscode.Uri.joinPath(
+                  context.extensionUri,
+                  "resources",
+                  "icons",
+                  "dark",
+                  "electron.svg",
+                ),
+                light: vscode.Uri.joinPath(
+                  context.extensionUri,
+                  "resources",
+                  "icons",
+                  "light",
+                  "electron.svg",
+                ),
+              },
+              detail: "The default Electron app",
+            },
+            {
+              label: "Custom Electron App",
+              iconPath: new vscode.ThemeIcon("folder-opened"),
+              detail: "Select a local path to an Electron app",
+            },
+            {
+              label: "URL",
+              iconPath: new vscode.ThemeIcon("globe"),
+              detail: "Enter a URL starting with http(s)://",
+            },
+          ],
+          { placeHolder: "Select Electron app to run, or run the default app" },
+        );
+
+        if (selection?.label === "Custom Electron App") {
+          return (
+            await vscode.window.showOpenDialog({
+              canSelectFiles: true,
+              canSelectFolders: true,
+            })
+          )?.[0].fsPath;
+        } else if (selection?.label === "URL") {
+          return await vscode.window.showInputBox({
+            placeHolder: "Enter a URL starting with http(s)://",
+          });
+        }
+
+        return "";
       },
     ),
     vscode.commands.registerTextEditorCommand(
