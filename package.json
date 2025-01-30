@@ -621,7 +621,8 @@
   },
   "extensionPack": [
     "davidanson.vscode-markdownlint",
-    "npclaudiu.vscode-gn"
+    "npclaudiu.vscode-gn",
+    "Google.vscode-mojom"
   ],
   "main": "./out/main.js",
   "markdown": "github",
