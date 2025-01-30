@@ -144,6 +144,7 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
             await vscode.window.showOpenDialog({
               canSelectFiles: true,
               canSelectFolders: true,
+              canSelectMany: false,
             })
           )?.[0].fsPath;
         } else if (selection?.label === "URL") {
