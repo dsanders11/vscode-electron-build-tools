@@ -1,4 +1,5 @@
 import * as net from "node:net";
+import * as os from "node:os";
 
 import * as vscode from "vscode";
 
@@ -48,6 +49,11 @@ type MochaEvent =
   | ["pending", MochaTestEvent]
   | ["test-start", MochaTestEvent];
 
+enum DebugMode {
+  JS,
+  NATIVE_AND_JS,
+}
+
 export function createTestController(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
@@ -82,7 +88,7 @@ export function createTestController(
   async function runTests(
     request: vscode.TestRunRequest,
     token: vscode.CancellationToken,
-    debug: boolean = false,
+    debug?: DebugMode,
   ) {
     const extraArgs = request.profile
       ? runProfileData.get(request.profile)
@@ -129,6 +135,18 @@ export function createTestController(
       }
     });
 
+    const processIdFilename = vscode.Uri.joinPath(
+      context.storageUri!,
+      ".native-test-debugging-process-id",
+    );
+
+    const env: Record<string, string> = {
+      MOCHA_REPORTER: "mocha-multi-reporters",
+      MOCHA_MULTI_REPORTERS: `${context.asAbsolutePath(
+        "out/electron/mocha-reporter.js",
+      )}, spec`,
+      ELECTRON_ROOT: electronRoot.fsPath,
+    };
     let command = `${buildToolsExecutable} test --runners=main`;
 
     if (testRegexes.length) {
@@ -139,8 +157,13 @@ export function createTestController(
       command += ` ${extraArgs}`;
     }
 
-    if (debug) {
+    if (debug !== undefined) {
       command += ` --inspect-brk`;
+    }
+
+    if (debug === DebugMode.NATIVE_AND_JS) {
+      command += ` --wait-for-debugger`;
+      env.ELECTRON_TEST_PID_DUMP_PATH = processIdFilename.fsPath;
     }
 
     // Mark all tests we're about to run as enqueued
@@ -158,13 +181,7 @@ export function createTestController(
       cancellationToken: token,
       shellOptions: {
         cwd: electronRoot.fsPath,
-        env: {
-          MOCHA_REPORTER: "mocha-multi-reporters",
-          MOCHA_MULTI_REPORTERS: `${context.asAbsolutePath(
-            "out/electron/mocha-reporter.js",
-          )}, spec`,
-          ELECTRON_ROOT: electronRoot.fsPath,
-        },
+        env,
       },
       // Ignore non-zero exit codes, there's no way to
       // distinguish from normal test failures
@@ -238,7 +255,73 @@ export function createTestController(
       }
     });
 
-    if (debug) {
+    if (debug === DebugMode.NATIVE_AND_JS) {
+      // Directory may not exist so create it first
+      await vscode.workspace.fs.createDirectory(context.storageUri!);
+
+      await vscode.workspace.fs.writeFile(
+        processIdFilename,
+        new TextEncoder().encode("0"),
+      );
+
+      // Watch for changes to the PID dump file so we know when
+      // the Electron process is started and we can attach to it
+      const watcher = vscode.workspace.createFileSystemWatcher(
+        new vscode.RelativePattern(
+          context.storageUri!,
+          ".native-test-debugging-process-id",
+        ),
+      );
+      const processId = await new Promise<number>((resolve, reject) => {
+        const timeoutId = setTimeout(reject, 10_000);
+
+        watcher.onDidChange(async (uri) => {
+          clearTimeout(timeoutId);
+          watcher.dispose();
+
+          resolve(
+            parseInt((await vscode.workspace.fs.readFile(uri)).toString()),
+          );
+        });
+      });
+
+      const nativeDebuggingConfigurationType =
+        os.platform() === "win32"
+          ? "electron.cpp.windows"
+          : os.platform() === "darwin"
+            ? "electron.cpp.lldb"
+            : "electron.cpp.gdb";
+      const nativeDebuggingConfiguration =
+        await context.extension.packageJSON.contributes.debuggers
+          .find(({ type }) => type === nativeDebuggingConfigurationType)
+          ?.initialConfigurations.find(({ request }) => request === "attach");
+
+      if (!nativeDebuggingConfiguration) {
+        testRunError = new vscode.TestMessage(
+          "Couldn't find native debugging configuration",
+        );
+        task.terminate();
+        return;
+      }
+
+      const nativeDebuggingSession = await vscode.debug.startDebugging(
+        undefined,
+        {
+          ...nativeDebuggingConfiguration,
+          processId,
+        },
+        { testRun: run },
+      );
+
+      if (!nativeDebuggingSession) {
+        testRunError = new vscode.TestMessage(
+          "Couldn't start native debugging session",
+        );
+        task.terminate();
+      }
+    }
+
+    if (testRunError === undefined && debug !== undefined) {
       const debuggingSession = await vscode.debug.startDebugging(
         undefined,
         {
@@ -248,7 +331,7 @@ export function createTestController(
           port: 9229,
           continueOnAttach: true,
         },
-        { testRun: run },
+        { testRun: run, parentSession: vscode.debug.activeDebugSession },
       );
 
       if (!debuggingSession) {
@@ -281,33 +364,66 @@ export function createTestController(
     }
   }
 
-  const runProfile = testController.createRunProfile(
-    "Run",
-    vscode.TestRunProfileKind.Run,
-    async (request, token) => {
-      return ExtensionState.runOperation(
-        ExtensionOperation.RUN_TESTS,
-        () => runTests(request, token),
-        ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
-      );
-    },
-    true,
-  );
+  const profiles = [
+    testController.createRunProfile(
+      "Run",
+      vscode.TestRunProfileKind.Run,
+      async (request, token) => {
+        return ExtensionState.runOperation(
+          ExtensionOperation.RUN_TESTS,
+          () => runTests(request, token),
+          ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
+        );
+      },
+      true,
+    ),
+    testController.createRunProfile(
+      "Debug",
+      vscode.TestRunProfileKind.Debug,
+      async (request, token) => {
+        return ExtensionState.runOperation(
+          ExtensionOperation.RUN_TESTS,
+          () => runTests(request, token, DebugMode.JS),
+          ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
+        );
+      },
+      false,
+    ),
+    testController.createRunProfile(
+      "Debug (C++ and JS)",
+      vscode.TestRunProfileKind.Debug,
+      async (request, token) => {
+        if (!vscode.extensions.getExtension("ms-vscode.cpptools")) {
+          vscode.window.showErrorMessage(
+            "Please install the 'ms-vscode.cpptools' extension to enable native debugging",
+          );
+          return;
+        }
 
-  const debugProfile = testController.createRunProfile(
-    "Debug",
-    vscode.TestRunProfileKind.Debug,
-    async (request, token) => {
-      return ExtensionState.runOperation(
-        ExtensionOperation.RUN_TESTS,
-        () => runTests(request, token, true),
-        ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
-      );
-    },
-    false,
-  );
+        const specRunnerContents = await vscode.workspace.fs.readFile(
+          vscode.Uri.joinPath(electronRoot, "script", "spec-runner.js"),
+        );
 
-  for (const profile of [runProfile, debugProfile]) {
+        if (
+          !specRunnerContents.toString().includes("ELECTRON_TEST_PID_DUMP_PATH")
+        ) {
+          vscode.window.showErrorMessage(
+            "This Electron checkout does not support native debugging - see https://github.com/electron/electron/pull/45481",
+          );
+          return;
+        }
+
+        return ExtensionState.runOperation(
+          ExtensionOperation.RUN_TESTS,
+          () => runTests(request, token, DebugMode.NATIVE_AND_JS),
+          ExtensionState.isOperationRunning(ExtensionOperation.RUN_TESTS),
+        );
+      },
+      false,
+    ),
+  ];
+
+  for (const profile of profiles) {
     profile.configureHandler = async () => {
       const extraArgs = await vscode.window.showInputBox({
         title: "Electron Test Runner",
