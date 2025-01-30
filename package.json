@@ -327,7 +327,11 @@
             "setupCommands": [
               {
                 "description": "Run Chromium lldbinit.py",
-              "text": "command script import ${command:electron-build-tools.show.root}/src/tools/lldb/lldbinit.py"
+                "text": "command script import ${command:electron-build-tools.show.root}/src/tools/lldb/lldbinit.py"
+              },
+              {
+                "description": "Load Blink lldb configuration",
+                "text": "command script import ${command:electron-build-tools.show.root}/src/third_party/blink/tools/lldb/lldb_blink.py"
               }
             ],
             "sourceFileMap": {
