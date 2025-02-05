@@ -273,7 +273,9 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:electron-build-tools.show.exec}",
-            "args": ["${command:electron-build-tools.debug.showOpenDialog}"],
+            "args": [
+              "${command:electron-build-tools.debug.showOpenDialog}"
+            ],
             "stopAtEntry": false,
             "cwd": "${command:electron-build-tools.show.root}\\src",
             "environment": [
@@ -302,10 +304,13 @@
         "label": "Electron: C++ (lldb)",
         "initialConfigurations": [
           {
+            "name": "Electron: C++ (lldb)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${command:electron-build-tools.show.exec}",
-            "args": ["${command:electron-build-tools.debug.showOpenDialog}"],
+            "args": [
+              "${command:electron-build-tools.debug.showOpenDialog}"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
@@ -332,6 +337,52 @@
               {
                 "description": "Load Blink lldb configuration",
                 "text": "command script import ${command:electron-build-tools.show.root}/src/third_party/blink/tools/lldb/lldb_blink.py"
+              }
+            ],
+            "sourceFileMap": {
+              "gen/": "${command:electron-build-tools.show.out.path}/gen/"
+            }
+          }
+        ]
+      },
+      {
+        "type": "electron.cpp.gdb",
+        "label": "Electron: C++ (gdb)",
+        "initialConfigurations": [
+          {
+            "name": "Electron: C++ (gdb)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:electron-build-tools.show.exec}",
+            "args": [
+              "${command:electron-build-tools.debug.showOpenDialog}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+              {
+                "name": "ELECTRON_ENABLE_LOGGING",
+                "value": "true"
+              },
+              {
+                "name": "ELECTRON_ENABLE_STACK_DUMPING",
+                "value": "true"
+              },
+              {
+                "name": "ELECTRON_RUN_AS_NODE",
+                "value": ""
+              }
+            ],
+            "MIMode": "gdb",
+            "externalConsole": false,
+            "setupCommands": [
+              {
+                "description": "Load Chromium gdb configuration",
+                "text": "-interpreter-exec console \"source -v ${command:electron-build-tools.show.root}/src/tools/gdb/gdbinit\""
+              },
+              {
+                "description": "Load Blink gdb configuration",
+                "text": "-interpreter-exec console \"python import sys; sys.path.insert(0, '${command:electron-build-tools.show.root}/src/third_party/blink/tools/gdb'); import blink\""
               }
             ],
             "sourceFileMap": {
