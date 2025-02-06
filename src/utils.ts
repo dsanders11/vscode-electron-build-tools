@@ -13,7 +13,7 @@ import { Octokit } from "@octokit/rest";
 import * as Diff from "diff";
 import LRU from "lru-cache";
 import MarkdownIt from "markdown-it";
-import type MarkdownToken from "markdown-it/lib/token";
+import type { default as MarkdownToken } from "markdown-it/lib/token.mjs";
 import { v4 as uuidv4 } from "uuid";
 
 import type { PromisifiedExecError } from "./common";
