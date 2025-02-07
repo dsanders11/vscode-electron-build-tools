@@ -132,7 +132,7 @@ export function createTestController(
     let command = `${buildToolsExecutable} test --runners=main`;
 
     if (testRegexes.length) {
-      command += ` -g '${testRegexes.join("|")}'`;
+      command += ` -g "${testRegexes.join("|")}"`;
     }
 
     if (extraArgs) {
