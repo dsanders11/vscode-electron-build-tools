@@ -6,7 +6,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 
-export async function setupSpecRunner(electronRoot: string) {
+export async function setupSpecRunner(
+  electronRoot: string,
+  depotToolsDir: string,
+) {
   const { hashElement } = await import(
     pathToFileURL(
       path.resolve(electronRoot, "node_modules", "folder-hash", "index.js"),
@@ -23,7 +26,6 @@ export async function setupSpecRunner(electronRoot: string) {
   );
 
   const BASE = path.resolve(electronRoot, "..");
-  const NPX_CMD = process.platform === "win32" ? "npx.cmd" : "npx";
 
   function generateTypeDefinitions() {
     const { status } = childProcess.spawnSync(
@@ -85,27 +87,43 @@ export async function setupSpecRunner(electronRoot: string) {
       ...process.env,
       CXXFLAGS: process.env.CXXFLAGS,
       npm_config_nodedir: nodeDir,
-      npm_config_msvs_version: "2019",
+      npm_config_msvs_version: "2022",
       npm_config_yes: "true",
     };
+    if (process.platform === "win32") {
+      env.npm_config_python = path.resolve(depotToolsDir, "python3.bat");
+    }
     if (fs.existsSync(path.resolve(dir, "node_modules"))) {
       await fs.promises.rm(path.resolve(dir, "node_modules"), {
         force: true,
         recursive: true,
       });
     }
-    const { status } = childProcess.spawnSync(
-      NPX_CMD,
-      [`yarn@${YARN_VERSION}`, "install", "--frozen-lockfile"],
+    const { status, stderr } = childProcess.spawnSync(
+      "e",
+      ["d", "npx", `yarn@${YARN_VERSION}`, "install", "--frozen-lockfile"],
       {
         env,
         cwd: dir,
-        stdio: "inherit",
+        stdio: "pipe",
+        shell: process.platform === "win32",
+        encoding: "utf-8",
       },
     );
     if (status !== 0 && !process.env.IGNORE_YARN_INSTALL_ERROR) {
-      console.log(`Failed to yarn install in '${dir}'`);
-      process.exit(1);
+      if (stderr.includes("missing any VC++ toolset")) {
+        throw new Error(
+          `Failed to yarn install in '${dir}': missing any VC++ toolset`,
+        );
+      }
+
+      if (stderr.includes("missing any Windows SDK")) {
+        throw new Error(
+          `Failed to yarn install in '${dir}': missing any Windows SDK`,
+        );
+      }
+
+      throw new Error(`Failed to yarn install in '${dir}': ${stderr}`);
     }
   }
 

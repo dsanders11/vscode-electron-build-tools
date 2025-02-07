@@ -403,8 +403,12 @@ async function getElectronTests(
     );
   }
 
+  const depotToolsDir = await vscode.commands.executeCommand<string>(
+    `${commandPrefix}.show.depotdir`,
+  );
+
   // This does things like install modules if they haven't been installed yet
-  await setupSpecRunner(electronRoot.fsPath);
+  await setupSpecRunner(electronRoot.fsPath, depotToolsDir);
 
   const electronExe = await vscode.commands.executeCommand<string>(
     `${commandPrefix}.show.exec`,
