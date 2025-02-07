@@ -77,19 +77,13 @@ export async function setupSpecRunner(electronRoot: string) {
   }
 
   async function installSpecModules(dir: string) {
-    // v8 headers use c++17 so override the gyp default of -std=c++14,
-    // but don't clobber any other CXXFLAGS that were passed into spec-runner.js
-    const CXXFLAGS = ["-std=c++17", process.env.CXXFLAGS]
-      .filter((x) => !!x)
-      .join(" ");
-
     const nodeDir = path.resolve(
       BASE,
       `out/${utils.getOutDir({ shouldLog: true })}/gen/node_headers`,
     );
-    const env = {
+    const env: NodeJS.ProcessEnv = {
       ...process.env,
-      CXXFLAGS,
+      CXXFLAGS: process.env.CXXFLAGS,
       npm_config_nodedir: nodeDir,
       npm_config_msvs_version: "2019",
       npm_config_yes: "true",
