@@ -118,6 +118,15 @@ function registerElectronBuildToolsCommands(
         }
       },
     ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.show.depotdir`,
+      async () => {
+        const { stdout } = await exec(`${buildToolsExecutable} show depotdir`, {
+          encoding: "utf8",
+        });
+        return stdout.trim();
+      },
+    ),
     vscode.commands.registerCommand(`${commandPrefix}.show.exe`, async () => {
       const { stdout } = await exec(`${buildToolsExecutable} show exe`, {
         encoding: "utf8",
