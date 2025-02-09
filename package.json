@@ -267,6 +267,8 @@
       {
         "type": "electron.cpp.windows",
         "label": "Electron: C++ (Windows)",
+        "languages": ["c", "cpp"],
+        "when": "electron-build-tools:ready && isWindows",
         "initialConfigurations": [
           {
             "name": "Electron: C++ (Windows)",
@@ -296,12 +298,26 @@
             "sourceFileMap": {
               "o:\\": "${command:electron-build-tools.show.root}\\src"
             }
+          },
+          {
+            "name": "Attach to Electron: C++ (Windows)",
+            "type": "cppvsdbg",
+            "request": "attach",
+            "program": "${command:electron-build-tools.show.exec}",
+            "MIMode": "lldb",
+            "processId": "${command:pickProcess}",
+            "sourceFileMap": {
+              "o:\\": "${command:electron-build-tools.show.root}\\src"
+            }
           }
         ]
       },
       {
         "type": "electron.cpp.lldb",
         "label": "Electron: C++ (lldb)",
+        "languages": ["c", "cpp", "objective-c", "objective-cpp"],
+        "when": "electron-build-tools:ready && !isWindows",
+        "hiddenWhen": "isLinux",
         "initialConfigurations": [
           {
             "name": "Electron: C++ (lldb)",
@@ -340,6 +356,29 @@
               }
             ],
             "sourceFileMap": {
+              "../../": "${command:electron-build-tools.show.root}/src/",
+              "gen/": "${command:electron-build-tools.show.out.path}/gen/"
+            }
+          },
+          {
+            "name": "Attach to Electron: C++ (lldb)",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${command:electron-build-tools.show.exec}",
+            "MIMode": "lldb",
+            "processId": "${command:pickProcess}",
+            "setupCommands": [
+              {
+                "description": "Run Chromium lldbinit.py",
+                "text": "command script import ${command:electron-build-tools.show.root}/src/tools/lldb/lldbinit.py"
+              },
+              {
+                "description": "Load Blink lldb configuration",
+                "text": "command script import ${command:electron-build-tools.show.root}/src/third_party/blink/tools/lldb/lldb_blink.py"
+              }
+            ],
+            "sourceFileMap": {
+              "../../": "${command:electron-build-tools.show.root}/src/",
               "gen/": "${command:electron-build-tools.show.out.path}/gen/"
             }
           }
@@ -348,6 +387,9 @@
       {
         "type": "electron.cpp.gdb",
         "label": "Electron: C++ (gdb)",
+        "languages": ["c", "cpp"],
+        "when": "electron-build-tools:ready && !isWindows",
+        "hiddenWhen": "isMac",
         "initialConfigurations": [
           {
             "name": "Electron: C++ (gdb)",
@@ -386,6 +428,29 @@
               }
             ],
             "sourceFileMap": {
+              "../../": "${command:electron-build-tools.show.root}/src/",
+              "gen/": "${command:electron-build-tools.show.out.path}/gen/"
+            }
+          },
+          {
+            "name": "Attach to Electron: C++ (gdb)",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${command:electron-build-tools.show.exec}",
+            "MIMode": "gdb",
+            "processId": "${command:pickProcess}",
+            "setupCommands": [
+              {
+                "description": "Load Chromium gdb configuration",
+                "text": "-interpreter-exec console \"source -v ${command:electron-build-tools.show.root}/src/tools/gdb/gdbinit\""
+              },
+              {
+                "description": "Load Blink gdb configuration",
+                "text": "-interpreter-exec console \"python import sys; sys.path.insert(0, '${command:electron-build-tools.show.root}/src/third_party/blink/tools/gdb'); import blink\""
+              }
+            ],
+            "sourceFileMap": {
+              "../../": "${command:electron-build-tools.show.root}/src/",
               "gen/": "${command:electron-build-tools.show.out.path}/gen/"
             }
           }
