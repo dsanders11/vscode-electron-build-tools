@@ -151,9 +151,11 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
           return await vscode.window.showInputBox({
             placeHolder: "Enter a URL starting with http(s)://",
           });
+        } else if (selection?.label === "Default Electron App") {
+          return "";
         }
 
-        return "";
+        return null;
       },
     ),
     vscode.commands.registerTextEditorCommand(

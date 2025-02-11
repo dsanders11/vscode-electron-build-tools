@@ -118,6 +118,29 @@ function registerElectronBuildToolsCommands(
         }
       },
     ),
+    vscode.commands.registerCommand(`${commandPrefix}.run`, async () => {
+      const arg = await vscode.commands.executeCommand<string | null>(
+        `${commandPrefix}.debug.showOpenDialog`,
+      );
+
+      if (arg !== null) {
+        const task = new vscode.Task(
+          { type: "electron-build-tools", task: "run" },
+          vscode.TaskScope.Workspace,
+          "Run Electron",
+          "electron-build-tools",
+          new vscode.ProcessExecution(buildToolsExecutable, ["run", arg], {
+            cwd: electronRoot.fsPath,
+          }),
+        );
+        task.presentationOptions = {
+          reveal: vscode.TaskRevealKind.Always,
+          echo: true,
+          clear: true,
+        };
+        await vscode.tasks.executeTask(task);
+      }
+    }),
     vscode.commands.registerCommand(
       `${commandPrefix}.show.depotdir`,
       async () => {
