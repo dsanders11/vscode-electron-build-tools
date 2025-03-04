@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 
 import type MarkdownIt from "markdown-it";
 
+import { registerChatParticipant } from "./chat/participant";
 import {
   buildToolsExecutable,
   commandPrefix,
@@ -360,6 +361,8 @@ export async function activate(context: vscode.ExtensionContext) {
       registerHelperCommands(context);
 
       setupDocsLinting(context);
+
+      registerChatParticipant(context, electronRoot);
 
       // Render emojis in Markdown
       const { full: emojiMarkdownIt } = await import("markdown-it-emoji");
