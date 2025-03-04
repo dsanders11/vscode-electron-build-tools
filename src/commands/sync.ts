@@ -141,10 +141,82 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
       () => {
         vscode.window.showErrorMessage("Can't sync, other work in-progress");
       },
-      async (force?: boolean) => {
-        const command = `${buildToolsExecutable} sync${
-          force ? " --force" : ""
-        }`;
+      async (force?: boolean, advanced?: boolean) => {
+        const options: vscode.QuickPickItem[] = [];
+        let args = "";
+
+        if (advanced) {
+          const quickPick = vscode.window.createQuickPick();
+          quickPick.step = 1;
+          quickPick.totalSteps = 2;
+          quickPick.canSelectMany = true;
+          quickPick.title = "Sync Electron Checkout";
+          quickPick.placeholder = "Advanced Options";
+          quickPick.items = [
+            {
+              label: "Force Sync",
+              description: "Force update even for unchanged modules",
+            },
+            {
+              label: "Three-way Merge",
+              description:
+                "Apply Electron patches using a three-way merge, useful when upgrading Chromium",
+            },
+          ];
+
+          let userQuit = await new Promise((resolve) => {
+            quickPick.onDidAccept(() => {
+              resolve(false);
+              options.push(...quickPick.selectedItems);
+              quickPick.dispose();
+            });
+            quickPick.onDidHide(() => {
+              resolve(true);
+              quickPick.dispose();
+            });
+            quickPick.show();
+          });
+
+          if (userQuit) {
+            return;
+          }
+
+          if (options.find(({ label }) => label === "Force Sync")) {
+            force = true;
+          }
+
+          if (options.find(({ label }) => label === "Three-way Merge")) {
+            args += " --three-way";
+          }
+
+          const syncOptionsInput = vscode.window.createInputBox();
+          syncOptionsInput.title = "Sync Electron";
+          syncOptionsInput.prompt = "Extra options";
+          syncOptionsInput.step = 2;
+          syncOptionsInput.totalSteps = 3;
+
+          userQuit = await new Promise((resolve) => {
+            syncOptionsInput.onDidAccept(() => {
+              resolve(false);
+              args += ` ${syncOptionsInput.value}`;
+              syncOptionsInput.dispose();
+            });
+            syncOptionsInput.onDidHide(() => {
+              resolve(true);
+              syncOptionsInput.dispose();
+            });
+            syncOptionsInput.show();
+          });
+
+          if (userQuit) {
+            return;
+          }
+        }
+
+        if (force) {
+          args += " --force";
+        }
+
         const operationName = `Electron Build Tools - ${
           force ? "Force " : ""
         }Syncing`;
@@ -154,7 +226,7 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
           context,
           operationName,
           taskName: "sync",
-          command,
+          command: `${buildToolsExecutable} sync ${args.trim()}`,
           cancellable: false,
           exitCodeHandler: (exitCode) => {
             if (exitCode === 1 && !force) {
@@ -191,6 +263,13 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
         }
       },
     ),
+    vscode.commands.registerCommand(`${commandPrefix}.sync.advanced`, () => {
+      return vscode.commands.executeCommand(
+        `${commandPrefix}.sync`,
+        false,
+        true,
+      );
+    }),
     vscode.commands.registerCommand(`${commandPrefix}.sync.force`, () => {
       return vscode.commands.executeCommand(`${commandPrefix}.sync`, true);
     }),
