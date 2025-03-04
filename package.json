@@ -273,7 +273,10 @@
       {
         "type": "electron.cpp.windows",
         "label": "Electron: C++ (Windows)",
-        "languages": ["c", "cpp"],
+        "languages": [
+          "c",
+          "cpp"
+        ],
         "when": "electron-build-tools:ready && isWindows",
         "initialConfigurations": [
           {
@@ -321,7 +324,12 @@
       {
         "type": "electron.cpp.lldb",
         "label": "Electron: C++ (lldb)",
-        "languages": ["c", "cpp", "objective-c", "objective-cpp"],
+        "languages": [
+          "c",
+          "cpp",
+          "objective-c",
+          "objective-cpp"
+        ],
         "when": "electron-build-tools:ready && !isWindows",
         "hiddenWhen": "isLinux",
         "initialConfigurations": [
@@ -393,7 +401,10 @@
       {
         "type": "electron.cpp.gdb",
         "label": "Electron: C++ (gdb)",
-        "languages": ["c", "cpp"],
+        "languages": [
+          "c",
+          "cpp"
+        ],
         "when": "electron-build-tools:ready && !isWindows",
         "hiddenWhen": "isMac",
         "initialConfigurations": [
