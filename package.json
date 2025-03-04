@@ -159,6 +159,12 @@
         "enablement": "electron-build-tools:build-tools-installed && electron-build-tools:canSync"
       },
       {
+        "command": "electron-build-tools.sync.force",
+        "title": "Force Sync",
+        "category": "Electron Build Tools",
+        "enablement": "electron-build-tools:build-tools-installed && electron-build-tools:canSync"
+      },
+      {
         "command": "electron-build-tools.sync.advanced",
         "title": "Sync (Advanced)",
         "category": "Electron Build Tools",
@@ -541,10 +547,6 @@
         },
         {
           "command": "electron-build-tools.sync.advanced",
-          "when": "electron-build-tools:build-tools-installed"
-        },
-        {
-          "command": "electron-build-tools.sync.force",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
