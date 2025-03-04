@@ -12,7 +12,7 @@
   "version": "0.0.0",
   "engines": {
     "node": ">=18",
-    "vscode": "^1.91.0"
+    "vscode": "^1.97.0"
   },
   "activationEvents": [
     "workspaceContains:electron_resources.grd",
@@ -38,6 +38,21 @@
     }
   },
   "contributes": {
+    "chatParticipants": [
+      {
+        "id": "electron-build-tools",
+        "name": "electron",
+        "fullName": "Electron Build Tools",
+        "description": "Ask about Electron",
+        "when": "electron-build-tools:active",
+        "commands": [
+          {
+            "name": "upgradesFindCL",
+            "description": "Attempt to find the Chromium CL related to the current sync/build failure."
+          }
+        ]
+      }
+    ],
     "colors": [
       {
         "id": "electronBuildTools.gettingStartedIcon",
@@ -786,8 +801,8 @@
     "lint": "eslint electron src && yarn prettier:check",
     "prepare": "husky",
     "pretest": "yarn run esbuild && yarn run lint",
-    "prettier:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"electron/**/*.ts\"",
-    "prettier:write": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"electron/**/*.ts\""
+    "prettier:check": "prettier --check \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" \"electron/**/*.ts\"",
+    "prettier:write": "prettier --write \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" \"electron/**/*.ts\""
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
@@ -800,7 +815,7 @@
     "@types/mocha": "^10.0.9",
     "@types/node": "^22.8.6",
     "@types/uuid": "^10.0.0",
-    "@types/vscode": "1.91.0",
+    "@types/vscode": "1.97.0",
     "esbuild": "^0.24.2",
     "eslint": "^9.13.0",
     "husky": "^9.1.6",
@@ -816,6 +831,7 @@
   "dependencies": {
     "@electron/docs-parser": "^2.0.0",
     "@octokit/rest": "^19.0.4",
+    "@vscode/prompt-tsx": "^0.3.0-alpha.20",
     "diff": "^5.0.0",
     "lru-cache": "^7.14.0",
     "markdown-it": "^14.1.0",

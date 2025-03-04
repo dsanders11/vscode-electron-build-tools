@@ -85,3 +85,5 @@ export const viewIds = Object.freeze({
   HELP: `${viewIdPrefix}:help`,
   PATCHES: `${viewIdPrefix}:patches`,
 });
+
+export const chatParticipantId = "electron-build-tools";

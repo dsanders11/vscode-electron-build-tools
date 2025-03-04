@@ -8,7 +8,10 @@
     ],
     "sourceMap": true,
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "jsx": "react",
+    "jsxFactory": "vscpp",
+    "jsxFragmentFactory": "vscppf"
   },
   "include": ["src"],
   "exclude": ["electron", "scripts"]
