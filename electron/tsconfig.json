@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2018",
-    "outDir": "out",
+    "outDir": "../out/electron",
     "lib": [
       "ES2020"
     ],
@@ -10,6 +10,8 @@
     "strict": true,
     "esModuleInterop": true
   },
-  "include": ["src"],
-  "exclude": ["electron", "scripts"]
+  "include": [
+    "mocha-reporter.ts",
+    "spec-runner.ts",
+  ]
 }
