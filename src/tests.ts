@@ -293,8 +293,13 @@ export function createTestController(
             : "electron.cpp.gdb";
       const nativeDebuggingConfiguration =
         await context.extension.packageJSON.contributes.debuggers
-          .find(({ type }) => type === nativeDebuggingConfigurationType)
-          ?.initialConfigurations.find(({ request }) => request === "attach");
+          .find(
+            ({ type }: { type: string }) =>
+              type === nativeDebuggingConfigurationType,
+          )
+          ?.initialConfigurations.find(
+            ({ request }: { request: string }) => request === "attach",
+          );
 
       if (!nativeDebuggingConfiguration) {
         testRunError = new vscode.TestMessage(
