@@ -85,3 +85,13 @@ export const viewIds = Object.freeze({
   HELP: `${viewIdPrefix}:help`,
   PATCHES: `${viewIdPrefix}:patches`,
 });
+
+export const chatParticipantId = "electron-build-tools";
+
+export const lmToolNames = Object.freeze({
+  chromiumLog: "electron-build-tools_chromiumGitLog",
+  chromiumGitShow: "electron-build-tools_chromiumGitShow",
+  getTerminalSelection: "copilot_getTerminalSelection",
+  gitLog: "electron-build-tools_gitLog",
+  gitShow: "electron-build-tools_gitShow",
+});

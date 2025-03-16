@@ -26,7 +26,7 @@ import ExtensionState from "./extensionState";
 import Logger from "./logging";
 import type { ElectronPatchesConfig, EVMConfig } from "./types";
 
-const exec = promisify(childProcess.exec);
+export const exec = promisify(childProcess.exec);
 
 const remoteFileContentCache = new LRU<string, string>({
   max: 500,
