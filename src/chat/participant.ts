@@ -7,11 +7,7 @@ import { upgradesFindCL } from "./commands/upgradesFindCL";
 import { getPrivateTools } from "./tools";
 
 export function registerChatParticipant(
-  {
-    extension,
-    extensionUri,
-    languageModelAccessInformation,
-  }: vscode.ExtensionContext,
+  { extension, extensionUri }: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
 ) {
   const chromiumRoot = vscode.Uri.joinPath(electronRoot, "..");
@@ -22,13 +18,6 @@ export function registerChatParticipant(
     stream: vscode.ChatResponseStream,
     token: vscode.CancellationToken,
   ): Promise<vscode.ChatResult> => {
-    if (!languageModelAccessInformation.canSendRequest(request.model)) {
-      stream.markdown(
-        "This extension cannot use the selected model. Please choose a different model.",
-      );
-      return {};
-    }
-
     const tools = getPrivateTools(extension);
 
     if (request.command === "findUpstreamFiles") {
