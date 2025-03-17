@@ -214,6 +214,14 @@ async function analyzeBuildError(
     request.model,
   ));
 
+  // A hackish way to track state for the Chromium log tool without
+  // relying on the model to do it since it constantly gets it wrong
+  const chromiumLogToolState = {
+    startVersion: previousChromiumVersion,
+    endVersion: newChromiumVersion,
+    page: 1,
+  };
+
   const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> =
     {};
   const toolCallRounds: ToolCallRound[] = [];
@@ -241,6 +249,13 @@ async function analyzeBuildError(
         responseStr += part.value;
       } else if (part instanceof vscode.LanguageModelToolCallPart) {
         toolCalls.push(part);
+        if (part.name === lmToolNames.chromiumLog) {
+          // Inject the Chromium log tool state into the input
+          Object.assign(part.input, chromiumLogToolState);
+
+          // Increment the page number for the next call
+          chromiumLogToolState.page += 1;
+        }
       }
     }
 
