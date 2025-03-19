@@ -16,7 +16,7 @@
         "${workspaceFolder}/out/**/*.js"
       ],
       "autoAttachChildProcesses": true,
-      "preLaunchTask": "${defaultBuildTask}"
+      "preLaunchTask": "npm: esbuild"
     },
     {
       "name": "Extension Tests",
