@@ -516,7 +516,12 @@
     "languageModelTools": [
       {
         "name": "electron-build-tools_chromiumGitLog",
-        "tags": ["chromium", "git", "log", "commits"],
+        "tags": [
+          "chromium",
+          "git",
+          "log",
+          "commits"
+        ],
         "displayName": "Chromium Git Log",
         "modelDescription": "Retrieves the git log for Chromium between two versions",
         "inputSchema": {
@@ -548,7 +553,12 @@
       },
       {
         "name": "electron-build-tools_chromiumGitShow",
-        "tags": ["chromium", "git", "show", "commits"],
+        "tags": [
+          "chromium",
+          "git",
+          "show",
+          "commits"
+        ],
         "displayName": "Chromium Git Show",
         "modelDescription": "Shows the log message and textual diff for a commit",
         "inputSchema": {
@@ -569,7 +579,11 @@
       },
       {
         "name": "electron-build-tools_gitLog",
-        "tags": ["git", "log", "commits"],
+        "tags": [
+          "git",
+          "log",
+          "commits"
+        ],
         "displayName": "Git Log",
         "modelDescription": "Retrieves the git log for a given filename",
         "inputSchema": {
@@ -598,7 +612,11 @@
       },
       {
         "name": "electron-build-tools_gitShow",
-        "tags": ["git", "show", "commits"],
+        "tags": [
+          "git",
+          "show",
+          "commits"
+        ],
         "displayName": "Git Show",
         "modelDescription": "Shows the log message and textual diff for a commit",
         "inputSchema": {
