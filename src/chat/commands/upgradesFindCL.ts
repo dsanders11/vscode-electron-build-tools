@@ -345,17 +345,23 @@ export async function upgradesFindCL(
   stream: vscode.ChatResponseStream,
   token: vscode.CancellationToken,
 ) {
-  if (request.prompt) {
-    stream.markdown("Cannot process prompt after the command.");
-  } else if (
-    !request.toolReferences.find(
-      (reference) => reference.name === lmToolNames.getTerminalSelection,
-    )
+  const terminalSelectionAttached = !!request.toolReferences.find(
+    (reference) => reference.name === lmToolNames.getTerminalSelection,
+  );
+
+  if (
+    (!request.prompt && !terminalSelectionAttached) ||
+    (request.prompt && terminalSelectionAttached)
   ) {
     stream.markdown(
-      "This command requires you attach the 'Terminal Selection' context.",
+      "This command requires you attach the 'Terminal Selection' context or provide the error in the prompt (but not both).",
     );
-  } else {
+    return {};
+  }
+
+  let errorText: string;
+
+  if (terminalSelectionAttached) {
     const terminalSelection = await vscode.lm.invokeTool(
       lmToolNames.getTerminalSelection,
       { input: {}, toolInvocationToken: request.toolInvocationToken },
@@ -369,77 +375,79 @@ export async function upgradesFindCL(
       return {};
     }
 
-    stream.progress("Checking current git branch...");
-    const branchName = await exec("git rev-parse --abbrev-ref HEAD", {
-      cwd: electronRoot.fsPath,
-      encoding: "utf8",
-    }).then(({ stdout }) => stdout.trim());
-    if (branchName !== "roller/chromium/main") {
-      stream.markdown(
-        "Confirm you have a Chromium roll branch checked out - only `roller/chromium/main is supported for now.",
-      );
-      return {};
-    }
-    stream.progress("Determining Chromium versions...");
-    const versions = await getChromiumVersions(electronRoot, branchName);
-    if (!versions.previousVersion || !versions.newVersion) {
-      stream.markdown(
-        "Couldn't determine Chromium versions from local checkout.",
-      );
-      return {};
-    }
-    if (
-      compareChromiumVersions(versions.newVersion, versions.previousVersion) <=
-      0
-    ) {
-      stream.markdown(
-        "Chromium version in this branch is the same or older than `origin/main`.",
-      );
-      return {};
-    }
-    const previousChromiumVersionDate = await getChromiumVersionCommitDate(
-      chromiumRoot,
-      versions.previousVersion,
+    errorText = terminalSelectionText;
+  } else {
+    errorText = request.prompt;
+  }
+
+  stream.progress("Checking current git branch...");
+  const branchName = await exec("git rev-parse --abbrev-ref HEAD", {
+    cwd: electronRoot.fsPath,
+    encoding: "utf8",
+  }).then(({ stdout }) => stdout.trim());
+  if (branchName !== "roller/chromium/main") {
+    stream.markdown(
+      "Confirm you have a Chromium roll branch checked out - only `roller/chromium/main is supported for now.",
     );
-    if (!previousChromiumVersionDate) {
-      stream.markdown(
-        "Couldn't determine the commit date for the previous Chromium version. Ensure you've synced recently.",
-      );
-      return {};
-    }
-    stream.progress("Analyzing terminal selection...");
-    const errorType = await determineErrorType(
-      request.model,
-      terminalSelectionText,
-      token,
-    );
-    if (errorType === ErrorType.SYNC) {
-      await analyzeSyncError(
-        chromiumRoot,
-        request,
-        stream,
-        tools,
-        previousChromiumVersionDate,
-        terminalSelectionText,
-        token,
-      );
-    } else if (errorType === ErrorType.BUILD) {
-      await analyzeBuildError(
-        chromiumRoot,
-        request,
-        stream,
-        tools,
-        versions.previousVersion,
-        versions.newVersion,
-        terminalSelectionText,
-        token,
-      );
-    } else if (errorType === ErrorType.UNKNOWN) {
-      stream.markdown(
-        "Could not determine the error type from the terminal selection.",
-      );
-      return {};
-    }
     return {};
   }
+
+  stream.progress("Determining Chromium versions...");
+  const versions = await getChromiumVersions(electronRoot, branchName);
+  if (!versions.previousVersion || !versions.newVersion) {
+    stream.markdown(
+      "Couldn't determine Chromium versions from local checkout.",
+    );
+    return {};
+  }
+  if (
+    compareChromiumVersions(versions.newVersion, versions.previousVersion) <= 0
+  ) {
+    stream.markdown(
+      "Chromium version in this branch is the same or older than `origin/main`.",
+    );
+    return {};
+  }
+  const previousChromiumVersionDate = await getChromiumVersionCommitDate(
+    chromiumRoot,
+    versions.previousVersion,
+  );
+  if (!previousChromiumVersionDate) {
+    stream.markdown(
+      "Couldn't determine the commit date for the previous Chromium version. Ensure you've synced recently.",
+    );
+    return {};
+  }
+
+  stream.progress("Analyzing terminal selection...");
+  const errorType = await determineErrorType(request.model, errorText, token);
+
+  if (errorType === ErrorType.SYNC) {
+    await analyzeSyncError(
+      chromiumRoot,
+      request,
+      stream,
+      tools,
+      previousChromiumVersionDate,
+      errorText,
+      token,
+    );
+  } else if (errorType === ErrorType.BUILD) {
+    await analyzeBuildError(
+      chromiumRoot,
+      request,
+      stream,
+      tools,
+      versions.previousVersion,
+      versions.newVersion,
+      errorText,
+      token,
+    );
+  } else if (errorType === ErrorType.UNKNOWN) {
+    stream.markdown(
+      "Could not determine the error type from the terminal selection.",
+    );
+  }
+
+  return {};
 }
