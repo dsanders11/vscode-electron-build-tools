@@ -153,6 +153,12 @@
         "enablement": "electron-build-tools:active"
       },
       {
+        "command": "electron-build-tools.runLmTests",
+        "title": "Run LM Tests",
+        "category": "Electron Build Tools",
+        "enablement": "electron-build-tools:active && electron-build-tools:development-mode"
+      },
+      {
         "command": "electron-build-tools.sanitizeConfig",
         "title": "Sanitize Config",
         "category": "Electron Build Tools"
@@ -681,6 +687,10 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
+          "command": "electron-build-tools.runLmTests",
+          "when": "electron-build-tools:active && electron-build-tools:development-mode"
+        },
+        {
           "command": "electron-build-tools.sanitizeConfig",
           "when": "false"
         },
@@ -934,11 +944,12 @@
     "esbuild:mocha-reporter": "esbuild ./electron/mocha-reporter.ts --bundle --outfile=out/electron/mocha-reporter.js --format=cjs --platform=node",
     "esbuild:ts-compiler": "esbuild ./electron/electron-build-tools-typescript.ts --bundle --outfile=out/electron/electron-build-tools-typescript.js --format=cjs --platform=node",
     "esbuild:echo-to-socket": "esbuild ./scripts/echo-to-socket.ts --bundle --outfile=out/scripts/echo-to-socket.js --format=cjs --platform=node",
+    "esbuild:lm-tests": "esbuild ./lm-tests/*.ts --bundle --external:vscode --outdir=out/lm-tests/ --format=cjs --platform=node",
     "lint": "eslint electron src && yarn prettier:check",
     "prepare": "husky",
     "pretest": "yarn run esbuild && yarn run lint",
-    "prettier:check": "prettier --check \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" \"electron/**/*.ts\"",
-    "prettier:write": "prettier --write \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" \"electron/**/*.ts\""
+    "prettier:check": "prettier --check \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" \"electron/**/*.ts\" \"lm-tests/**/*.ts\"",
+    "prettier:write": "prettier --write \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" \"electron/**/*.ts\" \"lm-tests/**/*.ts\""
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
@@ -957,6 +968,7 @@
     "husky": "^9.1.6",
     "json-schema-to-typescript": "^15.0.2",
     "lint-staged": "^15.2.10",
+    "mocha": "^11.1.0",
     "npm-run-all2": "^7.0.2",
     "prettier": "^3.3.3",
     "semantic-release": "^24.2.0",

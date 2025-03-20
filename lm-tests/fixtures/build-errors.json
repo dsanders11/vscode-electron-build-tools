@@ -1,0 +1,12 @@
+[
+    {
+      "error": "../../electron/shell/common/gin_converters/content_converter.cc:155:11: error: enumeration value 'LOCAL_NETWORK_ACCESS' not handled in switch [-Werror,-Wswitch]\n  155 |   switch (val) {\n      |           ^~~\n1 error generated.\n\n"
+    },
+    {
+      "error": "../../electron/shell/browser/native_window_views.cc:1224:22: error: no member named 'get_color' in 'views::Background'\n 1224 |   return background->get_color();\n      |          ~~~~~~~~~~  ^\n1 error generated.\n"
+    },
+    {
+      "error": "../../electron/shell/browser/extensions/electron_extension_loader.cc:98:25: error: no member named 'SetDelegate' in 'extensions::ExtensionRegistrar'\n   98 |   extension_registrar_->SetDelegate(this);\n      |   ~~~~~~~~~~~~~~~~~~~~~~^\n1 error generated."
+    }
+  ]
+  

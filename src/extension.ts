@@ -1,6 +1,6 @@
 import * as childProcess from "node:child_process";
 import * as path from "node:path";
-import { promisify } from "node:util";
+import util, { promisify } from "node:util";
 
 import * as vscode from "vscode";
 
@@ -10,6 +10,7 @@ import { registerChatParticipant } from "./chat/participant";
 import {
   buildToolsExecutable,
   commandPrefix,
+  outputChannelName,
   viewIds,
   virtualDocumentScheme,
   virtualFsScheme,
@@ -187,6 +188,99 @@ function registerElectronBuildToolsCommands(
       });
       return stdout.trim();
     }),
+    vscode.commands.registerCommand(`${commandPrefix}.runLmTests`, async () => {
+      const allModels = await vscode.lm.selectChatModels({ vendor: "copilot" });
+      const models = await vscode.window.showQuickPick(
+        allModels.map(({ name }) => name),
+        { placeHolder: "Select models to test", canPickMany: true },
+      );
+
+      if (!models?.length) {
+        return;
+      }
+
+      (globalThis as Record<string, unknown>)._testModels = allModels.filter(
+        (model) => models.includes(model.name),
+      );
+
+      (globalThis as Record<string, unknown>)._testFixtures = {
+        buildErrors: JSON.parse(
+          (
+            await vscode.workspace.fs.readFile(
+              vscode.Uri.joinPath(
+                context.extensionUri,
+                "lm-tests/fixtures/build-errors.json",
+              ),
+            )
+          ).toString(),
+        ),
+        syncErrors: JSON.parse(
+          (
+            await vscode.workspace.fs.readFile(
+              vscode.Uri.joinPath(
+                context.extensionUri,
+                "lm-tests/fixtures/sync-errors.json",
+              ),
+            )
+          ).toString(),
+        ),
+      };
+
+      const { default: Mocha } = await import("mocha");
+      const outputChannel = vscode.window.createOutputChannel(
+        `${outputChannelName}: LM Tests`,
+      );
+
+      // Redirect mocha output to the output channel (no color, sadly)
+      Mocha.reporters.Base.consoleLog = (...data: unknown[]) => {
+        if (data.length > 0) {
+          outputChannel.appendLine(util.format(...data));
+        }
+      };
+      interface MochaGlobalContext {
+        cancellationToken?: vscode.CancellationToken;
+      }
+      const globalContext: MochaGlobalContext = {
+        cancellationToken: undefined,
+      };
+      const mocha = new Mocha({
+        timeout: 600_000,
+        rootHooks: {
+          async beforeAll() {
+            (this as Record<string, unknown>).globalContext = globalContext;
+          },
+        },
+      });
+      outputChannel.show();
+
+      const files = await vscode.workspace.findFiles(
+        new vscode.RelativePattern(
+          context.extensionUri,
+          `out/lm-tests/**/*.test.js`,
+        ),
+      );
+      for (const file of files) {
+        mocha.addFile(file.fsPath);
+      }
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: `${outputChannelName}: Running LM Tests`,
+          cancellable: true,
+        },
+        async (_progress, token) => {
+          globalContext.cancellationToken = token;
+          await new Promise<void>((resolve) => {
+            const runner = mocha.run(() => resolve());
+            runner.on("end", () => resolve());
+            token.onCancellationRequested(() => {
+              runner.abort();
+            });
+          });
+        },
+      );
+      mocha.dispose();
+    }),
   );
 }
 
@@ -263,6 +357,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
     if (electronRoot !== undefined) {
       await setContext("active", true);
+
+      if (context.extensionMode === vscode.ExtensionMode.Development) {
+        await setContext("development-mode", true);
+      }
 
       const testController = createTestController(context, electronRoot);
 

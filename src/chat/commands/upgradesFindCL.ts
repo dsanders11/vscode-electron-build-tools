@@ -19,13 +19,13 @@ import {
   getChromiumVersionCommitDate,
 } from "../utils";
 
-enum ErrorType {
+export enum ErrorType {
   SYNC = "SYNC",
   BUILD = "BUILD",
   UNKNOWN = "UNKNOWN",
 }
 
-async function determineErrorType(
+export async function determineErrorType(
   model: vscode.LanguageModelChat,
   errorText: string,
   token: vscode.CancellationToken,
