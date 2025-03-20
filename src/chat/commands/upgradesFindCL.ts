@@ -171,7 +171,6 @@ async function analyzeBuildError(
   tools: vscode.LanguageModelChatTool[],
   previousChromiumVersion: string,
   newChromiumVersion: string,
-  previousChromiumVersionDate: string,
   errorText: string,
   token: vscode.CancellationToken,
 ) {
@@ -205,7 +204,6 @@ async function analyzeBuildError(
       errorText,
       previousChromiumVersion,
       newChromiumVersion,
-      previousChromiumVersionDate,
       toolCallResults: {},
       toolCallRounds: [],
       toolInvocationToken: request.toolInvocationToken,
@@ -275,7 +273,6 @@ async function analyzeBuildError(
           errorText,
           previousChromiumVersion,
           newChromiumVersion,
-          previousChromiumVersionDate,
           toolCallResults: accumulatedToolResults,
           // Only provide the last round of tool calls
           toolCallRounds: toolCallRounds.slice(-1),
@@ -405,7 +402,6 @@ export async function upgradesFindCL(
         tools,
         versions.previousVersion,
         versions.newVersion,
-        previousChromiumVersionDate,
         terminalSelectionText,
         token,
       );

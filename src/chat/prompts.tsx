@@ -93,7 +93,6 @@ interface AnalyzeBuildErrorProps extends BasePromptElementProps {
   errorText: string;
   previousChromiumVersion: string;
   newChromiumVersion: string;
-  previousChromiumVersionDate: string;
   toolCallRounds: ToolCallRound[];
   toolCallResults: Record<string, vscode.LanguageModelToolResult>;
   toolInvocationToken: vscode.ChatParticipantToolToken | undefined;
