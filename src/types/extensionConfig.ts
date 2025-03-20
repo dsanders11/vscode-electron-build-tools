@@ -13,6 +13,10 @@ export type ShowTargets = boolean;
  * Lint relative links in the docs and mark broken links as problems.
  */
 export type LintRelativeLinks = boolean;
+/**
+ * When syncing, use three-way merge.
+ */
+export type ThreeWayMerge = boolean;
 
 export interface ElectronBuildTools {
   "electronBuildTools.build.buildOptions"?: BuildOptions;
@@ -30,6 +34,7 @@ export interface ElectronBuildTools {
   "electronBuildTools.build.ninjaArgs"?: NinjaArgs;
   "electronBuildTools.build.showTargets"?: ShowTargets;
   "electronBuildTools.docs.lintRelativeLinks"?: LintRelativeLinks;
+  "electronBuildTools.sync.threeWayMerge"?: ThreeWayMerge;
   [k: string]: unknown;
 }
 /**

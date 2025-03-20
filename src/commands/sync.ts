@@ -145,6 +145,11 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
         const options: vscode.QuickPickItem[] = [];
         let args = "";
 
+        const syncConfig = vscode.workspace.getConfiguration(
+          "electronBuildTools.sync",
+        );
+        const threeWayMergeDefault = syncConfig.get<boolean>("threeWayMerge");
+
         if (advanced) {
           const quickPick = vscode.window.createQuickPick();
           quickPick.step = 1;
@@ -163,6 +168,12 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
                 "Apply Electron patches using a three-way merge, useful when upgrading Chromium",
             },
           ];
+
+          if (threeWayMergeDefault) {
+            quickPick.selectedItems = [
+              quickPick.items.find(({ label }) => label === "Three-way Merge")!,
+            ];
+          }
 
           let userQuit = await new Promise((resolve) => {
             quickPick.onDidAccept(() => {
@@ -210,6 +221,10 @@ export function registerSyncCommands(context: vscode.ExtensionContext) {
 
           if (userQuit) {
             return;
+          }
+        } else {
+          if (threeWayMergeDefault) {
+            args += " --three-way";
           }
         }
 

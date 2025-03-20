@@ -297,6 +297,12 @@
           "default": true,
           "title": "Lint Relative Links",
           "description": "Lint relative links in the docs and mark broken links as problems."
+        },
+        "electronBuildTools.sync.threeWayMerge": {
+          "type": "boolean",
+          "default": false,
+          "title": "Three-way Merge",
+          "description": "When syncing, use three-way merge."
         }
       }
     },
