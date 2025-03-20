@@ -441,6 +441,22 @@ async function getCheckoutDirectoryForUri(
   return vscode.Uri.file(stdout.trim());
 }
 
+export async function getShortSha(
+  cwd: vscode.Uri,
+  commit: string,
+): Promise<string> {
+  if (!/^[0-9a-f]+$/.test(commit)) {
+    throw new Error(`Invalid commit SHA: ${commit}`);
+  }
+
+  const { stdout } = await exec(`git rev-parse --short ${commit}`, {
+    encoding: "utf8",
+    cwd: cwd.fsPath,
+  });
+
+  return stdout.trim();
+}
+
 export async function getContentForUri(uri: vscode.Uri): Promise<string> {
   const { blobId, patch, unpatchedBlobId, repo, repoOwner } = querystringParse(
     uri.query,

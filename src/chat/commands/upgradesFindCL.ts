@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 
 import { lmToolNames } from "../../constants";
 import Logger from "../../logging";
-import { exec } from "../../utils";
+import { exec, getShortSha } from "../../utils";
 
 import {
   AnalyzeBuildErrorPrompt,
@@ -104,15 +104,30 @@ async function analyzeSyncError(
       token,
     );
 
+    let analyzingGitLogs = false;
+
     // Stream text output and collect tool calls from the response
     const toolCalls: vscode.LanguageModelToolCallPart[] = [];
     let responseStr = "";
     for await (const part of response.stream) {
       if (part instanceof vscode.LanguageModelTextPart) {
+        analyzingGitLogs = false;
         stream.markdown(part.value);
         responseStr += part.value;
       } else if (part instanceof vscode.LanguageModelToolCallPart) {
         toolCalls.push(part);
+
+        if (part.name === lmToolNames.gitLog && !analyzingGitLogs) {
+          stream.progress(`Analyzing git logs...`);
+          analyzingGitLogs = true;
+        } else if (part.name === lmToolNames.gitShow) {
+          analyzingGitLogs = false;
+          const shortSha = await getShortSha(
+            chromiumRoot,
+            (part.input as Record<string, string>).commit,
+          );
+          stream.progress(`Analyzing commit ${shortSha}...`);
+        }
       }
     }
 
@@ -223,7 +238,7 @@ async function analyzeBuildError(
   const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> =
     {};
   const toolCallRounds: ToolCallRound[] = [];
-  const runWithTools = async (): Promise<void> => {
+  const runWithTools = async (): Promise<string> => {
     // Send the request to the LanguageModelChat
     const response = await request.model.sendRequest(
       messages,
@@ -243,16 +258,26 @@ async function analyzeBuildError(
     let responseStr = "";
     for await (const part of response.stream) {
       if (part instanceof vscode.LanguageModelTextPart) {
-        stream.markdown(part.value);
+        // Don't stream out intermediate messages, they're not useful
         responseStr += part.value;
       } else if (part instanceof vscode.LanguageModelToolCallPart) {
         toolCalls.push(part);
         if (part.name === lmToolNames.chromiumLog) {
+          stream.progress(
+            `Analyzing page ${chromiumLogToolState.page} of the log...`,
+          );
+
           // Inject the Chromium log tool state into the input
           Object.assign(part.input, chromiumLogToolState);
 
           // Increment the page number for the next call
           chromiumLogToolState.page += 1;
+        } else if (part.name === lmToolNames.chromiumGitShow) {
+          const shortSha = await getShortSha(
+            chromiumRoot,
+            (part.input as Record<string, string>).commit,
+          );
+          stream.progress(`Analyzing commit ${shortSha}...`);
         }
       }
     }
@@ -293,9 +318,13 @@ async function analyzeBuildError(
       // This loops until the model doesn't want to call any more tools, then the request is done.
       return runWithTools();
     }
+
+    return responseStr;
   };
 
-  await runWithTools();
+  // The final message should have the most useful info for the user
+  const finalResponse = await runWithTools();
+  stream.markdown(finalResponse);
 
   return {
     metadata: {
