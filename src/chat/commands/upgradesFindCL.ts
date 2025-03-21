@@ -60,16 +60,24 @@ export async function analyzeSyncError(
   request: vscode.ChatRequest,
   stream: vscode.ChatResponseStream,
   tools: vscode.LanguageModelChatTool[],
-  previousChromiumVersionDate: string,
+  previousChromiumVersion: string,
+  _newChromiumVersion: string,
+  gitDiffOutput: string,
   errorText: string,
   token: vscode.CancellationToken,
 ) {
-  stream.progress("Analyzing sync error...");
+  const previousChromiumVersionDate = await getChromiumVersionCommitDate(
+    chromiumRoot,
+    previousChromiumVersion,
+  );
+  if (!previousChromiumVersionDate) {
+    stream.markdown(
+      "Couldn't determine the commit date for the previous Chromium version. Ensure you've synced recently.",
+    );
+    return {};
+  }
 
-  const gitDiffOutput = await exec("git diff", {
-    cwd: chromiumRoot.fsPath,
-    encoding: "utf8",
-  }).then(({ stdout }) => stdout.trim());
+  stream.progress("Analyzing sync error...");
 
   // Render the initial prompt
   let { messages } = await renderPrompt(
@@ -413,27 +421,24 @@ export async function upgradesFindCL(
     );
     return {};
   }
-  const previousChromiumVersionDate = await getChromiumVersionCommitDate(
-    chromiumRoot,
-    versions.previousVersion,
-  );
-  if (!previousChromiumVersionDate) {
-    stream.markdown(
-      "Couldn't determine the commit date for the previous Chromium version. Ensure you've synced recently.",
-    );
-    return {};
-  }
 
   stream.progress("Analyzing terminal selection...");
   const errorType = await determineErrorType(request.model, errorText, token);
 
   if (errorType === ErrorType.SYNC) {
+    const gitDiffOutput = await exec("git diff", {
+      cwd: chromiumRoot.fsPath,
+      encoding: "utf8",
+    }).then(({ stdout }) => stdout.trim());
+
     await analyzeSyncError(
       chromiumRoot,
       request,
       stream,
       tools,
-      previousChromiumVersionDate,
+      versions.previousVersion,
+      versions.newVersion,
+      gitDiffOutput,
       errorText,
       token,
     );

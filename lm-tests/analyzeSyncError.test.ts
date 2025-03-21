@@ -27,7 +27,9 @@ describe.skip("analyzeSyncError", () => {
             { model, toolInvocationToken: null } as vscode.ChatRequest,
             stream,
             tools,
-            previousChromiumVersionDate!,
+            fixture.previousVersion,
+            fixture.newVersion,
+            fixture.diff,
             fixture.error,
             this.globalContext.cancellationToken,
           );
