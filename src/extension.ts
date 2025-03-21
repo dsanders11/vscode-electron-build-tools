@@ -304,6 +304,10 @@ export async function activate(context: vscode.ExtensionContext) {
     setContext("ready", false),
     setContext("build-tools-installed", buildToolsIsInstalled),
     setContext("is-electron-workspace", false),
+    setContext(
+      "development-mode",
+      context.extensionMode === vscode.ExtensionMode.Development,
+    ),
   ]);
 
   // If build-tools is installed, always provide config and sync functionality
@@ -357,10 +361,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     if (electronRoot !== undefined) {
       await setContext("active", true);
-
-      if (context.extensionMode === vscode.ExtensionMode.Development) {
-        await setContext("development-mode", true);
-      }
 
       const testController = createTestController(context, electronRoot);
 
