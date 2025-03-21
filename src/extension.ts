@@ -237,9 +237,13 @@ function registerElectronBuildToolsCommands(
       };
       interface MochaGlobalContext {
         cancellationToken?: vscode.CancellationToken;
+        chromiumRoot: vscode.Uri;
+        extension: vscode.Extension<unknown>;
       }
       const globalContext: MochaGlobalContext = {
         cancellationToken: undefined,
+        chromiumRoot: vscode.Uri.joinPath(electronRoot, ".."),
+        extension: context.extension,
       };
       const mocha = new Mocha({
         timeout: 600_000,

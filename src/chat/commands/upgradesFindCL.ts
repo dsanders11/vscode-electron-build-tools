@@ -179,7 +179,7 @@ async function analyzeSyncError(
   };
 }
 
-async function analyzeBuildError(
+export async function analyzeBuildError(
   chromiumRoot: vscode.Uri,
   request: vscode.ChatRequest,
   stream: vscode.ChatResponseStream,
