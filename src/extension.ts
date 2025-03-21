@@ -448,6 +448,7 @@ export async function activate(context: vscode.ExtensionContext) {
           new DocsLinkCompletionProvider(linkableProvider),
           ...DocsLinkCompletionProvider.TRIGGER_CHARACTERS,
         ),
+        registerChatParticipant(context, electronRoot),
       );
       registerElectronBuildToolsCommands(
         context,
@@ -459,8 +460,6 @@ export async function activate(context: vscode.ExtensionContext) {
       registerHelperCommands(context);
 
       setupDocsLinting(context);
-
-      registerChatParticipant(context, electronRoot);
 
       // Render emojis in Markdown
       const { full: emojiMarkdownIt } = await import("markdown-it-emoji");

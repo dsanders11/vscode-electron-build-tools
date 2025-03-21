@@ -50,4 +50,6 @@ export function registerChatParticipant(
     "icons",
     "electron_logo.png",
   );
+
+  return participant;
 }
