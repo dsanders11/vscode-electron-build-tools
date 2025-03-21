@@ -55,7 +55,7 @@ export async function determineErrorType(
   return ErrorType.UNKNOWN;
 }
 
-async function analyzeSyncError(
+export async function analyzeSyncError(
   chromiumRoot: vscode.Uri,
   request: vscode.ChatRequest,
   stream: vscode.ChatResponseStream,
