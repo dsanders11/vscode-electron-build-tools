@@ -15,7 +15,7 @@ import type { ExtensionConfig } from "../types";
 import { getConfigDefaultTarget } from "../utils";
 
 export function registerBuildCommands(context: vscode.ExtensionContext) {
-  context.subscriptions.push(
+  return [
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.BUILD,
       `${commandPrefix}.build`,
@@ -218,5 +218,5 @@ export function registerBuildCommands(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(`${commandPrefix}.buildAdvanced`, () => {
       return vscode.commands.executeCommand(`${commandPrefix}.build`, true);
     }),
-  );
+  ];
 }

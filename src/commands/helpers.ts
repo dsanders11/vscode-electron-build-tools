@@ -86,7 +86,7 @@ function wrapLine(text: string) {
 }
 
 export function registerHelperCommands(context: vscode.ExtensionContext) {
-  context.subscriptions.push(
+  return [
     vscode.commands.registerCommand("vscode.copyToClipboard", (value: string) =>
       vscode.env.clipboard.writeText(value),
     ),
@@ -331,5 +331,5 @@ export function registerHelperCommands(context: vscode.ExtensionContext) {
         }
       },
     ),
-  );
+  ];
 }

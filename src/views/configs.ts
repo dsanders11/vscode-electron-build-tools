@@ -3,11 +3,16 @@ import * as vscode from "vscode";
 import { commandPrefix } from "../constants";
 import { getConfigs, getConfigsFilePath, setContext } from "../utils";
 
+export interface OnDidChangeActiveConfig {
+  activeConfig: string | null;
+}
+
 export interface OnDidStartRefreshing {
   refreshFinished: Promise<void>;
 }
 
 export interface ConfigCollector {
+  onDidChangeActiveConfig: vscode.Event<OnDidChangeActiveConfig>;
   onDidStartRefreshing: vscode.Event<OnDidStartRefreshing>;
 
   refreshConfigs(): Promise<void>;
@@ -18,6 +23,9 @@ export class BuildToolsConfigCollector
   extends vscode.Disposable
   implements ConfigCollector
 {
+  private _onDidChangeActiveConfig =
+    new vscode.EventEmitter<OnDidChangeActiveConfig>();
+  readonly onDidChangeActiveConfig = this._onDidChangeActiveConfig.event;
   private _onDidStartRefreshing =
     new vscode.EventEmitter<OnDidStartRefreshing>();
   readonly onDidStartRefreshing = this._onDidStartRefreshing.event;
@@ -25,6 +33,7 @@ export class BuildToolsConfigCollector
   private _configs?: string[];
   private _activeConfig: string | null = null;
   private _disposables: vscode.Disposable[] = [];
+  private _hasRefreshed: boolean = false;
 
   constructor(private readonly _extensionContext: vscode.ExtensionContext) {
     super(() => {
@@ -54,7 +63,13 @@ export class BuildToolsConfigCollector
     await setContext("active-config", activeConfig !== null);
 
     this._configs = configs;
+
+    if (this._hasRefreshed && this._activeConfig !== activeConfig) {
+      this._onDidChangeActiveConfig.fire({ activeConfig });
+    }
+
     this._activeConfig = activeConfig;
+    this._hasRefreshed = true;
 
     await this._extensionContext.globalState.update(
       "cachedConfigs",

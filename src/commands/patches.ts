@@ -30,12 +30,11 @@ import type {
 } from "../views/patches";
 
 export function registerPatchesCommands(
-  context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   patchesProvider: ElectronPatchesProvider,
   patchesView: vscode.TreeView<vscode.TreeItem>,
 ) {
-  context.subscriptions.push(
+  return [
     vscode.commands.registerCommand(
       `${commandPrefix}.openPatch`,
       (patchTreeItem: Patch) => {
@@ -258,5 +257,5 @@ export function registerPatchesCommands(
         }
       },
     ),
-  );
+  ];
 }

@@ -12,8 +12,8 @@ const markdownSettings = {
   "referenceLinks.enabled": "error",
 };
 
-export function setupDocsLinting(context: vscode.ExtensionContext) {
-  context.subscriptions.push(
+export function setupDocsLinting() {
+  return [
     new OptionalFeature(
       "electronBuildTools.docs",
       "lintRelativeLinks",
@@ -39,5 +39,5 @@ export function setupDocsLinting(context: vscode.ExtensionContext) {
         }
       },
     ),
-  );
+  ] as vscode.Disposable[];
 }

@@ -22,7 +22,7 @@ export function registerDocsCommands(
   context: vscode.ExtensionContext,
   linkableProvider: DocsLinkablesProvider,
 ) {
-  context.subscriptions.push(
+  return [
     vscode.commands.registerCommand(`${commandPrefix}.searchDocs`, async () => {
       let docsSearchOpenToSide: boolean =
         context.globalState.get<boolean>("docsSearchOpenToSide") || false;
@@ -71,5 +71,5 @@ export function registerDocsCommands(
       });
       quickPick.show();
     }),
-  );
+  ];
 }

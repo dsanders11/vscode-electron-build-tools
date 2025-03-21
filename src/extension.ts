@@ -54,16 +54,22 @@ import { registerBuildCommands } from "./commands/build";
 import { DocsLinkCompletionProvider } from "./docsLinkCompletionProvider";
 import { registerDocsCommands } from "./commands/docs";
 
+async function getElectronRoot() {
+  const { stdout } = await exec(`${buildToolsExecutable} show src`, {
+    encoding: "utf8",
+  });
+  return stdout.trim();
+}
+
 function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   patchesProvider: ElectronPatchesProvider,
   patchesView: vscode.TreeView<vscode.TreeItem>,
 ) {
-  registerBuildCommands(context);
-  registerPatchesCommands(context, electronRoot, patchesProvider, patchesView);
-
-  context.subscriptions.push(
+  return [
+    ...registerBuildCommands(context),
+    ...registerPatchesCommands(electronRoot, patchesProvider, patchesView),
     vscode.commands.registerCommand(
       `${commandPrefix}.revealInElectronSidebar`,
       async (file: vscode.Uri) => {
@@ -181,10 +187,7 @@ function registerElectronBuildToolsCommands(
       return stdout.trim();
     }),
     vscode.commands.registerCommand(`${commandPrefix}.show.src`, async () => {
-      const { stdout } = await exec(`${buildToolsExecutable} show src`, {
-        encoding: "utf8",
-      });
-      return stdout.trim();
+      return await getElectronRoot();
     }),
     vscode.commands.registerCommand(`${commandPrefix}.runLmTests`, async () => {
       const allModels = await vscode.lm.selectChatModels({ vendor: "copilot" });
@@ -279,7 +282,121 @@ function registerElectronBuildToolsCommands(
       );
       mocha.dispose();
     }),
+  ];
+}
+
+async function activateForElectronRoot(
+  context: vscode.ExtensionContext,
+  electronRoot: vscode.Uri,
+) {
+  const activeConfigElectronRoot = vscode.Uri.file(await getElectronRoot());
+
+  if (electronRoot.fsPath !== activeConfigElectronRoot.fsPath) {
+    await setContext("active", false);
+    return [];
+  }
+
+  await setContext("active", true);
+
+  const testController = createTestController(context, electronRoot);
+
+  const patchesConfig = getPatchesConfigFile(electronRoot);
+  const patchesProvider = new ElectronPatchesProvider(
+    electronRoot,
+    patchesConfig,
   );
+  const patchesView = vscode.window.createTreeView(viewIds.PATCHES, {
+    showCollapseAll: true,
+    treeDataProvider: patchesProvider,
+  });
+  const linkableProvider = new DocsLinkablesProvider(electronRoot);
+
+  const disposables = [
+    testController,
+    linkableProvider,
+    patchesView,
+    vscode.window.createTreeView(viewIds.DOCS, {
+      showCollapseAll: true,
+      treeDataProvider: new DocsTreeDataProvider(electronRoot),
+    }),
+    vscode.window.registerTreeDataProvider(
+      viewIds.ELECTRON,
+      new ElectronViewProvider(electronRoot),
+    ),
+    // There are two custom schemes used:
+    //   * electron-build-tools
+    //   * electron-build-tools-fs
+    //
+    // `electron-build-tools` is for providing read-only content to show
+    // the user in an editor, e.g. files inside a patch, patch overview,
+    // content from a pull request, etc. It could also be used to show
+    // any random markdown documentation we might want to show the user.
+    //
+    // `electron-build-tools-fs` also provides read-only content, based on
+    // optional blob IDs. It can also apply a provided patch to the content
+    // of a file on the fly. If a blob Id is provided, it will check for
+    // the blob on disk first, then fall back to remote content, and will
+    // cache remote content for fast subsequent lookups. The role of
+    // `electron-build-tools` could also be accomplished with this
+    // `FileSystemProvider`, but there are a few downsides to that, which
+    // is why both exist. Namely, VS Code displays a lock icon for
+    // read-only content served by a `FileSystemProvider` (undesirable),
+    // and any open editor to that content will cause constant hits to the
+    // `stat`method on the `FileSystemProvider`, which is unnecessary for
+    // our needs.
+    vscode.workspace.registerTextDocumentContentProvider(
+      virtualDocumentScheme,
+      new TextDocumentContentProvider(),
+    ),
+    vscode.workspace.registerFileSystemProvider(
+      virtualFsScheme,
+      new ElectronFileSystemProvider(),
+      { isReadonly: true },
+    ),
+    vscode.window.registerFileDecorationProvider(
+      new ElectronFileDecorationProvider(),
+    ),
+    vscode.languages.registerHoverProvider(
+      {
+        language: "markdown",
+        pattern: new vscode.RelativePattern(electronRoot, "docs/**/*.md"),
+      },
+      new DocsHoverProvider(),
+    ),
+    vscode.languages.registerDocumentLinkProvider(
+      { language: "gn" },
+      new GnLinkProvider(electronRoot),
+    ),
+    vscode.languages.registerDocumentFormattingEditProvider(
+      { language: "gn" },
+      new GnFormattingProvider(electronRoot),
+    ),
+    vscode.languages.registerCompletionItemProvider(
+      SnippetProvider.DOCUMENT_SELECTOR,
+      new SnippetProvider(),
+      ...SnippetProvider.TRIGGER_CHARACTERS,
+    ),
+    vscode.languages.registerCompletionItemProvider(
+      {
+        language: "markdown",
+        pattern: new vscode.RelativePattern(electronRoot, "docs/**/*.md"),
+      },
+      new DocsLinkCompletionProvider(linkableProvider),
+      ...DocsLinkCompletionProvider.TRIGGER_CHARACTERS,
+    ),
+    ...registerElectronBuildToolsCommands(
+      context,
+      electronRoot,
+      patchesProvider,
+      patchesView,
+    ),
+    ...registerDocsCommands(context, linkableProvider),
+    ...registerHelperCommands(context),
+    ...setupDocsLinting(),
+    registerChatParticipant(context, electronRoot),
+  ];
+
+  return disposables;
 }
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -309,11 +426,13 @@ export async function activate(context: vscode.ExtensionContext) {
   ]);
 
   // If build-tools is installed, always provide config and sync functionality
+  let configsCollector: BuildToolsConfigCollector;
+
   // so that a user can fully setup Electron on a clean machine with commands
   if (buildToolsIsInstalled) {
     await ExtensionState.setInitialState();
 
-    const configsCollector = new BuildToolsConfigCollector(context);
+    configsCollector = new BuildToolsConfigCollector(context);
     const configsProvider = new ElectronBuildToolsConfigsProvider(
       configsCollector,
     );
@@ -358,106 +477,14 @@ export async function activate(context: vscode.ExtensionContext) {
     await setContext("is-electron-workspace", electronRoot !== undefined);
 
     if (electronRoot !== undefined) {
-      await setContext("active", true);
-
-      const testController = createTestController(context, electronRoot);
-
-      const patchesConfig = getPatchesConfigFile(electronRoot);
-      const patchesProvider = new ElectronPatchesProvider(
-        electronRoot,
-        patchesConfig,
+      const disposable = vscode.Disposable.from(
+        ...(await activateForElectronRoot(context, electronRoot)),
       );
-      const patchesView = vscode.window.createTreeView(viewIds.PATCHES, {
-        showCollapseAll: true,
-        treeDataProvider: patchesProvider,
+
+      configsCollector!.onDidChangeActiveConfig(() => {
+        disposable.dispose();
+        activateForElectronRoot(context, electronRoot);
       });
-      const linkableProvider = new DocsLinkablesProvider(electronRoot);
-
-      context.subscriptions.push(
-        testController,
-        linkableProvider,
-        patchesView,
-        vscode.window.createTreeView(viewIds.DOCS, {
-          showCollapseAll: true,
-          treeDataProvider: new DocsTreeDataProvider(electronRoot),
-        }),
-        vscode.window.registerTreeDataProvider(
-          viewIds.ELECTRON,
-          new ElectronViewProvider(electronRoot),
-        ),
-        // There are two custom schemes used:
-        //   * electron-build-tools
-        //   * electron-build-tools-fs
-        //
-        // `electron-build-tools` is for providing read-only content to show
-        // the user in an editor, e.g. files inside a patch, patch overview,
-        // content from a pull request, etc. It could also be used to show
-        // any random markdown documentation we might want to show the user.
-        //
-        // `electron-build-tools-fs` also provides read-only content, based on
-        // optional blob IDs. It can also apply a provided patch to the content
-        // of a file on the fly. If a blob Id is provided, it will check for
-        // the blob on disk first, then fall back to remote content, and will
-        // cache remote content for fast subsequent lookups. The role of
-        // `electron-build-tools` could also be accomplished with this
-        // `FileSystemProvider`, but there are a few downsides to that, which
-        // is why both exist. Namely, VS Code displays a lock icon for
-        // read-only content served by a `FileSystemProvider` (undesirable),
-        // and any open editor to that content will cause constant hits to the
-        // `stat`method on the `FileSystemProvider`, which is unnecessary for
-        // our needs.
-        vscode.workspace.registerTextDocumentContentProvider(
-          virtualDocumentScheme,
-          new TextDocumentContentProvider(),
-        ),
-        vscode.workspace.registerFileSystemProvider(
-          virtualFsScheme,
-          new ElectronFileSystemProvider(),
-          { isReadonly: true },
-        ),
-        vscode.window.registerFileDecorationProvider(
-          new ElectronFileDecorationProvider(),
-        ),
-        vscode.languages.registerHoverProvider(
-          {
-            language: "markdown",
-            pattern: new vscode.RelativePattern(electronRoot, "docs/**/*.md"),
-          },
-          new DocsHoverProvider(),
-        ),
-        vscode.languages.registerDocumentLinkProvider(
-          { language: "gn" },
-          new GnLinkProvider(electronRoot),
-        ),
-        vscode.languages.registerDocumentFormattingEditProvider(
-          { language: "gn" },
-          new GnFormattingProvider(electronRoot),
-        ),
-        vscode.languages.registerCompletionItemProvider(
-          SnippetProvider.DOCUMENT_SELECTOR,
-          new SnippetProvider(),
-          ...SnippetProvider.TRIGGER_CHARACTERS,
-        ),
-        vscode.languages.registerCompletionItemProvider(
-          {
-            language: "markdown",
-            pattern: new vscode.RelativePattern(electronRoot, "docs/**/*.md"),
-          },
-          new DocsLinkCompletionProvider(linkableProvider),
-          ...DocsLinkCompletionProvider.TRIGGER_CHARACTERS,
-        ),
-        registerChatParticipant(context, electronRoot),
-      );
-      registerElectronBuildToolsCommands(
-        context,
-        electronRoot,
-        patchesProvider,
-        patchesView,
-      );
-      registerDocsCommands(context, linkableProvider);
-      registerHelperCommands(context);
-
-      setupDocsLinting(context);
 
       // Render emojis in Markdown
       const { full: emojiMarkdownIt } = await import("markdown-it-emoji");
