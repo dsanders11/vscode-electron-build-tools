@@ -32,6 +32,8 @@ export const patchDirectoryPrettyNames = Object.freeze({
   "src/electron/patches/webrtc": "WebRTC",
 });
 
+export type PatchDirectoryPrettyName = keyof typeof patchDirectoryPrettyNames;
+
 export const checkoutDirectoryGitHubRepo = Object.freeze<{
   [k: string]: { owner: string; repo: string } | undefined;
 }>({

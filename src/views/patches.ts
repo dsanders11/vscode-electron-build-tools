@@ -6,6 +6,7 @@ import {
   commandPrefix,
   patchDirectoryPrettyNames,
   virtualDocumentScheme,
+  PatchDirectoryPrettyName,
 } from "../constants";
 import Logger from "../logging";
 import type { ElectronPatchesConfig } from "../types";
@@ -129,7 +130,9 @@ export class ElectronPatchesProvider
         const patchDirectoryBasename = path.basename(patchDirectory);
         const uri = vscode.Uri.joinPath(this.rootDirectory, patchDirectory);
         const label =
-          patchDirectoryPrettyNames[patchDirectory] ?? patchDirectoryBasename;
+          patchDirectoryPrettyNames[
+            patchDirectory as PatchDirectoryPrettyName
+          ] ?? patchDirectoryBasename;
 
         children.push(new PatchDirectory(label, uri, patchDirectoryBasename));
       }
@@ -193,7 +196,9 @@ export class ElectronPatchesProvider
           const patchDirectoryBasename = path.basename(patchDirectory);
           const uri = vscode.Uri.joinPath(this.rootDirectory, patchDirectory);
           const label =
-            patchDirectoryPrettyNames[patchDirectory] ?? patchDirectoryBasename;
+            patchDirectoryPrettyNames[
+              patchDirectory as PatchDirectoryPrettyName
+            ] ?? patchDirectoryBasename;
 
           children.push(
             new PullRequestPatchDirectory(label, uri, patchDirectoryBasename, [
