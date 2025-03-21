@@ -345,13 +345,18 @@ export async function upgradesFindCL(
   stream: vscode.ChatResponseStream,
   token: vscode.CancellationToken,
 ) {
-  const terminalSelectionAttached = !!request.toolReferences.find(
-    (reference) => reference.name === lmToolNames.getTerminalSelection,
-  );
+  const terminalSelectionShebang =
+    request.prompt.trim() === "#terminalSelection";
+  const terminalSelectionAttached =
+    !!request.toolReferences.find(
+      (reference) => reference.name === lmToolNames.getTerminalSelection,
+    ) || terminalSelectionShebang;
+
+  const prompt = terminalSelectionShebang ? "" : request.prompt;
 
   if (
-    (!request.prompt && !terminalSelectionAttached) ||
-    (request.prompt && terminalSelectionAttached)
+    (!prompt && !terminalSelectionAttached) ||
+    (prompt && terminalSelectionAttached)
   ) {
     stream.markdown(
       "This command requires you attach the 'Terminal Selection' context or provide the error in the prompt (but not both).",
@@ -377,7 +382,7 @@ export async function upgradesFindCL(
 
     errorText = terminalSelectionText;
   } else {
-    errorText = request.prompt;
+    errorText = prompt;
   }
 
   stream.progress("Checking current git branch...");
