@@ -883,7 +883,7 @@
         {
           "id": "electron-build-tools:workspace",
           "name": "Workspace",
-          "when": "electron-build-tools:ready && electron-build-tools:build-tools-installed && !electron-build-tools:is-electron-workspace "
+          "when": "electron-build-tools:ready && electron-build-tools:build-tools-installed && !electron-build-tools:is-electron-workspace"
         },
         {
           "id": "electron-build-tools:electron",
