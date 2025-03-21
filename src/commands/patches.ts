@@ -1,6 +1,4 @@
-import * as childProcess from "node:child_process";
 import * as path from "node:path";
-import { promisify } from "util";
 
 import * as vscode from "vscode";
 
@@ -17,6 +15,7 @@ import {
 } from "../extensionState";
 import Logger from "../logging";
 import {
+  exec,
   getOctokit,
   hasContentForBlobId,
   querystringParse,
@@ -29,8 +28,6 @@ import type {
   PatchDirectory,
   PullRequestTreeItem,
 } from "../views/patches";
-
-const exec = promisify(childProcess.exec);
 
 export function registerPatchesCommands(
   context: vscode.ExtensionContext,

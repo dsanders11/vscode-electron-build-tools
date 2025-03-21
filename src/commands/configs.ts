@@ -1,7 +1,5 @@
-import * as childProcess from "node:child_process";
 import * as path from "node:path";
 import { setTimeout } from "node:timers/promises";
-import { promisify } from "node:util";
 
 import * as vscode from "vscode";
 
@@ -12,14 +10,12 @@ import {
   ExtensionOperation,
 } from "../extensionState";
 import Logger from "../logging";
-import { getConfigsFilePath } from "../utils";
+import { exec, getConfigsFilePath } from "../utils";
 import type {
   ConfigCollector,
   ConfigTreeItem,
   ElectronBuildToolsConfigsProvider,
 } from "../views/configs";
-
-const exec = promisify(childProcess.exec);
 
 interface BuildSettingsOptionItem extends vscode.QuickPickItem {
   value: string;

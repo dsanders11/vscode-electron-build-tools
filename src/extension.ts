@@ -1,6 +1,5 @@
-import * as childProcess from "node:child_process";
 import * as path from "node:path";
-import util, { promisify } from "node:util";
+import util from "node:util";
 
 import * as vscode from "vscode";
 
@@ -29,6 +28,7 @@ import { SnippetProvider } from "./snippetProvider";
 import { createTestController } from "./tests";
 import {
   drillDown,
+  exec,
   findElectronRoot,
   getPatchesConfigFile,
   isBuildToolsInstalled,
@@ -53,8 +53,6 @@ import { registerSyncCommands } from "./commands/sync";
 import { registerBuildCommands } from "./commands/build";
 import { DocsLinkCompletionProvider } from "./docsLinkCompletionProvider";
 import { registerDocsCommands } from "./commands/docs";
-
-const exec = promisify(childProcess.exec);
 
 function registerElectronBuildToolsCommands(
   context: vscode.ExtensionContext,
