@@ -1,5 +1,4 @@
 import * as path from "node:path";
-import util from "node:util";
 
 import * as vscode from "vscode";
 
@@ -225,16 +224,14 @@ function registerElectronBuildToolsCommands(
       };
 
       const { default: Mocha } = await import("mocha");
-      const outputChannel = vscode.window.createOutputChannel(
-        `${outputChannelName}: LM Tests`,
+
+      // Use a custom reporter to send output to an OutputChannel, and
+      // also output the number of continuations a given test needed
+      const reporterModule = await import(
+        vscode.Uri.joinPath(context.extensionUri, "out/lm-tests/reporter.js")
+          .fsPath
       );
 
-      // Redirect mocha output to the output channel (no color, sadly)
-      Mocha.reporters.Base.consoleLog = (...data: unknown[]) => {
-        if (data.length > 0) {
-          outputChannel.appendLine(util.format(...data));
-        }
-      };
       interface MochaGlobalContext {
         cancellationToken?: vscode.CancellationToken;
         chromiumRoot: vscode.Uri;
@@ -252,8 +249,8 @@ function registerElectronBuildToolsCommands(
             (this as Record<string, unknown>).globalContext = globalContext;
           },
         },
+        reporter: reporterModule.default.default,
       });
-      outputChannel.show();
 
       const files = await vscode.workspace.findFiles(
         new vscode.RelativePattern(

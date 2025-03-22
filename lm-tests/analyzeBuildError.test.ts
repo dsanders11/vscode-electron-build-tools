@@ -10,6 +10,7 @@ import {
 import { getPrivateTools } from "../src/chat/tools";
 
 import { MockChatResponseStream } from "./mocks";
+import type { ExtendedTest } from "./reporter";
 
 describe("analyzeBuildError", () => {
   describe("finds the upstream CL for a build error", () => {
@@ -55,6 +56,13 @@ describe("analyzeBuildError", () => {
                 !(error instanceof assert.AssertionError)
               ) {
                 throw error;
+              } else {
+                // Keep track of the number of continuations so we can show output
+                const test = this.test as ExtendedTest;
+                if (test._continuations === undefined) {
+                  test._continuations = 0;
+                }
+                test._continuations += 1;
               }
             }
           } while (continuation !== undefined);
