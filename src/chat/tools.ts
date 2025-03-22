@@ -99,11 +99,11 @@ async function chromiumGitLog(
   chromiumRoot: vscode.Uri,
   startVersion: string,
   endVersion: string,
-  page: number,
+  page: number, // 1-indexed
   continueAfter?: string,
 ) {
   let output = await exec(
-    `git log --max-count=10 --skip=${page * 10} --name-status ${startVersion}..${endVersion}`,
+    `git log --max-count=10 --skip=${(page - 1) * 10} --name-status ${startVersion}..${endVersion}`,
     {
       cwd: chromiumRoot.fsPath,
       encoding: "utf8",
