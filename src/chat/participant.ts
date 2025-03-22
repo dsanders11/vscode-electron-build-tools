@@ -14,7 +14,7 @@ export function registerChatParticipant(
 
   const handler: vscode.ChatRequestHandler = async (
     request: vscode.ChatRequest,
-    _context: vscode.ChatContext,
+    context: vscode.ChatContext,
     stream: vscode.ChatResponseStream,
     token: vscode.CancellationToken,
   ): Promise<vscode.ChatResult> => {
@@ -24,15 +24,15 @@ export function registerChatParticipant(
       await findUpstreamFiles(chromiumRoot, request, stream, token);
       return {};
     } else if (request.command === "upgradesFindCL") {
-      await upgradesFindCL(
+      return upgradesFindCL(
         chromiumRoot,
         electronRoot,
         tools,
         request,
+        context,
         stream,
         token,
       );
-      return {};
     } else {
       stream.markdown("Sorry, I can only respond to specific commands.");
     }
@@ -50,6 +50,20 @@ export function registerChatParticipant(
     "icons",
     "electron_logo.png",
   );
+
+  participant.followupProvider = {
+    provideFollowups(
+      result: vscode.ChatResult,
+      _context: vscode.ChatContext,
+      _token: vscode.CancellationToken,
+    ): vscode.ProviderResult<vscode.ChatFollowup[]> {
+      if (result.metadata?.continuation) {
+        return [{ label: "Continue Searching", prompt: "continue" }];
+      }
+
+      return [];
+    },
+  };
 
   return participant;
 }

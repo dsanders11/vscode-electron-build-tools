@@ -11,6 +11,11 @@ import {
   DetermineBuildErrorFilePrompt,
   DetermineErrorTypePrompt,
 } from "../prompts";
+import {
+  ChromiumGitLogToolParameters,
+  ChromiumGitShowToolParameters,
+  EmptyLogPageError,
+} from "../tools";
 import { ToolResultMetadata, ToolCallRound } from "../toolsPrompts";
 import {
   compareChromiumVersions,
@@ -23,6 +28,13 @@ export enum ErrorType {
   SYNC = "SYNC",
   BUILD = "BUILD",
   UNKNOWN = "UNKNOWN",
+}
+
+const CONTINUE_ANALYSIS_PROMPT = "continue";
+
+export interface AnalyzeBuildErrorContinuation {
+  after: string;
+  page: number;
 }
 
 export async function determineErrorType(
@@ -196,6 +208,7 @@ export async function analyzeBuildError(
   newChromiumVersion: string,
   errorText: string,
   token: vscode.CancellationToken,
+  continuation?: AnalyzeBuildErrorContinuation,
 ) {
   stream.progress("Analyzing build error...");
 
@@ -240,7 +253,8 @@ export async function analyzeBuildError(
   const chromiumLogToolState = {
     startVersion: previousChromiumVersion,
     endVersion: newChromiumVersion,
-    page: 1,
+    page: continuation?.page ?? 1,
+    continueAfter: continuation?.after,
   };
 
   const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> =
@@ -297,23 +311,48 @@ export async function analyzeBuildError(
         response: responseStr,
         toolCalls,
       });
-      const result = await renderPrompt(
-        AnalyzeBuildErrorPrompt,
-        {
-          chromiumRoot,
-          fileName: filename,
-          fileContents: contents.toString(),
-          errorText,
-          previousChromiumVersion,
-          newChromiumVersion,
-          toolCallResults: accumulatedToolResults,
-          // Only provide the last round of tool calls
-          toolCallRounds: toolCallRounds.slice(-1),
-          toolInvocationToken: request.toolInvocationToken,
-        },
-        { modelMaxPromptTokens: request.model.maxInputTokens },
-        request.model,
-      );
+      const renderToolCall = async () => {
+        const toolCall = toolCalls[0];
+
+        try {
+          return await renderPrompt(
+            AnalyzeBuildErrorPrompt,
+            {
+              chromiumRoot,
+              fileName: filename,
+              fileContents: contents.toString(),
+              errorText,
+              previousChromiumVersion,
+              newChromiumVersion,
+              toolCallResults: accumulatedToolResults,
+              // Only provide the last round of tool calls
+              toolCallRounds: toolCallRounds.slice(-1),
+              toolInvocationToken: request.toolInvocationToken,
+            },
+            { modelMaxPromptTokens: request.model.maxInputTokens },
+            request.model,
+          );
+        } catch (error) {
+          if (error instanceof EmptyLogPageError) {
+            // Continue on to the next page if the commit the
+            // user continued from was the last one on that page
+            stream.progress(
+              `Analyzing page ${chromiumLogToolState.page} of the log...`,
+            );
+
+            // Inject the Chromium log tool state into the input
+            Object.assign(toolCall.input, chromiumLogToolState);
+
+            // Increment the page number for the next call
+            chromiumLogToolState.page += 1;
+
+            return renderToolCall();
+          } else {
+            throw error;
+          }
+        }
+      };
+      const result = await renderToolCall();
       messages = result.messages;
       const toolResultMetadata = result.metadata.getAll(ToolResultMetadata);
       if (toolResultMetadata?.length) {
@@ -334,7 +373,7 @@ export async function analyzeBuildError(
   const finalResponse = await runWithTools();
   stream.markdown(finalResponse);
 
-  return {
+  const result: vscode.ChatResult = {
     metadata: {
       // Return tool call metadata so it can be used in prompt history on the next request
       toolCallsMetadata: {
@@ -343,6 +382,25 @@ export async function analyzeBuildError(
       },
     },
   };
+
+  const lastToolCall = toolCallRounds.at(-1)!.toolCalls[0];
+  const previousLogToolCall = toolCallRounds.findLast(
+    (round) => round.toolCalls[0].name === lmToolNames.chromiumLog,
+  )?.toolCalls[0];
+
+  // If the last tool call was getting details for a commit, then we assume there
+  // are more commits available in the log to analyze if the user wants to
+  if (
+    lastToolCall?.name === lmToolNames.chromiumGitShow &&
+    previousLogToolCall !== undefined
+  ) {
+    (result.metadata as Record<string, object>).continuation = {
+      after: (lastToolCall.input as ChromiumGitShowToolParameters).commit,
+      page: (previousLogToolCall.input as ChromiumGitLogToolParameters).page,
+    };
+  }
+
+  return result;
 }
 
 export async function upgradesFindCL(
@@ -350,17 +408,51 @@ export async function upgradesFindCL(
   electronRoot: vscode.Uri,
   tools: vscode.LanguageModelChatTool[],
   request: vscode.ChatRequest,
+  context: vscode.ChatContext,
   stream: vscode.ChatResponseStream,
   token: vscode.CancellationToken,
 ) {
-  const terminalSelectionShebang =
-    request.prompt.trim() === "#terminalSelection";
+  let continuation: AnalyzeBuildErrorContinuation | undefined;
+  let prompt = request.prompt;
+  let toolReferences = request.toolReferences;
+
+  if (request.prompt.toLowerCase() === CONTINUE_ANALYSIS_PROMPT) {
+    const lastTurn = context.history.at(-1);
+
+    if (lastTurn instanceof vscode.ChatResponseTurn) {
+      // Previous request may be several turns back if the user keeps
+      // continuing the analysis, so we need to find the last request
+      const previousRequestTurn = context.history.findLast(
+        (turn) =>
+          turn instanceof vscode.ChatRequestTurn &&
+          turn.prompt !== CONTINUE_ANALYSIS_PROMPT,
+      );
+
+      if (previousRequestTurn instanceof vscode.ChatRequestTurn) {
+        // Use the previous prompt and tool references for the
+        // checks that follow before continuing the analysis
+        prompt = previousRequestTurn.prompt;
+        toolReferences = previousRequestTurn.toolReferences;
+
+        // At this point we have everything we need to continue the analysis
+        continuation = lastTurn.result.metadata?.continuation;
+      }
+    }
+
+    if (continuation === undefined) {
+      stream.markdown("There is no error analysis in progress.");
+      return {};
+    }
+  }
+
+  const terminalSelectionShebang = prompt.trim() === "#terminalSelection";
   const terminalSelectionAttached =
-    !!request.toolReferences.find(
+    !!toolReferences.find(
       (reference) => reference.name === lmToolNames.getTerminalSelection,
     ) || terminalSelectionShebang;
 
-  const prompt = terminalSelectionShebang ? "" : request.prompt;
+  // If prompt is just #terminalSelection, then there's no real prompt
+  prompt = terminalSelectionShebang ? "" : prompt;
 
   if (
     (!prompt && !terminalSelectionAttached) ||
@@ -443,7 +535,7 @@ export async function upgradesFindCL(
       token,
     );
   } else if (errorType === ErrorType.BUILD) {
-    await analyzeBuildError(
+    return analyzeBuildError(
       chromiumRoot,
       request,
       stream,
@@ -452,6 +544,7 @@ export async function upgradesFindCL(
       versions.newVersion,
       errorText,
       token,
+      continuation,
     );
   } else if (errorType === ErrorType.UNKNOWN) {
     stream.markdown(

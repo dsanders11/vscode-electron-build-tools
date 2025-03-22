@@ -5,6 +5,11 @@ import * as vscode from "vscode";
 import { lmToolNames } from "../constants";
 import { exec } from "../utils";
 
+const commitLogRegex =
+  /commit ([0-9a-f]+).*?(?:\n|$)(?:(?=commit (?:[0-9a-f]+))|$)/gs;
+
+export class EmptyLogPageError extends Error {}
+
 function sanitizeDate(date: string) {
   const parsedDate = new Date(date);
   if (isNaN(parsedDate.getTime())) {
@@ -83,10 +88,11 @@ async function gitLog(
   ]);
 }
 
-interface ChromiumGitLogToolParameters {
+export interface ChromiumGitLogToolParameters {
   startVersion: string;
   endVersion: string;
   page: number;
+  continueAfter?: string;
 }
 
 async function chromiumGitLog(
@@ -94,6 +100,7 @@ async function chromiumGitLog(
   startVersion: string,
   endVersion: string,
   page: number,
+  continueAfter?: string,
 ) {
   let output = await exec(
     `git log --max-count=10 --skip=${page * 10} --name-status ${startVersion}..${endVersion}`,
@@ -103,17 +110,39 @@ async function chromiumGitLog(
     },
   ).then(({ stdout }) => stdout.trim());
 
+  // If continuing, we drop all log output before and
+  // including the commit we are continuing from
+  if (continueAfter) {
+    const regexMatches = output.matchAll(commitLogRegex);
+    const logEntries = [...regexMatches];
+    const targetEntryIdx = logEntries.findIndex(
+      (entry) => entry[1] === continueAfter,
+    );
+
+    if (targetEntryIdx !== -1) {
+      const nextEntry = logEntries[targetEntryIdx + 1];
+
+      if (nextEntry) {
+        output = output.slice(nextEntry.index);
+      } else {
+        throw new EmptyLogPageError();
+      }
+    }
+  }
+
   if (!output) {
-    output = "No commits found";
+    return new vscode.LanguageModelToolResult([
+      new vscode.LanguageModelTextPart("No commits found"),
+    ]);
   }
 
   return new vscode.LanguageModelToolResult([
-    new vscode.LanguageModelTextPart(`This is page ${page} of the log:\n`),
+    new vscode.LanguageModelTextPart(`This is page ${page} of the log:\n\n`),
     new vscode.LanguageModelTextPart(output),
   ]);
 }
 
-interface ChromiumGitShowToolParameters {
+export interface ChromiumGitShowToolParameters {
   commit: string;
 }
 
@@ -174,9 +203,15 @@ export function invokePrivateTool(
     const { commit, filename } = options.input as GitShowToolParameters;
     return gitShow(chromiumRoot, commit, filename);
   } else if (name === lmToolNames.chromiumLog) {
-    const { startVersion, endVersion, page } =
+    const { startVersion, endVersion, page, continueAfter } =
       options.input as ChromiumGitLogToolParameters;
-    return chromiumGitLog(chromiumRoot, startVersion, endVersion, page);
+    return chromiumGitLog(
+      chromiumRoot,
+      startVersion,
+      endVersion,
+      page,
+      continueAfter,
+    );
   } else if (name === lmToolNames.chromiumGitShow) {
     const { commit } = options.input as ChromiumGitShowToolParameters;
     return chromiumGitShow(chromiumRoot, commit);

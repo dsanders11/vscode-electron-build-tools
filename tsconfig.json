@@ -1,11 +1,7 @@
 {
+  "extends": "@tsconfig/node18/tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "ES2018",
     "outDir": "out",
-    "lib": [
-      "ES2020"
-    ],
     "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,

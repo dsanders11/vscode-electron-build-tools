@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import escapeRegExp from "lodash.escaperegexp";
 import * as vscode from "vscode";
 
-import { analyzeBuildError } from "../src/chat/commands/upgradesFindCL";
+import {
+  analyzeBuildError,
+  AnalyzeBuildErrorContinuation,
+} from "../src/chat/commands/upgradesFindCL";
 import { getPrivateTools } from "../src/chat/tools";
 
 import { MockChatResponseStream } from "./mocks";
@@ -13,23 +16,48 @@ describe("analyzeBuildError", () => {
     for (const model of globalThis._testModels) {
       for (const fixture of globalThis._testFixtures.buildErrors) {
         it(`using ${model.name}`, async function () {
-          const stream = new MockChatResponseStream();
-          const tools = getPrivateTools(this.globalContext.extension);
-          await analyzeBuildError(
-            this.globalContext.chromiumRoot,
-            { model, toolInvocationToken: null } as vscode.ChatRequest,
-            stream,
-            tools,
-            fixture.previousVersion,
-            fixture.newVersion,
-            fixture.error,
-            this.globalContext.cancellationToken,
-          );
-          assert.strictEqual(stream._markdownMessages.length, 1);
-          assert.match(
-            stream._markdownMessages[0],
-            new RegExp(escapeRegExp(fixture.cl)),
-          );
+          const request = {
+            model,
+            toolInvocationToken: null,
+          } as vscode.ChatRequest;
+          let continuation: AnalyzeBuildErrorContinuation | undefined;
+
+          do {
+            const stream = new MockChatResponseStream();
+            const tools = getPrivateTools(this.globalContext.extension);
+
+            const result = await analyzeBuildError(
+              this.globalContext.chromiumRoot,
+              request,
+              stream,
+              tools,
+              fixture.previousVersion,
+              fixture.newVersion,
+              fixture.error,
+              this.globalContext.cancellationToken,
+              continuation,
+            );
+            continuation = result.metadata?.continuation;
+
+            try {
+              assert.strictEqual(stream._markdownMessages.length, 1);
+              assert.match(
+                stream._markdownMessages[0],
+                new RegExp(escapeRegExp(fixture.cl)),
+              );
+
+              // Test passed, clear the continuation
+              continuation = undefined;
+            } catch (error) {
+              // Don't fail the test unless it's not possible to continue searching
+              if (
+                continuation === undefined ||
+                !(error instanceof assert.AssertionError)
+              ) {
+                throw error;
+              }
+            }
+          } while (continuation !== undefined);
         });
       }
     }
