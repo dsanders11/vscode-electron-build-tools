@@ -2,7 +2,7 @@ import { renderPrompt } from "@vscode/prompt-tsx";
 import * as vscode from "vscode";
 
 import { lmToolNames } from "../../constants";
-import { getShortSha } from "../../utils";
+import { exec, getShortSha } from "../../utils";
 
 import { SearchChromiumCommitsPrompt } from "../prompts";
 import {
@@ -11,6 +11,7 @@ import {
   EmptyLogPageError,
 } from "../tools";
 import { ToolResultMetadata, ToolCallRound } from "../toolsPrompts";
+import { compareChromiumVersions } from "../utils";
 
 const CONTINUE_SEARCHING_PROMPT = "continue";
 
@@ -65,45 +66,23 @@ export async function searchCLs(
   let endChromiumVersion: string;
 
   if (!continuation) {
+    stream.progress("Fetching Chromium versions...");
+    const versions = await exec(
+      'git tag --sort=version:refname --list "[1-2]??.*.*.*"',
+      {
+        cwd: chromiumRoot.fsPath,
+        encoding: "utf8",
+      },
+    ).then(({ stdout }) => stdout.trim().split("\n"));
+
     let quickPick = vscode.window.createQuickPick();
-    quickPick.items = [{ label: "135" }, { label: "136" }];
-    quickPick.title = "Search Chromium CLs";
-    quickPick.placeholder = "Choose Chromium milestone for start version";
-    quickPick.step = 1;
-    quickPick.totalSteps = 4;
-
-    const startMilestone = await new Promise((resolve) => {
-      quickPick.onDidAccept(() => {
-        resolve(quickPick.selectedItems[0].label);
-        quickPick.dispose();
-      });
-      quickPick.onDidHide(() => {
-        resolve(undefined);
-        quickPick.dispose();
-      });
-      quickPick.show();
-    });
-
-    if (!startMilestone) {
-      return {};
-    }
-
-    const startMilestoneVersions = new Set(
-      await fetch(
-        `https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Linux,Mac,Win32,Windows&milestone=${startMilestone}&num=1000`,
-      )
-        .then((resp) => resp.json() as Promise<Array<{ version: string }>>)
-        .then((versions) => versions.map(({ version }) => version)),
-    );
-
-    quickPick = vscode.window.createQuickPick();
-    quickPick.items = Array.from(startMilestoneVersions).map((version) => ({
+    quickPick.items = versions.map((version) => ({
       label: version,
     }));
     quickPick.title = "Search Chromium CLs";
     quickPick.placeholder = "Choose Chromium start version";
-    quickPick.step = 2;
-    quickPick.totalSteps = 4;
+    quickPick.step = 1;
+    quickPick.totalSteps = 2;
 
     const startVersion = await new Promise<string | undefined>((resolve) => {
       quickPick.onDidAccept(() => {
@@ -123,45 +102,18 @@ export async function searchCLs(
 
     startChromiumVersion = startVersion;
 
-    quickPick = vscode.window.createQuickPick();
-    quickPick.items = [{ label: "135" }, { label: "136" }];
-    quickPick.title = "Search Chromium CLs";
-    quickPick.placeholder = "Choose Chromium milestone for end version";
-    quickPick.step = 3;
-    quickPick.totalSteps = 4;
-
-    const endMilestone = await new Promise((resolve) => {
-      quickPick.onDidAccept(() => {
-        resolve(quickPick.selectedItems[0].label);
-        quickPick.dispose();
-      });
-      quickPick.onDidHide(() => {
-        resolve(undefined);
-        quickPick.dispose();
-      });
-      quickPick.show();
-    });
-
-    if (!endMilestone) {
-      return {};
-    }
-
-    const endMilestoneVersions = new Set(
-      await fetch(
-        `https://chromiumdash.appspot.com/fetch_releases?channel=Canary&platform=Linux,Mac,Win32,Windows&milestone=${endMilestone}&num=1000`,
-      )
-        .then((resp) => resp.json() as Promise<Array<{ version: string }>>)
-        .then((versions) => versions.map(({ version }) => version)),
+    const remainingVersions = versions.filter(
+      (version) => compareChromiumVersions(version, startChromiumVersion) > 0,
     );
 
     quickPick = vscode.window.createQuickPick();
-    quickPick.items = Array.from(endMilestoneVersions).map((version) => ({
+    quickPick.items = remainingVersions.map((version) => ({
       label: version,
     }));
     quickPick.title = "Search Chromium CLs";
     quickPick.placeholder = "Choose Chromium end version";
-    quickPick.step = 4;
-    quickPick.totalSteps = 4;
+    quickPick.step = 2;
+    quickPick.totalSteps = 2;
 
     const endVersion = await new Promise<string | undefined>((resolve) => {
       quickPick.onDidAccept(() => {
