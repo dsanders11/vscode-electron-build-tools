@@ -4,6 +4,7 @@ import { chatParticipantId } from "../constants";
 
 import { findUpstreamFiles } from "./commands/findUpstreamFiles";
 import { upgradesFindCL } from "./commands/upgradesFindCL";
+import { searchCLs } from "./commands/searchCLs";
 import { getPrivateTools } from "./tools";
 
 export function registerChatParticipant(
@@ -25,6 +26,16 @@ export function registerChatParticipant(
       return {};
     } else if (request.command === "upgradesFindCL") {
       return upgradesFindCL(
+        chromiumRoot,
+        electronRoot,
+        tools,
+        request,
+        context,
+        stream,
+        token,
+      );
+    } else if (request.command === "searchCLs") {
+      return searchCLs(
         chromiumRoot,
         electronRoot,
         tools,
