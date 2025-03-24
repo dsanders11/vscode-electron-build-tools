@@ -16,7 +16,7 @@ const {
 } = Runner.constants;
 const color = reporters.Base.color;
 
-type ExtendedTest = Test & { _continuations?: number };
+export type ExtendedTest = Test & { _continuations?: number };
 
 // Adapted from https://github.com/mochajs/mocha/blob/v11.1.0/lib/reporters/spec.js
 export default class ExtendedSpecReporter extends reporters.Base {
