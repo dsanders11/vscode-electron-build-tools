@@ -8,7 +8,6 @@ import { exec, getShortSha } from "../../utils";
 import {
   AnalyzeBuildErrorPrompt,
   AnalyzeSyncErrorPrompt,
-  DetermineBuildErrorFilePrompt,
   DetermineErrorTypePrompt,
 } from "../prompts";
 import {
@@ -212,31 +211,11 @@ export async function analyzeBuildError(
 ) {
   stream.progress("Analyzing build error...");
 
-  let { messages } = await renderPrompt(
-    DetermineBuildErrorFilePrompt,
-    {
-      errorText,
-    },
-    { modelMaxPromptTokens: request.model.maxInputTokens },
-    request.model,
-  );
-
-  const response = await request.model.sendRequest(messages, {}, token);
-  let filename = "";
-  for await (const fragment of response.text) {
-    filename += fragment;
-  }
-
-  const file = vscode.Uri.joinPath(chromiumRoot, "out", "Default", filename);
-  const contents = await vscode.workspace.fs.readFile(file);
-
   // Render the initial prompt
-  ({ messages } = await renderPrompt(
+  let { messages } = await renderPrompt(
     AnalyzeBuildErrorPrompt,
     {
       chromiumRoot,
-      fileName: filename,
-      fileContents: contents.toString(),
       errorText,
       previousChromiumVersion,
       newChromiumVersion,
@@ -246,7 +225,7 @@ export async function analyzeBuildError(
     },
     { modelMaxPromptTokens: request.model.maxInputTokens },
     request.model,
-  ));
+  );
 
   // A hackish way to track state for the Chromium log tool without
   // relying on the model to do it since it constantly gets it wrong
@@ -319,8 +298,6 @@ export async function analyzeBuildError(
             AnalyzeBuildErrorPrompt,
             {
               chromiumRoot,
-              fileName: filename,
-              fileContents: contents.toString(),
               errorText,
               previousChromiumVersion,
               newChromiumVersion,

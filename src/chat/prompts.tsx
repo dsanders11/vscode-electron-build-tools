@@ -88,8 +88,6 @@ export class DetermineBuildErrorFilePrompt extends PromptElement<DetermineBuildE
 
 interface AnalyzeBuildErrorProps extends BasePromptElementProps {
   chromiumRoot: vscode.Uri;
-  fileName: string;
-  fileContents: string;
   errorText: string;
   previousChromiumVersion: string;
   newChromiumVersion: string;
