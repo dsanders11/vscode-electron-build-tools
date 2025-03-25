@@ -22,6 +22,22 @@ export interface SearchCommitsContinuation {
   endChromiumVersion: string;
 }
 
+async function showQuickPick(
+  quickPick: vscode.QuickPick<vscode.QuickPickItem>,
+) {
+  return new Promise<string | undefined>((resolve) => {
+    quickPick.onDidAccept(() => {
+      resolve(quickPick.selectedItems[0].label);
+      quickPick.dispose();
+    });
+    quickPick.onDidHide(() => {
+      resolve(undefined);
+      quickPick.dispose();
+    });
+    quickPick.show();
+  });
+}
+
 export async function searchCLs(
   chromiumRoot: vscode.Uri,
   _electronRoot: vscode.Uri,
@@ -62,8 +78,8 @@ export async function searchCLs(
     }
   }
 
-  let startChromiumVersion: string;
-  let endChromiumVersion: string;
+  let startChromiumVersion: string | undefined;
+  let endChromiumVersion: string | undefined;
 
   if (!continuation) {
     stream.progress("Fetching Chromium versions...");
@@ -84,26 +100,14 @@ export async function searchCLs(
     quickPick.step = 1;
     quickPick.totalSteps = 2;
 
-    const startVersion = await new Promise<string | undefined>((resolve) => {
-      quickPick.onDidAccept(() => {
-        resolve(quickPick.selectedItems[0].label);
-        quickPick.dispose();
-      });
-      quickPick.onDidHide(() => {
-        resolve(undefined);
-        quickPick.dispose();
-      });
-      quickPick.show();
-    });
+    startChromiumVersion = await showQuickPick(quickPick);
 
-    if (!startVersion) {
+    if (!startChromiumVersion) {
       return {};
     }
 
-    startChromiumVersion = startVersion;
-
     const remainingVersions = versions.filter(
-      (version) => compareChromiumVersions(version, startChromiumVersion) > 0,
+      (version) => compareChromiumVersions(version, startChromiumVersion!) > 0,
     );
 
     quickPick = vscode.window.createQuickPick();
@@ -115,23 +119,11 @@ export async function searchCLs(
     quickPick.step = 2;
     quickPick.totalSteps = 2;
 
-    const endVersion = await new Promise<string | undefined>((resolve) => {
-      quickPick.onDidAccept(() => {
-        resolve(quickPick.selectedItems[0].label);
-        quickPick.dispose();
-      });
-      quickPick.onDidHide(() => {
-        resolve(undefined);
-        quickPick.dispose();
-      });
-      quickPick.show();
-    });
+    endChromiumVersion = await showQuickPick(quickPick);
 
-    if (!endVersion) {
+    if (!endChromiumVersion) {
       return {};
     }
-
-    endChromiumVersion = endVersion;
   } else {
     ({ startChromiumVersion, endChromiumVersion } = continuation);
   }
