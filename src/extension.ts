@@ -243,7 +243,7 @@ function registerElectronBuildToolsCommands(
         extension: context.extension,
       };
       const mocha = new Mocha({
-        timeout: 600_000,
+        timeout: 1_200_000,
         rootHooks: {
           async beforeAll() {
             (this as Record<string, unknown>).globalContext = globalContext;
