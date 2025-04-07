@@ -1,23 +1,9 @@
 [
   {
-    "previousVersion": "?",
-    "newVersion": "?",
-    "diff": "?",
-    "error": "Applying: Preconnect manager\nUsing index info to reconstruct a base tree...\nM chrome/browser/predictors/preconnect_manager.cc\nM     chrome/browser/predictors/preconnect_manager.h\nFalling back to patching base and 3-way merge...\nAuto-merging chrome/browser/predictors/preconnect_manager.h\nCONFLICT (content): Merge conflict in chrome/browser/predictors/preconnect_manager.h\nAuto-merging chrome/browser/predictors/preconnect_manager.cc\nerror: Failed to merge in the changes.\nhint: Use 'git am --show-current-patch=diff' to see the failed patch\nhint: When you have resolved this problem, run \"git am --continue\".\nhint: If you prefer to skip this patch, run \"git am --skip\" instead.\nhint: To restore the original branch and stop patching, run \"git am --abort\".\nhint: Disable this message with \"git config advice.mergeConflict false\"\nPatch failed at 0093 Preconnect manager\n\n",
-    "cl": "?"
-  },
-  {
-    "previousVersion": "?",
-    "newVersion": "?",
-    "diff": "?",
-    "error": "Applying: extend ProcessSingleton\nUsing index info to reconstruct a base tree...\nM    chrome/browser/process_singleton_posix.cc\nFalling back to patching base and 3-way merge...\nAuto-merging chrome/browser/process_singleton_posix.cc\nCONFLICT (content): Merge conflict in chrome/browser/process_singleton_posix.cc\n",
-    "cl": "?"
-  },
-  {
-    "previousVersion": "?",
-    "newVersion": "?",
-    "diff": "?",
-    "error": "Applying: Enable V8 code cache for custom schemes\nUsing index info to reconstruct a base tree...\nM    content/browser/code_cache/generated_code_cache.cc\nFalling back to patching base and 3-way merge...\nAuto-merging content/browser/code_cache/generated_code_cache.cc\nCONFLICT (content): Merge conflict in content/browser/code_cache/generated_code_cache.cc\nerror: Failed to merge in the changes.\nPatch failed at 0118 Enable V8 code cache for custom schemes\n",
-    "cl": "?"
+    "previousVersion": "136.0.7095.0",
+    "newVersion": "137.0.7113.0",
+    "diff": "diff --cc content/browser/code_cache/generated_code_cache_browsertest.cc\nindex c810c580efea0,8227df3c7faa0..0000000000000\n--- a/content/browser/code_cache/generated_code_cache_browsertest.cc\n+++ b/content/browser/code_cache/generated_code_cache_browsertest.cc\n@@@ -20,9 -23,10 +23,14 @@@\n  #include \"content/public/test/browser_test_utils.h\"\n  #include \"content/public/test/content_browser_test.h\"\n  #include \"content/public/test/content_browser_test_utils.h\"\n+ #include \"content/public/test/test_browser_context.h\"\n  #include \"content/shell/browser/shell.h\"\n  #include \"content/test/content_browser_test_utils_internal.h\"\n++<<<<<<< HEAD\n +#include \"net/base/features.h\"\n++=======\n+ #include \"content/test/test_content_client.h\"\n++>>>>>>> Enable V8 code cache for custom schemes\n  #include \"net/dns/mock_host_resolver.h\"\n  #include \"third_party/blink/public/common/features.h\"\n  #include \"third_party/blink/public/common/page/v8_compile_hints_histograms.h\"\n\n",
+    "error": "Applying: Enable V8 code cache for custom schemes\nUsing index info to reconstruct a base tree...\nM content/browser/code_cache/generated_code_cache_browsertest.cc\nFalling back to patching base and 3-way merge...\nAuto-merging content/browser/code_cache/generated_code_cache_browsertest.cc\nCONFLICT (content): Merge conflict in content/browser/code_cache/generated_code_cache_browsertest.cc\nerror: Failed to merge in the changes.\nPatch failed at 0118 Enable V8 code cache for custom schemes\nhint: Use 'git am --show-current-patch=diff' to see the failed patch\nhint: When you have resolved this problem, run \"git am --continue\".\nhint: If you prefer to skip this patch, run \"git am --skip\" instead.\nhint: To restore the original branch and stop patching, run \"git am --abort\".\nhint: Disable this message with \"git config advice.mergeConflict false\"\n",
+    "cl": "https://chromium-review.googlesource.com/c/chromium/src/+/6422872"
   }
 ]

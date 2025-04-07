@@ -13,7 +13,7 @@ import { MockChatResponseStream } from "./mocks";
 import type { ExtendedTest } from "./reporter";
 
 describe("analyzeBuildError", () => {
-  describe.only("finds the upstream CL for a build error", () => {
+  describe("finds the upstream CL for a build error", () => {
     for (const fixture of globalThis._testFixtures.buildErrors) {
       describe(fixture.cl, () => {
         for (const model of globalThis._testModels) {
