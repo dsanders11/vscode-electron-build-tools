@@ -12,7 +12,7 @@
   "version": "0.0.0",
   "engines": {
     "node": ">=18",
-    "vscode": "^1.97.0"
+    "vscode": "^1.96.0"
   },
   "activationEvents": [
     "workspaceContains:electron_resources.grd",
@@ -973,7 +973,7 @@
     "@types/mocha": "^10.0.9",
     "@types/node": "^22.8.6",
     "@types/uuid": "^10.0.0",
-    "@types/vscode": "1.97.0",
+    "@types/vscode": "1.96.0",
     "esbuild": "^0.24.2",
     "eslint": "^9.13.0",
     "husky": "^9.1.6",
