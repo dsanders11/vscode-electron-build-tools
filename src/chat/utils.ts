@@ -58,34 +58,6 @@ export async function getChromiumVersions(
   return { previousVersion, newVersion };
 }
 
-export async function getChromiumVersionCommitDate(
-  chromiumRoot: vscode.Uri,
-  version: string,
-) {
-  try {
-    const sha = await exec(`git rev-list -1 tags/${version}`, {
-      cwd: chromiumRoot.fsPath,
-      encoding: "utf8",
-    }).then(({ stdout }) => stdout.trim());
-    return await exec(`git log -n 1 --format="%cd" ${sha}`, {
-      cwd: chromiumRoot.fsPath,
-      encoding: "utf8",
-    }).then(({ stdout }) => stdout.trim());
-  } catch (err) {
-    if (
-      err instanceof Error &&
-      Object.prototype.hasOwnProperty.call(err, "code")
-    ) {
-      if ((err as PromisifiedExecError).code === 128) {
-        // TODO
-        Logger.debug("Tag for Chromium version not found");
-      }
-    }
-  }
-
-  return null;
-}
-
 export function extractTerminalSelectionText(
   terminalSelection: vscode.LanguageModelToolResult,
 ) {

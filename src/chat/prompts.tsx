@@ -145,7 +145,6 @@ interface AnalyzeSyncErrorProps extends BasePromptElementProps {
   chromiumRoot: vscode.Uri;
   errorText: string;
   gitDiffOutput: string;
-  previousChromiumVersionDate: string;
   toolCallRounds: ToolCallRound[];
   toolCallResults: Record<string, vscode.LanguageModelToolResult>;
   toolInvocationToken: vscode.ChatParticipantToolToken | undefined;
@@ -161,8 +160,7 @@ export class AnalyzeSyncErrorPrompt extends PromptElement<AnalyzeSyncErrorProps>
           Suggest a list of Chromium CLs that might be the cause of the user's
           merge conflict when applying Electron's patches. Analyze the git log
           (using the provided tools) for the files with merge conflicts. For
-          each file, first check the git log for commits since "
-          {this.props.previousChromiumVersionDate}".
+          each file, check the git log for commits.
           <br />
           For any commit which might be the cause of the merge conflict, request
           the full commit details (using the provided tools) to determine if it

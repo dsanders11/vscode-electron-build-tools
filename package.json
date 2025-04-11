@@ -612,13 +612,6 @@
                 "chrome/browser/icon_loader.cc",
                 "components/autofill/core/browser/geo/autofill_country.h"
               ]
-            },
-            "since": {
-              "type": "string",
-              "description": "Show commits more recent than a specific date.",
-              "examples": [
-                "Mon Jan 10 18:11:51 2022 -0700"
-              ]
             }
           },
           "required": [

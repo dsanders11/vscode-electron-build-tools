@@ -5,7 +5,6 @@ import * as vscode from "vscode";
 
 import { analyzeSyncError } from "../src/chat/commands/upgradesFindCL";
 import { getPrivateTools } from "../src/chat/tools";
-import { getChromiumVersionCommitDate } from "../src/chat/utils";
 
 import { MockChatResponseStream } from "./mocks";
 
@@ -16,12 +15,6 @@ describe("analyzeSyncError", () => {
         for (const model of globalThis._testModels) {
           it(`using ${model.name}`, async function () {
             const stream = new MockChatResponseStream();
-            const previousChromiumVersionDate =
-              await getChromiumVersionCommitDate(
-                this.globalContext.chromiumRoot,
-                fixture.previousVersion,
-              );
-            assert.notStrictEqual(previousChromiumVersionDate, null);
             const tools = getPrivateTools(this.globalContext.extension);
             await analyzeSyncError(
               this.globalContext.chromiumRoot,

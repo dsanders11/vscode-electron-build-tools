@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { lmToolNames } from "../constants";
 import { exec } from "../utils";
 
+const chromiumVersionRegex = /\d+\.\d+\.\d+\.\d+/;
 const commitLogRegex =
   /commit ([0-9a-f]+).*?(?:\n|$)(?:(?=commit (?:[0-9a-f]+))|$)/gs;
 
@@ -60,19 +61,29 @@ export function getPrivateTools(
 }
 
 interface GitLogToolParameters {
+  startVersion: string;
+  endVersion: string;
   filename: string;
-  since: string;
 }
 
 async function gitLog(
   chromiumRoot: vscode.Uri,
+  startVersion: string,
+  endVersion: string,
   filename: string,
-  since: string,
 ) {
+  if (!chromiumVersionRegex.test(startVersion)) {
+    throw new Error(`Invalid Chromium version: ${startVersion}`);
+  }
+
+  if (!chromiumVersionRegex.test(endVersion)) {
+    throw new Error(`Invalid Chromium version: ${endVersion}`);
+  }
+
   const { cwd } = await validateGitToolFilename(chromiumRoot, filename);
 
   let output = await exec(
-    `git log --since="${sanitizeDate(since)}" ${path.basename(filename)}`,
+    `git log ${startVersion}..${endVersion} ${path.basename(filename)}`,
     {
       cwd,
       encoding: "utf8",
@@ -80,7 +91,7 @@ async function gitLog(
   ).then(({ stdout }) => stdout.trim());
 
   if (!output) {
-    output = `No commits found for ${filename} since ${since}`;
+    output = `No commits found for ${filename} in the range ${startVersion}..${endVersion}`;
   }
 
   return new vscode.LanguageModelToolResult([
@@ -102,6 +113,14 @@ async function chromiumGitLog(
   page: number, // 1-indexed
   continueAfter?: string,
 ) {
+  if (!chromiumVersionRegex.test(startVersion)) {
+    throw new Error(`Invalid Chromium version: ${startVersion}`);
+  }
+
+  if (!chromiumVersionRegex.test(endVersion)) {
+    throw new Error(`Invalid Chromium version: ${endVersion}`);
+  }
+
   let output = await exec(
     `git log --max-count=10 --skip=${(page - 1) * 10} --name-status ${startVersion}..${endVersion}`,
     {
@@ -197,8 +216,9 @@ export function invokePrivateTool(
   _token?: vscode.CancellationToken,
 ): Promise<vscode.LanguageModelToolResult> {
   if (name === lmToolNames.gitLog) {
-    const { filename, since } = options.input as GitLogToolParameters;
-    return gitLog(chromiumRoot, filename, since);
+    const { startVersion, endVersion, filename } =
+      options.input as GitLogToolParameters;
+    return gitLog(chromiumRoot, startVersion, endVersion, filename);
   } else if (name === lmToolNames.gitShow) {
     const { commit, filename } = options.input as GitShowToolParameters;
     return gitShow(chromiumRoot, commit, filename);

@@ -20,7 +20,6 @@ import {
   compareChromiumVersions,
   extractTerminalSelectionText,
   getChromiumVersions,
-  getChromiumVersionCommitDate,
 } from "../utils";
 
 export enum ErrorType {
@@ -72,22 +71,11 @@ export async function analyzeSyncError(
   stream: vscode.ChatResponseStream,
   tools: vscode.LanguageModelChatTool[],
   previousChromiumVersion: string,
-  _newChromiumVersion: string,
+  newChromiumVersion: string,
   gitDiffOutput: string,
   errorText: string,
   token: vscode.CancellationToken,
 ) {
-  const previousChromiumVersionDate = await getChromiumVersionCommitDate(
-    chromiumRoot,
-    previousChromiumVersion,
-  );
-  if (!previousChromiumVersionDate) {
-    stream.markdown(
-      "Couldn't determine the commit date for the previous Chromium version. Ensure you've synced recently.",
-    );
-    return {};
-  }
-
   stream.progress("Analyzing sync error...");
 
   // Render the initial prompt
@@ -97,7 +85,6 @@ export async function analyzeSyncError(
       chromiumRoot,
       errorText,
       gitDiffOutput,
-      previousChromiumVersionDate,
       toolCallResults: {},
       toolCallRounds: [],
       toolInvocationToken: request.toolInvocationToken,
@@ -105,6 +92,13 @@ export async function analyzeSyncError(
     { modelMaxPromptTokens: request.model.maxInputTokens },
     request.model,
   );
+
+  // A hackish way to track state without relying on the
+  // model to do it since it constantly gets it wrong
+  const gitLogToolState = {
+    startVersion: previousChromiumVersion,
+    endVersion: newChromiumVersion,
+  };
 
   const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> =
     {};
@@ -136,9 +130,14 @@ export async function analyzeSyncError(
       } else if (part instanceof vscode.LanguageModelToolCallPart) {
         toolCalls.push(part);
 
-        if (part.name === lmToolNames.gitLog && !analyzingGitLogs) {
-          stream.progress(`Analyzing git logs...`);
-          analyzingGitLogs = true;
+        if (part.name === lmToolNames.gitLog) {
+          if (!analyzingGitLogs) {
+            stream.progress(`Analyzing git logs...`);
+            analyzingGitLogs = true;
+          }
+
+          // Inject the git log tool state into the input
+          Object.assign(part.input, gitLogToolState);
         } else if (part.name === lmToolNames.gitShow) {
           analyzingGitLogs = false;
           const shortSha = await getShortSha(
@@ -163,7 +162,6 @@ export async function analyzeSyncError(
           chromiumRoot,
           errorText,
           gitDiffOutput,
-          previousChromiumVersionDate,
           toolCallResults: accumulatedToolResults,
           toolCallRounds,
           toolInvocationToken: request.toolInvocationToken,
