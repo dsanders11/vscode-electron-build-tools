@@ -51,6 +51,11 @@ export async function searchChromiumLog(
 ) {
   stream.progress("Searching Chromium git log...");
 
+  const chatConfig = vscode.workspace.getConfiguration(
+    "electronBuildTools.chat",
+  );
+  const pageSize = chatConfig.get<boolean>("chromiumLogPageSize");
+
   // Render the initial prompt
   let { messages } = await renderPrompt(
     SearchChromiumCommitsPrompt,
@@ -73,6 +78,7 @@ export async function searchChromiumLog(
     startVersion: startChromiumVersion,
     endVersion: endChromiumVersion,
     page: continuation?.page ?? 1,
+    pageSize,
     continueAfter: continuation?.after,
   };
 

@@ -102,10 +102,11 @@ describe("invokePrivateTool", () => {
         },
       );
 
-      assert.strictEqual(result.content.length, 1);
+      assert.strictEqual(result.content.length, 2);
       assert.ok(result.content[0] instanceof vscode.LanguageModelTextPart);
+      assert.ok(result.content[1] instanceof vscode.LanguageModelTextPart);
       assert.strictEqual(
-        result.content[0].value,
+        result.content[0].value + result.content[1].value,
         globalThis._testFixtures.tools[lmToolNames.chromiumGitShow][0],
       );
     });
@@ -122,6 +123,7 @@ describe("invokePrivateTool", () => {
             startVersion: "136.0.7064.0",
             endVersion: "136.0.7067.0",
             page,
+            pageSize: 15,
           },
           toolInvocationToken: undefined,
         },
@@ -149,6 +151,7 @@ describe("invokePrivateTool", () => {
             startVersion: "136.0.7064.0",
             endVersion: "136.0.7067.0",
             page: 999,
+            pageSize: 15,
           },
           toolInvocationToken: undefined,
         },

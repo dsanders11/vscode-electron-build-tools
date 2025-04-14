@@ -293,6 +293,12 @@
           "default": false,
           "description": "When building, show a list of build targets to choose from."
         },
+        "electronBuildTools.chat.chromiumLogPageSize": {
+          "type": "integer",
+          "default": 15,
+          "minimum": 1,
+          "description": "Page size when searching the Chromium git log. Larger page sizes may cause the model to lose context."
+        },
         "electronBuildTools.docs.lintRelativeLinks": {
           "type": "boolean",
           "default": true,
