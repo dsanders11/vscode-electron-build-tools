@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import LRU from "lru-cache";
 import * as vscode from "vscode";
 
 import { lmToolNames } from "../constants";
@@ -7,7 +8,7 @@ import { exec } from "../utils";
 
 const chromiumVersionRegex = /\d+\.\d+\.\d+\.\d+/;
 const commitLogRegex =
-  /commit ([0-9a-f]+).*?(?:\n|$)(?:(?=commit (?:[0-9a-f]+))|$)/gs;
+  /commit ([0-9a-f]+)\n(.*?)\n\n((?:[A|M|D]|[R|C]\d*)\s.*?)\n?(?:\n|$)(?:(?=commit (?:[0-9a-f]+))|$)/;
 
 export class EmptyLogPageError extends Error {}
 
@@ -29,6 +30,18 @@ async function validateGitToolFilename(
   const cwd = path.dirname(vscode.Uri.joinPath(chromiumRoot, filename).fsPath);
 
   return { cwd };
+}
+
+// Filter out as much of Chromium's CL footer syntax
+// (https://www.chromium.org/developers/contributing-code/-bug-syntax/)
+// as possible - this may not be complete but covers the most common ones
+function filterGitLogDetails(details: string) {
+  return details
+    .replaceAll(
+      /(?:Author|Date): .*?\n|[ \t>]*(?:Auto-Submit|AX-Relnotes|Bot-Commit|Bug|Change-Id|Cq-Include-Trybots|Commit-Queue|Cr-Branched-From|Cr-Commit-Position|Fixed|Merge-Approval-Bypass|No-Presubmit|No-Tree-Checks|No-Try|Reviewed-by|Tbr|Test):.*?(?:\n|$)|[ \t>]*(?:BUG|R)=.*?(?:\n|$)|[ \t>]*> Reviewed-on: .*?\n/g,
+      "",
+    )
+    .trimEnd();
 }
 
 export function getPrivateTools(
@@ -90,10 +103,48 @@ async function gitLog(
   ]);
 }
 
+const chromiumGitLogCache = new Map<string, string[]>();
+
+const chromiumGitDetailsCache = new LRU<
+  string,
+  { details: string; nameStatus: string }
+>({
+  maxSize: 25_000_000,
+  sizeCalculation: ({ details, nameStatus }) => {
+    return details.length + nameStatus.length;
+  },
+});
+
+async function getChromiumCommitDetails(
+  chromiumRoot: vscode.Uri,
+  commit: string,
+) {
+  let commitDetails = chromiumGitDetailsCache.get(commit);
+  if (!commitDetails) {
+    const output = await exec(`git show --name-status ${commit}`, {
+      cwd: chromiumRoot.fsPath,
+      encoding: "utf8",
+    }).then(({ stdout }) => stdout.trim());
+    const regexMatch = output.match(new RegExp(commitLogRegex, "s"));
+
+    if (!regexMatch) {
+      throw new Error(`Invalid commit output: ${output}`);
+    }
+
+    const [, , details, nameStatus] = regexMatch;
+
+    commitDetails = { details: filterGitLogDetails(details), nameStatus };
+    chromiumGitDetailsCache.set(commit, commitDetails);
+  }
+
+  return commitDetails;
+}
+
 export interface ChromiumGitLogToolParameters {
   startVersion: string;
   endVersion: string;
   page: number;
+  pageSize: number;
   continueAfter?: string;
 }
 
@@ -102,6 +153,7 @@ async function chromiumGitLog(
   startVersion: string,
   endVersion: string,
   page: number, // 1-indexed
+  pageSize: number,
   continueAfter?: string,
 ) {
   if (!chromiumVersionRegex.test(startVersion)) {
@@ -112,45 +164,94 @@ async function chromiumGitLog(
     throw new Error(`Invalid Chromium version: ${endVersion}`);
   }
 
-  let output = await exec(
-    `git log --max-count=10 --skip=${(page - 1) * 10} --name-status ${startVersion}..${endVersion}`,
-    {
-      cwd: chromiumRoot.fsPath,
-      encoding: "utf8",
-    },
-  ).then(({ stdout }) => stdout.trim());
+  const logCommits =
+    chromiumGitLogCache.get(`${startVersion}..${endVersion}`) ?? [];
+
+  if (logCommits.length === 0) {
+    const fullLog = await exec(
+      `git log --name-status ${startVersion}..${endVersion}`,
+      {
+        cwd: chromiumRoot.fsPath,
+        encoding: "utf8",
+        maxBuffer: 1024 * 1024 * 50,
+      },
+    ).then(({ stdout }) => stdout.trim());
+
+    const regexMatches = fullLog.matchAll(new RegExp(commitLogRegex, "gs"));
+
+    for (const match of regexMatches) {
+      const [, commit, details, nameStatus] = match;
+
+      const changedFiles = nameStatus.split("\n");
+
+      // Skip "Roll [...] PGO Profile" commits, as they'll never be relevant
+      if (changedFiles.every((line) => line.trim().endsWith(".pgo.txt"))) {
+        continue;
+      }
+
+      logCommits.push(commit);
+
+      // Populate the cache with commit details
+      if (!chromiumGitDetailsCache.has(commit)) {
+        chromiumGitDetailsCache.set(commit, {
+          details: filterGitLogDetails(details),
+          nameStatus,
+        });
+      }
+    }
+
+    chromiumGitLogCache.set(`${startVersion}..${endVersion}`, logCommits);
+  }
+
+  // Paginate logCommits and then hydrate the log entries
+  let pageCommits = logCommits.slice((page - 1) * pageSize, page * pageSize);
 
   // If continuing, we drop all log output before and
   // including the commit we are continuing from
   if (continueAfter) {
-    const regexMatches = output.matchAll(commitLogRegex);
-    const logEntries = [...regexMatches];
-    const targetEntryIdx = logEntries.findIndex(
-      (entry) => entry[1] === continueAfter,
-    );
+    const idx = pageCommits.findIndex((commit) => commit === continueAfter);
 
-    if (targetEntryIdx !== -1) {
-      const nextEntry = logEntries[targetEntryIdx + 1];
+    if (idx === -1) {
+      throw new Error(
+        `Could not find commit to continue from: ${continueAfter}`,
+      );
+    }
 
-      if (nextEntry) {
-        output = output.slice(nextEntry.index);
-      } else {
-        throw new EmptyLogPageError();
-      }
+    pageCommits = pageCommits.slice(idx + 1);
+
+    if (pageCommits.length === 0) {
+      throw new EmptyLogPageError();
     }
   }
 
-  if (!output) {
+  if (pageCommits.length === 0) {
     return new vscode.LanguageModelToolResult([
       new vscode.LanguageModelTextPart("No commits found"),
     ]);
   }
 
+  const output = await Promise.all(
+    pageCommits.map(async (commit) => {
+      const { details, nameStatus } = await getChromiumCommitDetails(
+        chromiumRoot,
+        commit,
+      );
+      return `commit ${commit}\n${details}\n\n${nameStatus}`;
+    }),
+  );
+
   return new vscode.LanguageModelToolResult([
     new vscode.LanguageModelTextPart(`This is page ${page} of the log:\n\n`),
-    new vscode.LanguageModelTextPart(output),
+    new vscode.LanguageModelTextPart(output.join("\n\n")),
   ]);
 }
+
+const chromiumGitDiffCache = new LRU<string, string>({
+  maxSize: 25_000_000,
+  sizeCalculation: (value) => {
+    return value.length;
+  },
+});
 
 export interface ChromiumGitShowToolParameters {
   commit: string;
@@ -161,13 +262,28 @@ async function chromiumGitShow(chromiumRoot: vscode.Uri, commit: string) {
     throw new Error(`Invalid commit SHA: ${commit}`);
   }
 
-  const output = await exec(`git show ${commit}`, {
-    cwd: chromiumRoot.fsPath,
-    encoding: "utf8",
-  }).then(({ stdout }) => stdout.trim());
+  const { details: commitDetails } = await getChromiumCommitDetails(
+    chromiumRoot,
+    commit,
+  );
+
+  let diff = chromiumGitDiffCache.get(commit);
+  if (!diff) {
+    const output = await exec(
+      `git show --no-notes --pretty=format:"" ${commit}`,
+      {
+        cwd: chromiumRoot.fsPath,
+        encoding: "utf8",
+      },
+    ).then(({ stdout }) => stdout.trim());
+
+    diff = output;
+    chromiumGitDiffCache.set(commit, diff);
+  }
 
   return new vscode.LanguageModelToolResult([
-    new vscode.LanguageModelTextPart(output),
+    new vscode.LanguageModelTextPart(`commit ${commit}\n${commitDetails}\n\n`),
+    new vscode.LanguageModelTextPart(diff),
   ]);
 }
 
@@ -214,13 +330,14 @@ export function invokePrivateTool(
     const { commit, filename } = options.input as GitShowToolParameters;
     return gitShow(chromiumRoot, commit, filename);
   } else if (name === lmToolNames.chromiumLog) {
-    const { startVersion, endVersion, page, continueAfter } =
+    const { startVersion, endVersion, page, pageSize, continueAfter } =
       options.input as ChromiumGitLogToolParameters;
     return chromiumGitLog(
       chromiumRoot,
       startVersion,
       endVersion,
       page,
+      pageSize,
       continueAfter,
     );
   } else if (name === lmToolNames.chromiumGitShow) {

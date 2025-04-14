@@ -270,6 +270,9 @@ function registerElectronBuildToolsCommands(
           },
         },
         reporter: reporterModule.default.default,
+        reporterOptions: {
+          maxDiffSize: 128 * 1024,
+        },
       });
 
       const files = await vscode.workspace.findFiles(

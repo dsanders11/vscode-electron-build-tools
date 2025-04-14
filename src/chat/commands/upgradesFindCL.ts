@@ -225,12 +225,18 @@ export async function analyzeBuildError(
     request.model,
   );
 
+  const chatConfig = vscode.workspace.getConfiguration(
+    "electronBuildTools.chat",
+  );
+  const pageSize = chatConfig.get<boolean>("chromiumLogPageSize");
+
   // A hackish way to track state for the Chromium log tool without
   // relying on the model to do it since it constantly gets it wrong
   const chromiumLogToolState = {
     startVersion: previousChromiumVersion,
     endVersion: newChromiumVersion,
     page: continuation?.page ?? 1,
+    pageSize,
     continueAfter: continuation?.after,
   };
 
