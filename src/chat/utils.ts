@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 
-import type { PromisifiedExecError } from "../common";
 import Logger from "../logging";
 import { exec } from "../utils";
 

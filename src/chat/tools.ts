@@ -11,15 +11,6 @@ const commitLogRegex =
 
 export class EmptyLogPageError extends Error {}
 
-function sanitizeDate(date: string) {
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate.getTime())) {
-    throw new Error(`Invalid date: ${date}`);
-  }
-
-  return parsedDate.toISOString();
-}
-
 async function validateGitToolFilename(
   chromiumRoot: vscode.Uri,
   filename: string,
