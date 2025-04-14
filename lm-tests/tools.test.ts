@@ -104,7 +104,10 @@ describe("invokePrivateTool", () => {
 
       assert.strictEqual(result.content.length, 1);
       assert.ok(result.content[0] instanceof vscode.LanguageModelTextPart);
-      assert.ok(result.content[0].value.startsWith(`commit ${commit}`));
+      assert.strictEqual(
+        result.content[0].value,
+        globalThis._testFixtures.tools[lmToolNames.chromiumGitShow][0],
+      );
     });
   });
 
@@ -131,10 +134,9 @@ describe("invokePrivateTool", () => {
         `This is page ${page} of the log:`,
       );
       assert.ok(result.content[1] instanceof vscode.LanguageModelTextPart);
-      assert.ok(
-        result.content[1].value.startsWith(
-          "commit d56e81813eb860c59c9dcb4c4bd8e48e443c85c0",
-        ),
+      assert.strictEqual(
+        result.content[1].value,
+        globalThis._testFixtures.tools[lmToolNames.chromiumLog][0],
       );
     });
 

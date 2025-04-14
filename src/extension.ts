@@ -221,6 +221,16 @@ function registerElectronBuildToolsCommands(
             )
           ).toString(),
         ),
+        tools: JSON.parse(
+          (
+            await vscode.workspace.fs.readFile(
+              vscode.Uri.joinPath(
+                context.extensionUri,
+                "lm-tests/fixtures/tools.json",
+              ),
+            )
+          ).toString(),
+        ),
       };
 
       const { default: Mocha } = await import("mocha");
