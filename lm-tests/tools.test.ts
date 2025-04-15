@@ -44,7 +44,7 @@ describe("invokePrivateTool", () => {
       const commit = "a0c2c27201d4a32d65cceba1a0053ffa08530aaf";
       const result = await invokePrivateTool(
         this.globalContext.chromiumRoot,
-        lmToolNames.chromiumGitShow,
+        lmToolNames.gitShow,
         {
           input: { commit, filename: "chrome/android/junit/BUILD.gn" },
           toolInvocationToken: undefined,
