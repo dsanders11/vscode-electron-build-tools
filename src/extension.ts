@@ -211,6 +211,16 @@ function registerElectronBuildToolsCommands(
             )
           ).toString(),
         ),
+        searchChromiumLog: JSON.parse(
+          (
+            await vscode.workspace.fs.readFile(
+              vscode.Uri.joinPath(
+                context.extensionUri,
+                "lm-tests/fixtures/search-chromium-log.json",
+              ),
+            )
+          ).toString(),
+        ),
         syncErrors: JSON.parse(
           (
             await vscode.workspace.fs.readFile(

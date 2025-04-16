@@ -38,97 +38,18 @@ async function showQuickPick(
   });
 }
 
-export async function searchCLs(
+export async function searchChromiumLog(
   chromiumRoot: vscode.Uri,
-  _electronRoot: vscode.Uri,
-  tools: vscode.LanguageModelChatTool[],
   request: vscode.ChatRequest,
-  context: vscode.ChatContext,
   stream: vscode.ChatResponseStream,
+  tools: vscode.LanguageModelChatTool[],
+  startChromiumVersion: string,
+  endChromiumVersion: string,
+  prompt: string,
   token: vscode.CancellationToken,
+  continuation?: SearchCommitsContinuation,
 ) {
-  let continuation: SearchCommitsContinuation | undefined;
-  let prompt = request.prompt;
-
-  if (request.prompt.toLowerCase() === CONTINUE_SEARCHING_PROMPT) {
-    const lastTurn = context.history.at(-1);
-
-    if (lastTurn instanceof vscode.ChatResponseTurn) {
-      // Previous request may be several turns back if the user keeps
-      // continuing the analysis, so we need to find the last request
-      const previousRequestTurn = context.history.findLast(
-        (turn) =>
-          turn instanceof vscode.ChatRequestTurn &&
-          turn.prompt !== CONTINUE_SEARCHING_PROMPT,
-      );
-
-      if (previousRequestTurn instanceof vscode.ChatRequestTurn) {
-        // Use the previous prompt and tool references for the
-        // checks that follow before continuing the analysis
-        prompt = previousRequestTurn.prompt;
-
-        // At this point we have everything we need to continue the analysis
-        continuation = lastTurn.result.metadata?.continuation;
-      }
-    }
-
-    if (continuation === undefined) {
-      stream.markdown("There is no error analysis in progress.");
-      return {};
-    }
-  }
-
-  let startChromiumVersion: string | undefined;
-  let endChromiumVersion: string | undefined;
-
-  if (!continuation) {
-    stream.progress("Fetching Chromium versions...");
-    const versions = await exec(
-      'git tag --sort=version:refname --list "[1-2]??.*.*.*"',
-      {
-        cwd: chromiumRoot.fsPath,
-        encoding: "utf8",
-      },
-    ).then(({ stdout }) => stdout.trim().split("\n"));
-
-    let quickPick = vscode.window.createQuickPick();
-    quickPick.items = versions.map((version) => ({
-      label: version,
-    }));
-    quickPick.title = "Search Chromium CLs";
-    quickPick.placeholder = "Choose Chromium start version";
-    quickPick.step = 1;
-    quickPick.totalSteps = 2;
-
-    startChromiumVersion = await showQuickPick(quickPick);
-
-    if (!startChromiumVersion) {
-      return {};
-    }
-
-    const remainingVersions = versions.filter(
-      (version) => compareChromiumVersions(version, startChromiumVersion!) > 0,
-    );
-
-    quickPick = vscode.window.createQuickPick();
-    quickPick.items = remainingVersions.map((version) => ({
-      label: version,
-    }));
-    quickPick.title = "Search Chromium CLs";
-    quickPick.placeholder = "Choose Chromium end version";
-    quickPick.step = 2;
-    quickPick.totalSteps = 2;
-
-    endChromiumVersion = await showQuickPick(quickPick);
-
-    if (!endChromiumVersion) {
-      return {};
-    }
-  } else {
-    ({ startChromiumVersion, endChromiumVersion } = continuation);
-  }
-
-  stream.progress("Searching Chromium CLs...");
+  stream.progress("Searching Chromium git log...");
 
   // Render the initial prompt
   let { messages } = await renderPrompt(
@@ -304,4 +225,107 @@ export async function searchCLs(
   }
 
   return result;
+}
+
+export async function searchCLs(
+  chromiumRoot: vscode.Uri,
+  _electronRoot: vscode.Uri,
+  tools: vscode.LanguageModelChatTool[],
+  request: vscode.ChatRequest,
+  context: vscode.ChatContext,
+  stream: vscode.ChatResponseStream,
+  token: vscode.CancellationToken,
+) {
+  let continuation: SearchCommitsContinuation | undefined;
+  let prompt = request.prompt;
+
+  if (request.prompt.toLowerCase() === CONTINUE_SEARCHING_PROMPT) {
+    const lastTurn = context.history.at(-1);
+
+    if (lastTurn instanceof vscode.ChatResponseTurn) {
+      // Previous request may be several turns back if the user keeps
+      // continuing the analysis, so we need to find the last request
+      const previousRequestTurn = context.history.findLast(
+        (turn) =>
+          turn instanceof vscode.ChatRequestTurn &&
+          turn.prompt !== CONTINUE_SEARCHING_PROMPT,
+      );
+
+      if (previousRequestTurn instanceof vscode.ChatRequestTurn) {
+        // Use the previous prompt and tool references for the
+        // checks that follow before continuing the analysis
+        prompt = previousRequestTurn.prompt;
+
+        // At this point we have everything we need to continue the analysis
+        continuation = lastTurn.result.metadata?.continuation;
+      }
+    }
+
+    if (continuation === undefined) {
+      stream.markdown("There is no error analysis in progress.");
+      return {};
+    }
+  }
+
+  let startChromiumVersion: string | undefined;
+  let endChromiumVersion: string | undefined;
+
+  if (!continuation) {
+    stream.progress("Fetching Chromium versions...");
+    const versions = await exec(
+      'git tag --sort=version:refname --list "[1-2]??.*.*.*"',
+      {
+        cwd: chromiumRoot.fsPath,
+        encoding: "utf8",
+      },
+    ).then(({ stdout }) => stdout.trim().split("\n"));
+
+    let quickPick = vscode.window.createQuickPick();
+    quickPick.items = versions.map((version) => ({
+      label: version,
+    }));
+    quickPick.title = "Search Chromium CLs";
+    quickPick.placeholder = "Choose Chromium start version";
+    quickPick.step = 1;
+    quickPick.totalSteps = 2;
+
+    startChromiumVersion = await showQuickPick(quickPick);
+
+    if (!startChromiumVersion) {
+      return {};
+    }
+
+    const remainingVersions = versions.filter(
+      (version) => compareChromiumVersions(version, startChromiumVersion!) > 0,
+    );
+
+    quickPick = vscode.window.createQuickPick();
+    quickPick.items = remainingVersions.map((version) => ({
+      label: version,
+    }));
+    quickPick.title = "Search Chromium CLs";
+    quickPick.placeholder = "Choose Chromium end version";
+    quickPick.step = 2;
+    quickPick.totalSteps = 2;
+
+    endChromiumVersion = await showQuickPick(quickPick);
+
+    if (!endChromiumVersion) {
+      return {};
+    }
+  } else {
+    ({ startChromiumVersion, endChromiumVersion } = continuation);
+  }
+
+  return searchChromiumLog(
+    chromiumRoot,
+    request,
+    stream,
+    tools,
+    startChromiumVersion,
+    endChromiumVersion,
+    prompt,
+    token,
+    continuation,
+  );
 }
