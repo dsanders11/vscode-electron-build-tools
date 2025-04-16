@@ -275,11 +275,20 @@ export async function analyzeBuildError(
           // Clear continueAfter so we don't keep passing it
           chromiumLogToolState.continueAfter = undefined;
         } else if (part.name === lmToolNames.chromiumGitShow) {
-          const shortSha = await getShortSha(
-            chromiumRoot,
-            (part.input as Record<string, string>).commit,
-          );
+          const { commit } = part.input as ChromiumGitShowToolParameters;
+          const shortSha = await getShortSha(chromiumRoot, commit);
           stream.progress(`Analyzing commit ${shortSha}...`);
+
+          const previousLogToolCall = toolCallRounds.findLast(
+            (round) => round.toolCalls[0].name === lmToolNames.chromiumLog,
+          )?.toolCalls[0];
+
+          // Set up continuation state so that the remaining commits
+          // on this page will still be analyzed if this one isn't it
+          chromiumLogToolState.page = (
+            previousLogToolCall!.input as ChromiumGitLogToolParameters
+          ).page;
+          chromiumLogToolState.continueAfter = commit;
         }
       }
     }
@@ -362,19 +371,15 @@ export async function analyzeBuildError(
   };
 
   const lastToolCall = toolCallRounds.at(-1)!.toolCalls[0];
-  const previousLogToolCall = toolCallRounds.findLast(
-    (round) => round.toolCalls[0].name === lmToolNames.chromiumLog,
-  )?.toolCalls[0];
 
   // If the last tool call was getting details for a commit, then we assume there
   // are more commits available in the log to analyze if the user wants to
-  if (
-    lastToolCall?.name === lmToolNames.chromiumGitShow &&
-    previousLogToolCall !== undefined
-  ) {
-    (result.metadata as Record<string, object>).continuation = {
-      after: (lastToolCall.input as ChromiumGitShowToolParameters).commit,
-      page: (previousLogToolCall.input as ChromiumGitLogToolParameters).page,
+  if (lastToolCall?.name === lmToolNames.chromiumGitShow) {
+    (
+      result.metadata as Record<string, AnalyzeBuildErrorContinuation>
+    ).continuation = {
+      after: chromiumLogToolState.continueAfter!,
+      page: chromiumLogToolState.page,
     };
   }
 
