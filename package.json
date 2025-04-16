@@ -264,7 +264,6 @@
             }
           },
           "default": {},
-          "title": "Build Options",
           "description": "Options to use when building."
         },
         "electronBuildTools.build.defaultTarget": {
@@ -287,25 +286,21 @@
             "type": "string"
           },
           "default": {},
-          "title": "Ninja Args",
           "description": "Args to pass to Ninja when building."
         },
         "electronBuildTools.build.showTargets": {
           "type": "boolean",
           "default": false,
-          "title": "Show Targets",
           "description": "When building, show a list of build targets to choose from."
         },
         "electronBuildTools.docs.lintRelativeLinks": {
           "type": "boolean",
           "default": true,
-          "title": "Lint Relative Links",
           "description": "Lint relative links in the docs and mark broken links as problems."
         },
         "electronBuildTools.sync.threeWayMerge": {
           "type": "boolean",
           "default": false,
-          "title": "Three-way Merge",
           "description": "When syncing, use three-way merge."
         }
       }
