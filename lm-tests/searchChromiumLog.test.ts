@@ -12,7 +12,7 @@ import { getPrivateTools } from "../src/chat/tools";
 import { MockChatResponseStream } from "./mocks";
 import type { ExtendedTest } from "./reporter";
 
-describe.only("searchChromiumLog", () => {
+describe("searchChromiumLog", () => {
   describe("finds an upstream CL for a search query", () => {
     for (const fixture of globalThis._testFixtures.searchChromiumLog) {
       describe(fixture.cl, () => {
