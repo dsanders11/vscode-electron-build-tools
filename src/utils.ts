@@ -35,7 +35,7 @@ const remoteFileContentCache = new LRU<string, string>({
 });
 
 export const patchedFilenameRegex =
-  /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:[\w \t]+ mode \d+[\r\n]+)*index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|(?=\s--\s.+$)|$)/gs;
+  /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:[\w \t]+ mode \d+[\r\n]+)*index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|(?=\s--\s.+$)|$)/;
 
 export interface DocLink {
   description: string;
@@ -153,7 +153,9 @@ export async function getFilesInPatch(
 ): Promise<vscode.Uri[]> {
   const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
   const patchedFiles: vscode.Uri[] = [];
-  const regexMatches = patchContents.matchAll(patchedFilenameRegex);
+  const regexMatches = patchContents.matchAll(
+    new RegExp(patchedFilenameRegex, "gs"),
+  );
 
   for (const [_, filename, blobIdA, blobIdB] of regexMatches) {
     // Retain the scheme and query params from the patch URI, but tweak a few params
@@ -229,9 +231,9 @@ export function parsePatchMetadata(patchContents: string) {
       .map((text) => text.trim())
       .join(" "),
     description: subjectAndDescription![2],
-    filenames: Array.from(patchContents.matchAll(patchedFilenameRegex)).map(
-      (match) => match[1],
-    ),
+    filenames: Array.from(
+      patchContents.matchAll(new RegExp(patchedFilenameRegex, "gs")),
+    ).map((match) => match[1]),
   };
 }
 
@@ -323,7 +325,11 @@ export async function parseDocsSections(electronRoot: vscode.Uri) {
             // use vscode.Uri.file to parse them
             links.push({
               description: child.content,
-              destination: vscode.Uri.parse(`file://${filePath}`),
+              destination: vscode.Uri.parse(
+                os.platform() === "win32"
+                  ? `file:///${filePath}`
+                  : `file://${filePath}`,
+              ),
               level,
             });
           }
@@ -480,12 +486,17 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
     const patchContents = (
       await vscode.workspace.fs.readFile(vscode.Uri.parse(patch, true))
     ).toString();
+    const relativePath = ensurePosixSeparators(
+      path.relative(checkoutDirectory.path, uri.path),
+    );
 
-    const regexMatches = patchContents.matchAll(patchedFilenameRegex);
+    const regexMatches = patchContents.matchAll(
+      new RegExp(patchedFilenameRegex, "gs"),
+    );
     let filePatch: string | undefined = undefined;
 
     for (const [patch, filename] of regexMatches) {
-      if (filename === path.relative(checkoutDirectory.path, uri.path)) {
+      if (filename === relativePath) {
         filePatch = patch;
         break;
       }
