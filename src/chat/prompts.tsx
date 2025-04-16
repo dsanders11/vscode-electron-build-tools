@@ -105,8 +105,8 @@ export class AnalyzeBuildErrorPrompt extends PromptElement<AnalyzeBuildErrorProp
         <AssistantMessage>
           Suggest a list of Chromium CLs that might be the cause of the user's
           build error after upgrading the Chromium version. Analyze each page of
-          the Chromium log (using the provided tools) for the changes between $
-          {this.props.previousChromiumVersion} and $
+          the Chromium log (using the provided tools) for the changes between 
+          {this.props.previousChromiumVersion} and 
           {this.props.newChromiumVersion}. DO NOT GIVE UP until you have checked
           all pages of the log and no more commits are found. DO NOT ASK THE
           USER WHAT THEY WANT TO DO. ALWAYS ask for the next sequential page
@@ -209,8 +209,8 @@ export class SearchChromiumCommitsPrompt extends PromptElement<SearchChromiumCom
         <AssistantMessage>
           Suggest a list of Chromium CLs that might be related to the user's
           query. Analyze each page of the Chromium log (using the provided
-          tools) for the changes between ${this.props.startChromiumVersion} and
-          ${this.props.endChromiumVersion}. DO NOT GIVE UP until you have
+          tools) for the changes between {this.props.startChromiumVersion} and
+          {this.props.endChromiumVersion}. DO NOT GIVE UP until you have
           checked all pages of the log and no more commits are found. DO NOT ASK
           THE USER WHAT THEY WANT TO DO.
           <br />
