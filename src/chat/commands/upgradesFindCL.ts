@@ -271,6 +271,9 @@ export async function analyzeBuildError(
 
           // Increment the page number for the next call
           chromiumLogToolState.page += 1;
+
+          // Clear continueAfter so we don't keep passing it
+          chromiumLogToolState.continueAfter = undefined;
         } else if (part.name === lmToolNames.chromiumGitShow) {
           const shortSha = await getShortSha(
             chromiumRoot,
