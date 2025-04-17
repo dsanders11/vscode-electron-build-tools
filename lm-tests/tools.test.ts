@@ -6,6 +6,57 @@ import { invokePrivateTool } from "../src/chat/tools";
 import { lmToolNames } from "../src/constants";
 
 describe("invokePrivateTool", () => {
+  describe(`invoking ${lmToolNames.gitLog}`, () => {
+    const startVersion = "136.0.7064.0";
+    const endVersion = "136.0.7080.0";
+
+    it("gets the log", async function () {
+      const result = await invokePrivateTool(
+        this.globalContext.chromiumRoot,
+        lmToolNames.gitLog,
+        {
+          input: {
+            startVersion,
+            endVersion,
+            filename: "base/check.cc",
+          },
+          toolInvocationToken: undefined,
+        },
+      );
+
+      assert.strictEqual(result.content.length, 1);
+      assert.ok(result.content[0] instanceof vscode.LanguageModelTextPart);
+      assert.strictEqual(
+        result.content[0].value,
+        globalThis._testFixtures.tools[lmToolNames.gitLog][0],
+      );
+    });
+
+    it("handles no more commits", async function () {
+      const filename = "base/run_loop.h";
+
+      const result = await invokePrivateTool(
+        this.globalContext.chromiumRoot,
+        lmToolNames.gitLog,
+        {
+          input: {
+            startVersion,
+            endVersion,
+            filename,
+          },
+          toolInvocationToken: undefined,
+        },
+      );
+
+      assert.strictEqual(result.content.length, 1);
+      assert.ok(result.content[0] instanceof vscode.LanguageModelTextPart);
+      assert.strictEqual(
+        result.content[0].value,
+        `No commits found for ${filename} in the range ${startVersion}..${endVersion}`,
+      );
+    });
+  });
+
   describe(`invoking ${lmToolNames.gitShow}`, () => {
     it("throws an error if the commit SHA is invalid", async function () {
       const invalidCommit = "invalid-sha";
@@ -53,7 +104,10 @@ describe("invokePrivateTool", () => {
 
       assert.strictEqual(result.content.length, 1);
       assert.ok(result.content[0] instanceof vscode.LanguageModelTextPart);
-      assert.ok(result.content[0].value.startsWith(`commit ${commit}`));
+      assert.strictEqual(
+        result.content[0].value,
+        globalThis._testFixtures.tools[lmToolNames.gitShow][0],
+      );
     });
   });
 
@@ -113,6 +167,10 @@ describe("invokePrivateTool", () => {
   });
 
   describe(`invoking ${lmToolNames.chromiumLog}`, () => {
+    const startVersion = "136.0.7064.0";
+    const endVersion = "136.0.7067.0";
+    const pageSize = 15;
+
     it("gets the log", async function () {
       const page = 27;
       const result = await invokePrivateTool(
@@ -120,10 +178,10 @@ describe("invokePrivateTool", () => {
         lmToolNames.chromiumLog,
         {
           input: {
-            startVersion: "136.0.7064.0",
-            endVersion: "136.0.7067.0",
+            startVersion,
+            endVersion,
             page,
-            pageSize: 15,
+            pageSize,
           },
           toolInvocationToken: undefined,
         },
@@ -148,10 +206,10 @@ describe("invokePrivateTool", () => {
         lmToolNames.chromiumLog,
         {
           input: {
-            startVersion: "136.0.7064.0",
-            endVersion: "136.0.7067.0",
+            startVersion,
+            endVersion,
             page: 999,
-            pageSize: 15,
+            pageSize,
           },
           toolInvocationToken: undefined,
         },
