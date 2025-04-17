@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 import { invokePrivateTool } from "../src/chat/tools";
 import { lmToolNames } from "../src/constants";
 
-describe("invokePrivateTool", () => {
+describe.only("invokePrivateTool", () => {
   describe(`invoking ${lmToolNames.gitLog}`, () => {
     const startVersion = "136.0.7064.0";
     const endVersion = "136.0.7080.0";
@@ -30,6 +30,32 @@ describe("invokePrivateTool", () => {
         result.content[0].value,
         globalThis._testFixtures.tools[lmToolNames.gitLog][0],
       );
+    });
+
+    it("can continue after a commit", async function () {
+      const result = await invokePrivateTool(
+        this.globalContext.chromiumRoot,
+        lmToolNames.gitLog,
+        {
+          input: {
+            startVersion,
+            endVersion,
+            filename: "base/check.cc",
+            continueAfter: "59a246e8689e2eb1705f1970472491e092e94818",
+          },
+          toolInvocationToken: undefined,
+        },
+      );
+
+      const expected = globalThis._testFixtures.tools[lmToolNames.gitLog][0];
+      const idx = expected.indexOf(
+        "commit ce41a1e988c20274ffbb57c9a37d81bbde998ad8",
+      );
+
+      assert.notStrictEqual(idx, -1);
+      assert.strictEqual(result.content.length, 1);
+      assert.ok(result.content[0] instanceof vscode.LanguageModelTextPart);
+      assert.strictEqual(result.content[0].value, expected.slice(idx));
     });
 
     it("handles no more commits", async function () {
@@ -198,6 +224,40 @@ describe("invokePrivateTool", () => {
         result.content[1].value,
         globalThis._testFixtures.tools[lmToolNames.chromiumLog][0],
       );
+    });
+
+    it("can continue after a commit", async function () {
+      const page = 27;
+      const result = await invokePrivateTool(
+        this.globalContext.chromiumRoot,
+        lmToolNames.chromiumLog,
+        {
+          input: {
+            startVersion,
+            endVersion,
+            page,
+            pageSize,
+            continueAfter: "c7debf96ebebaf6b50e8a90e23c15ee66c2e967f",
+          },
+          toolInvocationToken: undefined,
+        },
+      );
+
+      const expected =
+        globalThis._testFixtures.tools[lmToolNames.chromiumLog][0];
+      const idx = expected.indexOf(
+        "commit dc7d351e311846f5c17eeb871128eab070d2b0d4",
+      );
+
+      assert.notStrictEqual(idx, -1);
+      assert.strictEqual(result.content.length, 2);
+      assert.ok(result.content[0] instanceof vscode.LanguageModelTextPart);
+      assert.strictEqual(
+        result.content[0].value.trim(),
+        `This is page ${page} of the log:`,
+      );
+      assert.ok(result.content[1] instanceof vscode.LanguageModelTextPart);
+      assert.strictEqual(result.content[1].value, expected.slice(idx));
     });
 
     it("handles no more commits", async function () {

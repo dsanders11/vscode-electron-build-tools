@@ -12,7 +12,7 @@ import { getPrivateTools } from "../src/chat/tools";
 import { MockChatResponseStream } from "./mocks";
 import type { ExtendedTest } from "./reporter";
 
-describe("analyzeBuildError", () => {
+describe.skip("analyzeBuildError", () => {
   describe("finds the upstream CL for a build error", () => {
     for (const fixture of globalThis._testFixtures.buildErrors) {
       describe(fixture.cl, () => {

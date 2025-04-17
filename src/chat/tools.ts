@@ -7,7 +7,7 @@ import { lmToolNames } from "../constants";
 import { exec } from "../utils";
 
 const chromiumVersionRegex = /\d+\.\d+\.\d+\.\d+/;
-const commitLogRegex =
+const commitLogWithNameStatusRegex =
   /commit ([0-9a-f]+)\n(.*?)\n\n((?:[A|M|D]|[R|C]\d*)\s.*?)\n?(?:\n|$)(?:(?=commit (?:[0-9a-f]+))|$)/;
 
 export class EmptyLogPageError extends Error {}
@@ -68,6 +68,7 @@ interface GitLogToolParameters {
   startVersion: string;
   endVersion: string;
   filename: string;
+  continueAfter?: string;
 }
 
 async function gitLog(
@@ -75,6 +76,7 @@ async function gitLog(
   startVersion: string,
   endVersion: string,
   filename: string,
+  continueAfter?: string,
 ) {
   if (!chromiumVersionRegex.test(startVersion)) {
     throw new Error(`Invalid Chromium version: ${startVersion}`);
@@ -86,7 +88,7 @@ async function gitLog(
 
   const { cwd } = await validateGitToolFilename(chromiumRoot, filename);
 
-  let output = await exec(
+  const output = await exec(
     `git log ${startVersion}..${endVersion} ${path.basename(filename)}`,
     {
       cwd,
@@ -94,12 +96,41 @@ async function gitLog(
     },
   ).then(({ stdout }) => stdout.trim());
 
-  if (!output) {
-    output = `No commits found for ${filename} in the range ${startVersion}..${endVersion}`;
+  let logCommits: { commit: string; details: string }[] = [];
+  const regexMatches = output.matchAll(
+    /commit ([0-9a-f]+).*?(?:(?=commit [0-9a-f]+)|$)/gs,
+  );
+
+  for (const match of regexMatches) {
+    logCommits.push({ commit: match[1], details: match[0].trimEnd() });
+  }
+
+  // If continuing, we drop all log output before and
+  // including the commit we are continuing from
+  if (continueAfter) {
+    const idx = logCommits.findIndex(({ commit }) => commit === continueAfter);
+
+    if (idx === -1) {
+      throw new Error(
+        `Could not find commit to continue from: ${continueAfter}`,
+      );
+    }
+
+    logCommits = logCommits.slice(idx + 1);
+  }
+
+  if (logCommits.length === 0) {
+    return new vscode.LanguageModelToolResult([
+      new vscode.LanguageModelTextPart(
+        `No commits found for ${filename} in the range ${startVersion}..${endVersion}`,
+      ),
+    ]);
   }
 
   return new vscode.LanguageModelToolResult([
-    new vscode.LanguageModelTextPart(output),
+    new vscode.LanguageModelTextPart(
+      logCommits.map(({ details }) => details).join("\n\n"),
+    ),
   ]);
 }
 
@@ -125,7 +156,9 @@ async function getChromiumCommitDetails(
       cwd: chromiumRoot.fsPath,
       encoding: "utf8",
     }).then(({ stdout }) => stdout.trim());
-    const regexMatch = output.match(new RegExp(commitLogRegex, "s"));
+    const regexMatch = output.match(
+      new RegExp(commitLogWithNameStatusRegex, "s"),
+    );
 
     if (!regexMatch) {
       throw new Error(`Invalid commit output: ${output}`);
@@ -177,7 +210,9 @@ async function chromiumGitLog(
       },
     ).then(({ stdout }) => stdout.trim());
 
-    const regexMatches = fullLog.matchAll(new RegExp(commitLogRegex, "gs"));
+    const regexMatches = fullLog.matchAll(
+      new RegExp(commitLogWithNameStatusRegex, "gs"),
+    );
 
     for (const match of regexMatches) {
       const [, commit, details, nameStatus] = match;
@@ -323,9 +358,15 @@ export function invokePrivateTool(
   _token?: vscode.CancellationToken,
 ): Promise<vscode.LanguageModelToolResult> {
   if (name === lmToolNames.gitLog) {
-    const { startVersion, endVersion, filename } =
+    const { startVersion, endVersion, filename, continueAfter } =
       options.input as GitLogToolParameters;
-    return gitLog(chromiumRoot, startVersion, endVersion, filename);
+    return gitLog(
+      chromiumRoot,
+      startVersion,
+      endVersion,
+      filename,
+      continueAfter,
+    );
   } else if (name === lmToolNames.gitShow) {
     const { commit, filename } = options.input as GitShowToolParameters;
     return gitShow(chromiumRoot, commit, filename);
