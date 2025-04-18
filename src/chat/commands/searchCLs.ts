@@ -49,6 +49,8 @@ export async function searchChromiumLog(
   token: vscode.CancellationToken,
   continuation?: SearchCommitsContinuation,
 ) {
+  const { nanoid } = await import("nanoid");
+
   stream.progress("Searching Chromium git log...");
 
   const chatConfig = vscode.workspace.getConfiguration(
@@ -100,6 +102,40 @@ export async function searchChromiumLog(
       token,
     );
 
+    const processToolCall = async (
+      toolCall: vscode.LanguageModelToolCallPart,
+    ) => {
+      if (toolCall.name === lmToolNames.chromiumLog) {
+        stream.progress(
+          `Searching page ${chromiumLogToolState.page} of the log...`,
+        );
+
+        // Inject the Chromium log tool state into the input
+        Object.assign(toolCall.input, chromiumLogToolState);
+
+        // Increment the page number for the next call
+        chromiumLogToolState.page += 1;
+
+        // Clear continueAfter so we don't keep passing it
+        chromiumLogToolState.continueAfter = undefined;
+      } else if (toolCall.name === lmToolNames.chromiumGitShow) {
+        const { commit } = toolCall.input as ChromiumGitShowToolParameters;
+        const shortSha = await getShortSha(chromiumRoot, commit);
+        stream.progress(`Analyzing commit ${shortSha}...`);
+
+        const previousLogToolCall = toolCallRounds.findLast(
+          (round) => round.toolCalls[0].name === lmToolNames.chromiumLog,
+        )?.toolCalls[0];
+
+        // Set up continuation state so that the remaining commits
+        // on this page will still be analyzed if this one isn't it
+        chromiumLogToolState.page = (
+          previousLogToolCall!.input as ChromiumGitLogToolParameters
+        ).page;
+        chromiumLogToolState.continueAfter = commit;
+      }
+    };
+
     // Stream text output and collect tool calls from the response
     const toolCalls: vscode.LanguageModelToolCallPart[] = [];
     let responseStr = "";
@@ -109,35 +145,38 @@ export async function searchChromiumLog(
         responseStr += part.value;
       } else if (part instanceof vscode.LanguageModelToolCallPart) {
         toolCalls.push(part);
-        if (part.name === lmToolNames.chromiumLog) {
-          stream.progress(
-            `Searching page ${chromiumLogToolState.page} of the log...`,
-          );
+        processToolCall(part);
+      }
+    }
 
-          // Inject the Chromium log tool state into the input
-          Object.assign(part.input, chromiumLogToolState);
+    // OpenAI models sometimes get confused and says it's going to call
+    // the tool, but doesn't actually do it. This is a hack for that.
+    if (toolCalls.length === 0) {
+      let toolCall: vscode.LanguageModelToolCallPart | undefined;
 
-          // Increment the page number for the next call
-          chromiumLogToolState.page += 1;
+      if (
+        /the next page of the ?(?:Chromium)? log|I will now check page|check the next page|continue (?:analyzing|checking|searching)|continue to ?(?:the next)? page/.test(
+          responseStr,
+        )
+      ) {
+        toolCall = new vscode.LanguageModelToolCallPart(
+          nanoid(),
+          lmToolNames.chromiumLog,
+          {},
+        );
+      } else if (/[0-9a-f]{40}/.test(responseStr)) {
+        const commit = responseStr.match(/[0-9a-f]{40}/)![0];
 
-          // Clear continueAfter so we don't keep passing it
-          chromiumLogToolState.continueAfter = undefined;
-        } else if (part.name === lmToolNames.chromiumGitShow) {
-          const { commit } = part.input as ChromiumGitShowToolParameters;
-          const shortSha = await getShortSha(chromiumRoot, commit);
-          stream.progress(`Analyzing commit ${shortSha}...`);
+        toolCall = new vscode.LanguageModelToolCallPart(
+          nanoid(),
+          lmToolNames.chromiumGitShow,
+          { commit },
+        );
+      }
 
-          const previousLogToolCall = toolCallRounds.findLast(
-            (round) => round.toolCalls[0].name === lmToolNames.chromiumLog,
-          )?.toolCalls[0];
-
-          // Set up continuation state so that the remaining commits
-          // on this page will still be analyzed if this one isn't it
-          chromiumLogToolState.page = (
-            previousLogToolCall!.input as ChromiumGitLogToolParameters
-          ).page;
-          chromiumLogToolState.continueAfter = commit;
-        }
+      if (toolCall) {
+        processToolCall(toolCall);
+        toolCalls.push(toolCall);
       }
     }
 
