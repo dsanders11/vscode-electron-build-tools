@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 
+import Logger from "../src/logging";
+
 export class MockChatResponseStream implements vscode.ChatResponseStream {
   public _markdownMessages: string[] = [];
 
@@ -11,8 +13,11 @@ export class MockChatResponseStream implements vscode.ChatResponseStream {
       value = value.value;
     }
     this._markdownMessages.push(value);
+    Logger.debug(value);
   }
-  progress(): void {}
+  progress(value: string): void {
+    Logger.debug(value);
+  }
   push(): void {}
   reference(): void {}
 }
