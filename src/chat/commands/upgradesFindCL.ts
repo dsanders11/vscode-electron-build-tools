@@ -7,6 +7,7 @@ import { exec, getShortSha } from "../../utils";
 
 import {
   AnalyzeBuildErrorPrompt,
+  AnalyzeBuildErrorFirstPassPrompt,
   AnalyzeSyncErrorPrompt,
   DetermineErrorTypePrompt,
 } from "../prompts";
@@ -35,6 +36,10 @@ const CONTINUE_ANALYSIS_PROMPT = "continue";
 export interface AnalyzeBuildErrorContinuation {
   after: string;
   page: number;
+}
+
+export interface AnalyzeSyncErrorFirstPassContinuation {
+  after: string;
 }
 
 export interface AnalyzeSyncErrorContinuation {
@@ -220,6 +225,156 @@ export async function analyzeSyncError(
   return result;
 }
 
+export async function analyzeBuildErrorFirstPass(
+  chromiumRoot: vscode.Uri,
+  request: vscode.ChatRequest,
+  stream: vscode.ChatResponseStream,
+  tools: vscode.LanguageModelChatTool[],
+  previousChromiumVersion: string,
+  newChromiumVersion: string,
+  errorText: string,
+  token: vscode.CancellationToken,
+  continuation?: AnalyzeSyncErrorFirstPassContinuation,
+) {
+  // Render the initial prompt
+  let { messages } = await renderPrompt(
+    AnalyzeBuildErrorFirstPassPrompt,
+    {
+      chromiumRoot,
+      errorText,
+      previousChromiumVersion,
+      newChromiumVersion,
+      toolCallResults: {},
+      toolCallRounds: [],
+      toolInvocationToken: request.toolInvocationToken,
+    },
+    { modelMaxPromptTokens: request.model.maxInputTokens },
+    request.model,
+  );
+
+  // A hackish way to track state without relying on the
+  // model to do it since it constantly gets it wrong
+  const gitLogToolState: Omit<GitLogToolParameters, "filename"> = {
+    startVersion: previousChromiumVersion,
+    endVersion: newChromiumVersion,
+    continueAfter: continuation?.after,
+  };
+
+  const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> =
+    {};
+  const toolCallRounds: ToolCallRound[] = [];
+  const runWithTools = async (): Promise<string> => {
+    // Send the request to the LanguageModelChat
+    const response = await request.model.sendRequest(
+      messages,
+      {
+        toolMode: vscode.LanguageModelChatToolMode.Auto,
+        tools: tools.filter(
+          ({ name }) =>
+            name === lmToolNames.gitLog || name === lmToolNames.gitShow,
+        ),
+      },
+      token,
+    );
+
+    // Stream text output and collect tool calls from the response
+    const toolCalls: vscode.LanguageModelToolCallPart[] = [];
+    let responseStr = "";
+    for await (const part of response.stream) {
+      if (part instanceof vscode.LanguageModelTextPart) {
+        // Don't stream out intermediate messages, they're not useful
+        responseStr += part.value;
+      } else if (part instanceof vscode.LanguageModelToolCallPart) {
+        toolCalls.push(part);
+
+        if (part.name === lmToolNames.gitLog) {
+          // Inject the git log tool state into the input
+          Object.assign(part.input, gitLogToolState);
+        } else if (part.name === lmToolNames.gitShow) {
+          const { commit } = part.input as GitShowToolParameters;
+          const shortSha = await getShortSha(chromiumRoot, commit);
+          stream.progress(`Analyzing commit ${shortSha}...`);
+
+          // Set up continuation state so that the remaining commits
+          // on this page will still be analyzed if this one isn't it
+          gitLogToolState.continueAfter = commit;
+        }
+      }
+    }
+
+    if (toolCalls.length) {
+      // If the model called any tools, then we do another round- render the prompt with those tool calls (rendering the PromptElements will invoke the tools)
+      // and include the tool results in the prompt for the next request.
+      toolCallRounds.push({
+        response: responseStr,
+        toolCalls,
+      });
+      const result = await renderPrompt(
+        AnalyzeBuildErrorFirstPassPrompt,
+        {
+          chromiumRoot,
+          errorText,
+          previousChromiumVersion,
+          newChromiumVersion,
+          toolCallResults: accumulatedToolResults,
+          // Only provide the last round of tool calls
+          toolCallRounds: toolCallRounds.slice(-1),
+          toolInvocationToken: request.toolInvocationToken,
+        },
+        { modelMaxPromptTokens: request.model.maxInputTokens },
+        request.model,
+      );
+      messages = result.messages;
+      const toolResultMetadata = result.metadata.getAll(ToolResultMetadata);
+      if (toolResultMetadata?.length) {
+        // Cache tool results for later, so they can be incorporated into later prompts without calling the tool again
+        toolResultMetadata.forEach(
+          (meta) => (accumulatedToolResults[meta.toolCallId] = meta.result),
+        );
+      }
+
+      // This loops until the model doesn't want to call any more tools, then the request is done.
+      return runWithTools();
+    }
+
+    return responseStr;
+  };
+
+  // The final message should have the most useful info for the user
+  const finalResponse = await runWithTools();
+
+  const result: vscode.ChatResult = {
+    metadata: {
+      // Return tool call metadata so it can be used in prompt history on the next request
+      toolCallsMetadata: {
+        toolCallResults: accumulatedToolResults,
+        toolCallRounds,
+      },
+    },
+  };
+
+  const lastToolCall = toolCallRounds.at(-1)!.toolCalls[0];
+
+  // If the last tool call was getting details for a commit, then we assume there
+  // are more commits available to analyze if the model mentioned a CL
+  if (
+    lastToolCall?.name === lmToolNames.gitShow &&
+    /https:\/\/chromium-review\.googlesource\.com\/c\/chromium\/src\/\+\/\d+/.test(
+      finalResponse,
+    )
+  ) {
+    (
+      result.metadata as Record<string, AnalyzeSyncErrorFirstPassContinuation>
+    ).continuation = {
+      after: gitLogToolState.continueAfter!,
+    };
+
+    stream.markdown(finalResponse);
+  }
+
+  return result;
+}
+
 export async function analyzeBuildError(
   chromiumRoot: vscode.Uri,
   request: vscode.ChatRequest,
@@ -234,6 +389,24 @@ export async function analyzeBuildError(
   const { nanoid } = await import("nanoid");
 
   stream.progress("Analyzing build error...");
+
+  const firstPassResult = await analyzeBuildErrorFirstPass(
+    chromiumRoot,
+    request,
+    stream,
+    tools,
+    previousChromiumVersion,
+    newChromiumVersion,
+    errorText,
+    token,
+    continuation as AnalyzeBuildErrorContinuation,
+  );
+
+  // If the first pass result has a continuation, then we
+  // need to wait for the user to continue the analysis
+  if (firstPassResult.metadata?.continuation) {
+    return firstPassResult;
+  }
 
   // Render the initial prompt
   let { messages } = await renderPrompt(

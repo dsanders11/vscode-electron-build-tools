@@ -86,7 +86,18 @@ async function gitLog(
     throw new Error(`Invalid Chromium version: ${endVersion}`);
   }
 
+  const electronRoot = vscode.Uri.joinPath(chromiumRoot, "electron");
   const { cwd } = await validateGitToolFilename(chromiumRoot, filename);
+
+  // Check if the file is in the Electron root directory, if it is
+  // this tool cannot be used since it checks between Chromium versions
+  if (!path.relative(electronRoot.fsPath, cwd).startsWith("..")) {
+    return new vscode.LanguageModelToolResult([
+      new vscode.LanguageModelTextPart(
+        `No commits found for ${filename} in the range ${startVersion}..${endVersion}`,
+      ),
+    ]);
+  }
 
   const output = await exec(
     `git log ${startVersion}..${endVersion} ${path.basename(filename)}`,

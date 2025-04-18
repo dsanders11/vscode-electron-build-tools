@@ -96,6 +96,41 @@ interface AnalyzeBuildErrorProps extends BasePromptElementProps {
   toolInvocationToken: vscode.ChatParticipantToolToken | undefined;
 }
 
+export class AnalyzeBuildErrorFirstPassPrompt extends PromptElement<AnalyzeBuildErrorProps> {
+  override async prepare() {}
+
+  async render(_state: void, _sizing: PromptSizing) {
+    return (
+      <>
+        <AssistantMessage>
+          Suggest a list of Chromium CLs that might be the cause of the user's
+          build error after upgrading the Chromium version. Analyze the git log
+          (using the provided tools) for the files mentioned in the build error.
+          For each file, check the git log for commits.
+          <br />
+          For any commit in the log which might be the cause of the build error,
+          request the full commit details (using the provided tools) to
+          determine if it is causing the build error.
+          <br />
+          List Chromium CLs by the value of \`Reviewed-on\` in the commit
+          message.
+        </AssistantMessage>
+        <UserMessage>
+          Here is the user's error:
+          <br />
+          {this.props.errorText}
+        </UserMessage>
+        <ToolCalls
+          chromiumRoot={this.props.chromiumRoot}
+          toolCallRounds={this.props.toolCallRounds}
+          toolInvocationToken={this.props.toolInvocationToken}
+          toolCallResults={this.props.toolCallResults}
+        />
+      </>
+    );
+  }
+}
+
 export class AnalyzeBuildErrorPrompt extends PromptElement<AnalyzeBuildErrorProps> {
   override async prepare() {}
 
