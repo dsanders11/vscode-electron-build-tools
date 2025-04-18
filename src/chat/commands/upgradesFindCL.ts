@@ -14,6 +14,8 @@ import {
   ChromiumGitLogToolParameters,
   ChromiumGitShowToolParameters,
   EmptyLogPageError,
+  GitLogToolParameters,
+  GitShowToolParameters,
 } from "../tools";
 import { ToolResultMetadata, ToolCallRound } from "../toolsPrompts";
 import {
@@ -33,6 +35,10 @@ const CONTINUE_ANALYSIS_PROMPT = "continue";
 export interface AnalyzeBuildErrorContinuation {
   after: string;
   page: number;
+}
+
+export interface AnalyzeSyncErrorContinuation {
+  after: string;
 }
 
 export async function determineErrorType(
@@ -75,6 +81,7 @@ export async function analyzeSyncError(
   gitDiffOutput: string,
   errorText: string,
   token: vscode.CancellationToken,
+  continuation?: AnalyzeSyncErrorContinuation,
 ) {
   stream.progress("Analyzing sync error...");
 
@@ -95,9 +102,10 @@ export async function analyzeSyncError(
 
   // A hackish way to track state without relying on the
   // model to do it since it constantly gets it wrong
-  const gitLogToolState = {
+  const gitLogToolState: Omit<GitLogToolParameters, "filename"> = {
     startVersion: previousChromiumVersion,
     endVersion: newChromiumVersion,
+    continueAfter: continuation?.after,
   };
 
   const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> =
@@ -140,11 +148,13 @@ export async function analyzeSyncError(
           Object.assign(part.input, gitLogToolState);
         } else if (part.name === lmToolNames.gitShow) {
           analyzingGitLogs = false;
-          const shortSha = await getShortSha(
-            chromiumRoot,
-            (part.input as Record<string, string>).commit,
-          );
+          const { commit } = part.input as GitShowToolParameters;
+          const shortSha = await getShortSha(chromiumRoot, commit);
           stream.progress(`Analyzing commit ${shortSha}...`);
+
+          // Set up continuation state so that the remaining commits
+          // on this page will still be analyzed if this one isn't it
+          gitLogToolState.continueAfter = commit;
         }
       }
     }
@@ -185,7 +195,7 @@ export async function analyzeSyncError(
 
   await runWithTools();
 
-  return {
+  const result: vscode.ChatResult = {
     metadata: {
       // Return tool call metadata so it can be used in prompt history on the next request
       toolCallsMetadata: {
@@ -194,6 +204,20 @@ export async function analyzeSyncError(
       },
     },
   };
+
+  const lastToolCall = toolCallRounds.at(-1)!.toolCalls[0];
+
+  // If the last tool call was getting details for a commit, then we assume there
+  // are more commits available to analyze if the user wants to
+  if (lastToolCall?.name === lmToolNames.gitShow) {
+    (
+      result.metadata as Record<string, AnalyzeSyncErrorContinuation>
+    ).continuation = {
+      after: gitLogToolState.continueAfter!,
+    };
+  }
+
+  return result;
 }
 
 export async function analyzeBuildError(
@@ -230,11 +254,11 @@ export async function analyzeBuildError(
   const chatConfig = vscode.workspace.getConfiguration(
     "electronBuildTools.chat",
   );
-  const pageSize = chatConfig.get<boolean>("chromiumLogPageSize");
+  const pageSize = chatConfig.get<number>("chromiumLogPageSize")!;
 
   // A hackish way to track state for the Chromium log tool without
   // relying on the model to do it since it constantly gets it wrong
-  const chromiumLogToolState = {
+  const chromiumLogToolState: ChromiumGitLogToolParameters = {
     startVersion: previousChromiumVersion,
     endVersion: newChromiumVersion,
     page: continuation?.page ?? 1,
@@ -440,7 +464,10 @@ export async function upgradesFindCL(
   stream: vscode.ChatResponseStream,
   token: vscode.CancellationToken,
 ) {
-  let continuation: AnalyzeBuildErrorContinuation | undefined;
+  let continuation:
+    | AnalyzeBuildErrorContinuation
+    | AnalyzeSyncErrorContinuation
+    | undefined;
   let prompt = request.prompt;
   let toolReferences = request.toolReferences;
 
@@ -561,6 +588,7 @@ export async function upgradesFindCL(
       gitDiffOutput,
       errorText,
       token,
+      continuation as AnalyzeSyncErrorContinuation,
     );
   } else if (errorType === ErrorType.BUILD) {
     return analyzeBuildError(
@@ -572,7 +600,7 @@ export async function upgradesFindCL(
       versions.newVersion,
       errorText,
       token,
-      continuation,
+      continuation as AnalyzeBuildErrorContinuation,
     );
   } else if (errorType === ErrorType.UNKNOWN) {
     stream.markdown(

@@ -64,7 +64,7 @@ export function getPrivateTools(
   );
 }
 
-interface GitLogToolParameters {
+export interface GitLogToolParameters {
   startVersion: string;
   endVersion: string;
   filename: string;
@@ -325,7 +325,7 @@ async function chromiumGitShow(chromiumRoot: vscode.Uri, commit: string) {
   ]);
 }
 
-interface GitShowToolParameters {
+export interface GitShowToolParameters {
   commit: string;
   filename: string;
 }

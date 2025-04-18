@@ -56,7 +56,7 @@ export async function searchChromiumLog(
   const chatConfig = vscode.workspace.getConfiguration(
     "electronBuildTools.chat",
   );
-  const pageSize = chatConfig.get<boolean>("chromiumLogPageSize");
+  const pageSize = chatConfig.get<number>("chromiumLogPageSize")!;
 
   // Render the initial prompt
   let { messages } = await renderPrompt(
@@ -76,7 +76,7 @@ export async function searchChromiumLog(
 
   // A hackish way to track state for the Chromium log tool without
   // relying on the model to do it since it constantly gets it wrong
-  const chromiumLogToolState = {
+  const chromiumLogToolState: ChromiumGitLogToolParameters = {
     startVersion: startChromiumVersion,
     endVersion: endChromiumVersion,
     page: continuation?.page ?? 1,
