@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 import { invokePrivateTool } from "../src/chat/tools";
 import { lmToolNames } from "../src/constants";
 
-describe.only("invokePrivateTool", () => {
+describe("invokePrivateTool", () => {
   describe(`invoking ${lmToolNames.gitLog}`, () => {
     const startVersion = "136.0.7064.0";
     const endVersion = "136.0.7080.0";
