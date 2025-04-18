@@ -38,7 +38,7 @@ async function validateGitToolFilename(
 function filterGitLogDetails(details: string) {
   return details
     .replaceAll(
-      /(?:Author|Date): .*?\n|[ \t>]*(?:Auto-Submit|AX-Relnotes|Bot-Commit|Bug|Change-Id|Cq-Include-Trybots|Commit-Queue|Cr-Branched-From|Cr-Commit-Position|Fixed|Merge-Approval-Bypass|No-Presubmit|No-Tree-Checks|No-Try|Reviewed-by|Tbr|Test):.*?(?:\n|$)|[ \t>]*(?:BUG|R)=.*?(?:\n|$)|[ \t>]*> Reviewed-on: .*?\n/g,
+      /(?:Author|Date): .*?\n|[ \t>]*(?:Auto-Submit|AX-Relnotes|Bot-Commit|Bug|Change-Id|Cq-Include-Trybots|Commit-Queue|Cr-Branched-From|Cr-Commit-Position|Fixed|Merge-Approval-Bypass|No-Presubmit|No-Tree-Checks|No-Try|Owners-Override|Reviewed-by|Tbr|Test):.*?(?:\n|$)|[ \t>]*(?:BUG|R)=.*?(?:\n|$)|[ \t>]*> Reviewed-on: .*?\n/g,
       "",
     )
     .trimEnd();
@@ -102,7 +102,10 @@ async function gitLog(
   );
 
   for (const match of regexMatches) {
-    logCommits.push({ commit: match[1], details: match[0].trimEnd() });
+    logCommits.push({
+      commit: match[1],
+      details: filterGitLogDetails(match[0]),
+    });
   }
 
   // If continuing, we drop all log output before and
@@ -347,7 +350,7 @@ async function gitShow(
   ).then(({ stdout }) => stdout.trim());
 
   return new vscode.LanguageModelToolResult([
-    new vscode.LanguageModelTextPart(output),
+    new vscode.LanguageModelTextPart(filterGitLogDetails(output)),
   ]);
 }
 
