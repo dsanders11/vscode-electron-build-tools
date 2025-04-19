@@ -346,7 +346,12 @@ export async function analyzeBuildError(
           lmToolNames.chromiumLog,
           {},
         );
-      } else if (/[0-9a-f]{40}/.test(responseStr)) {
+      } else if (
+        /[0-9a-f]{40}/.test(responseStr) &&
+        /(?:fetch|retrieve) the full ?(?:commit)? details|(?:further|more) details about this commit|analysis of this commit/.test(
+          responseStr,
+        )
+      ) {
         const commit = responseStr.match(/[0-9a-f]{40}/)![0];
 
         toolCall = new vscode.LanguageModelToolCallPart(
