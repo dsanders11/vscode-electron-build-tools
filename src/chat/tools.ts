@@ -182,6 +182,7 @@ export interface ChromiumGitLogToolParameters {
   page: number;
   pageSize: number;
   continueAfter?: string;
+  reverse?: boolean;
 }
 
 async function chromiumGitLog(
@@ -191,6 +192,7 @@ async function chromiumGitLog(
   page: number, // 1-indexed
   pageSize: number,
   continueAfter?: string,
+  reverse?: boolean,
 ) {
   if (!chromiumVersionRegex.test(startVersion)) {
     throw new Error(`Invalid Chromium version: ${startVersion}`);
@@ -200,7 +202,7 @@ async function chromiumGitLog(
     throw new Error(`Invalid Chromium version: ${endVersion}`);
   }
 
-  const logCommits =
+  let logCommits =
     chromiumGitLogCache.get(`${startVersion}..${endVersion}`) ?? [];
 
   if (logCommits.length === 0) {
@@ -239,6 +241,10 @@ async function chromiumGitLog(
     }
 
     chromiumGitLogCache.set(`${startVersion}..${endVersion}`, logCommits);
+  }
+
+  if (reverse) {
+    logCommits = [...logCommits].reverse();
   }
 
   // Paginate logCommits and then hydrate the log entries
@@ -374,7 +380,7 @@ export function invokePrivateTool(
     const { commit, filename } = options.input as GitShowToolParameters;
     return gitShow(chromiumRoot, commit, filename);
   } else if (name === lmToolNames.chromiumLog) {
-    const { startVersion, endVersion, page, pageSize, continueAfter } =
+    const { startVersion, endVersion, page, pageSize, continueAfter, reverse } =
       options.input as ChromiumGitLogToolParameters;
     return chromiumGitLog(
       chromiumRoot,
@@ -383,6 +389,7 @@ export function invokePrivateTool(
       page,
       pageSize,
       continueAfter,
+      reverse,
     );
   } else if (name === lmToolNames.chromiumGitShow) {
     const { commit } = options.input as ChromiumGitShowToolParameters;

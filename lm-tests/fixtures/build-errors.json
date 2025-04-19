@@ -18,7 +18,7 @@
       "cl": "https://chromium-review.googlesource.com/c/chromium/src/+/6349218"
     },
     {
-      "previousVersion": "136.0.7067.0",
+      "previousVersion": "136.0.7087.0",
       "newVersion": "136.0.7095.0",
       "error": "../../electron/shell/common/api/electron_api_url_loader.h:51:7: error: abstract class is marked 'final' [-Werror,-Wabstract-final-class]\n   51 | class SimpleURLLoaderWrapper final\n      |       ^\ngen/services/network/public/mojom/url_loader_network_service_observer.mojom.h:317:16: note: unimplemented pure virtual method 'OnLocalNetworkAccessPermissionRequired' in 'SimpleURLLoaderWrapper'\n  317 |   virtual void OnLocalNetworkAccessPermissionRequired(OnLocalNetworkAccessPermissionRequiredCallback callback) = 0;\n      |                ^\n1 error generated.\n\n",
       "cl": "https://chromium-review.googlesource.com/c/chromium/src/+/6337340"

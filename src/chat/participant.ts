@@ -24,7 +24,10 @@ export function registerChatParticipant(
     if (request.command === "findUpstreamFiles") {
       await findUpstreamFiles(chromiumRoot, request, stream, token);
       return {};
-    } else if (request.command === "upgradesFindCL") {
+    } else if (
+      request.command === "upgradesFindCL" ||
+      request.command === "upgradesFindCLAdvanced"
+    ) {
       return upgradesFindCL(
         chromiumRoot,
         electronRoot,
@@ -33,6 +36,7 @@ export function registerChatParticipant(
         context,
         stream,
         token,
+        request.command === "upgradesFindCLAdvanced",
       );
     } else if (request.command === "searchCLs") {
       return searchCLs(

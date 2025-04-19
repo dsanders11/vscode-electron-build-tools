@@ -22,6 +22,7 @@ import {
   compareChromiumVersions,
   extractTerminalSelectionText,
   getChromiumVersions,
+  showQuickPick,
 } from "../utils";
 
 export enum ErrorType {
@@ -230,6 +231,7 @@ export async function analyzeBuildError(
   errorText: string,
   token: vscode.CancellationToken,
   continuation?: AnalyzeBuildErrorContinuation,
+  reverse: boolean = false,
 ) {
   const { nanoid } = await import("nanoid");
 
@@ -264,6 +266,7 @@ export async function analyzeBuildError(
     page: continuation?.page ?? 1,
     pageSize,
     continueAfter: continuation?.after,
+    reverse,
   };
 
   const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> =
@@ -468,6 +471,7 @@ export async function upgradesFindCL(
   context: vscode.ChatContext,
   stream: vscode.ChatResponseStream,
   token: vscode.CancellationToken,
+  advanced: boolean = false,
 ) {
   let continuation:
     | AnalyzeBuildErrorContinuation
@@ -596,16 +600,98 @@ export async function upgradesFindCL(
       continuation as AnalyzeSyncErrorContinuation,
     );
   } else if (errorType === ErrorType.BUILD) {
+    let previousChromiumVersion: string | undefined = versions.previousVersion;
+    let newChromiumVersion: string | undefined = versions.newVersion;
+    let reverse = false;
+
+    if (advanced) {
+      let chromiumVersions = await exec(
+        'git tag --sort=version:refname --list "[1-2]??.*.*.*"',
+        {
+          cwd: chromiumRoot.fsPath,
+          encoding: "utf8",
+        },
+      ).then(({ stdout }) => stdout.trim().split("\n"));
+
+      chromiumVersions = chromiumVersions.filter(
+        (version) =>
+          compareChromiumVersions(version, previousChromiumVersion!) >= 0 &&
+          compareChromiumVersions(version, newChromiumVersion!) <= 0,
+      );
+
+      let quickPick = vscode.window.createQuickPick<vscode.QuickPickItem>();
+      quickPick.title = "Advanced Options";
+      quickPick.canSelectMany = true;
+      quickPick.items = [
+        {
+          label: "Reverse",
+          detail: "Search the git log in reverse order (oldest to newest)",
+        },
+      ];
+      quickPick.step = 1;
+      quickPick.totalSteps = 3;
+
+      const selectedOptions = await showQuickPick(quickPick);
+
+      if (!selectedOptions) {
+        return {};
+      }
+
+      reverse =
+        selectedOptions.find(({ label }) => label === "Reverse") !== undefined;
+
+      quickPick = vscode.window.createQuickPick();
+      quickPick.items = chromiumVersions.map((version) => ({
+        label: version,
+        description:
+          version === previousChromiumVersion ? "Default" : undefined,
+      }));
+      quickPick.title = "Advanced Options";
+      quickPick.placeholder = "Choose Chromium start version";
+      quickPick.step = 2;
+      quickPick.totalSteps = 3;
+
+      previousChromiumVersion = (await showQuickPick(quickPick))?.[0].label;
+
+      if (!previousChromiumVersion) {
+        return {};
+      }
+
+      const remainingVersions = chromiumVersions
+        .filter(
+          (version) =>
+            compareChromiumVersions(version, previousChromiumVersion!) > 0,
+        )
+        .reverse();
+
+      quickPick = vscode.window.createQuickPick();
+      quickPick.items = remainingVersions.map((version) => ({
+        label: version,
+        description: version === newChromiumVersion ? "Default" : undefined,
+      }));
+      quickPick.title = "Advanced Options";
+      quickPick.placeholder = "Choose Chromium end version";
+      quickPick.step = 3;
+      quickPick.totalSteps = 3;
+
+      newChromiumVersion = (await showQuickPick(quickPick))?.[0].label;
+
+      if (!newChromiumVersion) {
+        return {};
+      }
+    }
+
     return analyzeBuildError(
       chromiumRoot,
       request,
       stream,
       tools,
-      versions.previousVersion,
-      versions.newVersion,
+      previousChromiumVersion,
+      newChromiumVersion,
       errorText,
       token,
       continuation as AnalyzeBuildErrorContinuation,
+      reverse,
     );
   } else if (errorType === ErrorType.UNKNOWN) {
     stream.markdown(

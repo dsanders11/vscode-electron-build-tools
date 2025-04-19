@@ -11,7 +11,7 @@ import {
   EmptyLogPageError,
 } from "../tools";
 import { ToolResultMetadata, ToolCallRound } from "../toolsPrompts";
-import { compareChromiumVersions } from "../utils";
+import { compareChromiumVersions, showQuickPick } from "../utils";
 
 const CONTINUE_SEARCHING_PROMPT = "continue";
 
@@ -20,22 +20,6 @@ export interface SearchCommitsContinuation {
   page: number;
   startChromiumVersion: string;
   endChromiumVersion: string;
-}
-
-async function showQuickPick(
-  quickPick: vscode.QuickPick<vscode.QuickPickItem>,
-) {
-  return new Promise<string | undefined>((resolve) => {
-    quickPick.onDidAccept(() => {
-      resolve(quickPick.selectedItems[0].label);
-      quickPick.dispose();
-    });
-    quickPick.onDidHide(() => {
-      resolve(undefined);
-      quickPick.dispose();
-    });
-    quickPick.show();
-  });
 }
 
 export async function searchChromiumLog(
@@ -342,7 +326,7 @@ export async function searchCLs(
     quickPick.step = 1;
     quickPick.totalSteps = 2;
 
-    startChromiumVersion = await showQuickPick(quickPick);
+    startChromiumVersion = (await showQuickPick(quickPick))?.[0].label;
 
     if (!startChromiumVersion) {
       return {};
@@ -361,7 +345,7 @@ export async function searchCLs(
     quickPick.step = 2;
     quickPick.totalSteps = 2;
 
-    endChromiumVersion = await showQuickPick(quickPick);
+    endChromiumVersion = (await showQuickPick(quickPick))?.[0].label;
 
     if (!endChromiumVersion) {
       return {};

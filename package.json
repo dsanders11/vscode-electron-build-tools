@@ -55,6 +55,10 @@
             "description": "Attempt to find the Chromium CL related to the current sync/build failure."
           },
           {
+            "name": "upgradesFindCLAdvanced",
+            "description": "Attempt to find the Chromium CL related to the current sync/build failure, with advanced options."
+          },
+          {
             "name": "searchCLs",
             "description": "Search Chromium CLs between two versions."
           }

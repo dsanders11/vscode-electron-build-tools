@@ -76,3 +76,19 @@ export function extractTerminalSelectionText(
 
   return text;
 }
+
+export async function showQuickPick(
+  quickPick: vscode.QuickPick<vscode.QuickPickItem>,
+) {
+  return new Promise<readonly vscode.QuickPickItem[] | undefined>((resolve) => {
+    quickPick.onDidAccept(() => {
+      resolve(quickPick.selectedItems);
+      quickPick.dispose();
+    });
+    quickPick.onDidHide(() => {
+      resolve(undefined);
+      quickPick.dispose();
+    });
+    quickPick.show();
+  });
+}
