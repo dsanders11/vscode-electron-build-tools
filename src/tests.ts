@@ -578,7 +578,7 @@ async function getElectronTests(
     let result = "";
 
     const socketServer = net.createServer().listen(socketName);
-    const socketClosedPromise = new Promise((resolve, reject) => {
+    const socketClosedPromise = new Promise<void>((resolve, reject) => {
       socketServer.once("connection", (socket) => {
         socket.on("data", (data) => {
           result += data.toString();
@@ -604,7 +604,11 @@ async function getElectronTests(
         if (execution === taskExecution) {
           await socketClosedPromise;
           socketServer.close();
-          resolve(JSON.parse(result));
+          try {
+            resolve(JSON.parse(result));
+          } catch (err) {
+            reject(err);
+          }
         }
       });
 
@@ -617,7 +621,17 @@ async function getElectronTests(
           } else {
             await socketClosedPromise;
             socketServer.close();
-            resolve(JSON.parse(result));
+            if (exitCode === 0) {
+              try {
+                resolve(JSON.parse(result));
+              } catch (err) {
+                reject(err);
+              }
+            } else {
+              reject(
+                new Error(`Error discovering tests - exit code ${exitCode}`),
+              );
+            }
           }
         }
       });
