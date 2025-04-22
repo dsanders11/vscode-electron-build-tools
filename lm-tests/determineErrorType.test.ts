@@ -20,32 +20,53 @@ describe("determineErrorType", () => {
   });
 
   describe("can detect sync errors", () => {
-    for (const model of globalThis._testModels) {
-      for (const { error } of globalThis._testFixtures.syncErrors) {
-        it(`using ${model.name}`, async function () {
-          const result = await determineErrorType(
-            model,
-            error,
-            this.globalContext.cancellationToken,
-          );
-          assert.strictEqual(result, ErrorType.SYNC);
-        });
-      }
+    for (const fixture of globalThis._testFixtures.syncErrors) {
+      describe(fixture.cl, () => {
+        for (const model of globalThis._testModels) {
+          it(`using ${model.name}`, async function () {
+            const result = await determineErrorType(
+              model,
+              fixture.error,
+              this.globalContext.cancellationToken,
+            );
+            assert.strictEqual(result, ErrorType.SYNC);
+          });
+        }
+      });
     }
   });
 
   describe("can detect build errors", () => {
-    for (const model of globalThis._testModels) {
-      for (const { error } of globalThis._testFixtures.buildErrors) {
-        it(`using ${model.name}`, async function () {
-          const result = await determineErrorType(
-            model,
-            error,
-            this.globalContext.cancellationToken,
-          );
-          assert.strictEqual(result, ErrorType.BUILD);
-        });
-      }
+    for (const fixture of globalThis._testFixtures.buildErrors) {
+      describe(fixture.cl, () => {
+        for (const model of globalThis._testModels) {
+          it(`using ${model.name}`, async function () {
+            const result = await determineErrorType(
+              model,
+              fixture.error,
+              this.globalContext.cancellationToken,
+            );
+            assert.strictEqual(result, ErrorType.BUILD);
+          });
+        }
+      });
+    }
+  });
+
+  describe("can detect test errors", () => {
+    for (const fixture of globalThis._testFixtures.testErrors) {
+      describe(fixture.cl, () => {
+        for (const model of globalThis._testModels) {
+          it(`using ${model.name}`, async function () {
+            const result = await determineErrorType(
+              model,
+              fixture.error,
+              this.globalContext.cancellationToken,
+            );
+            assert.strictEqual(result, ErrorType.TEST);
+          });
+        }
+      });
     }
   });
 });

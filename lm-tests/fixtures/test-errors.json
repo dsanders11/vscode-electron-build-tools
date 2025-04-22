@@ -1,0 +1,8 @@
+[
+  {
+    "previousVersion": "137.0.7107.0",
+    "newVersion": "137.0.7109.0",
+    "error": "not ok 411 BrowserWindow module window states resizable state works for a window smaller than 64x64\n  expected [ 32, 39 ] to deeply equal [ 30, 30 ]\n  AssertionError: expected [ 32, 39 ] to deeply equal [ 30, 30 ]\n      at expectBoundsEqual (electron\\spec\\api-browser-window-spec.ts:38:28)\n      at Context.<anonymous> (electron\\spec\\api-browser-window-spec.ts:5294:9)\n",
+    "cl": "https://chromium-review.googlesource.com/c/chromium/src/+/6428649"
+  }
+]

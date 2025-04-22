@@ -231,6 +231,16 @@ function registerElectronBuildToolsCommands(
             )
           ).toString(),
         ),
+        testErrors: JSON.parse(
+          (
+            await vscode.workspace.fs.readFile(
+              vscode.Uri.joinPath(
+                context.extensionUri,
+                "lm-tests/fixtures/test-errors.json",
+              ),
+            )
+          ).toString(),
+        ),
         tools: JSON.parse(
           (
             await vscode.workspace.fs.readFile(

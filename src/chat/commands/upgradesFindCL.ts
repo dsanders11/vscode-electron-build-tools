@@ -8,6 +8,7 @@ import { exec, getShortSha } from "../../utils";
 import {
   AnalyzeBuildErrorPrompt,
   AnalyzeSyncErrorPrompt,
+  AnalyzeTestErrorPrompt,
   DetermineErrorTypePrompt,
 } from "../prompts";
 import {
@@ -28,6 +29,7 @@ import {
 export enum ErrorType {
   SYNC = "SYNC",
   BUILD = "BUILD",
+  TEST = "TEST",
   UNKNOWN = "UNKNOWN",
 }
 
@@ -40,6 +42,11 @@ export interface AnalyzeBuildErrorContinuation {
 
 export interface AnalyzeSyncErrorContinuation {
   after: string;
+}
+
+export interface AnalyzeTestErrorContinuation {
+  after: string;
+  page: number;
 }
 
 export async function determineErrorType(
@@ -63,6 +70,8 @@ export async function determineErrorType(
     return ErrorType.SYNC;
   } else if (result.trim() === "BUILD") {
     return ErrorType.BUILD;
+  } else if (result.trim() === "TEST") {
+    return ErrorType.TEST;
   }
 
   if (result.trim() !== "UNKNOWN") {
@@ -463,6 +472,248 @@ export async function analyzeBuildError(
   return result;
 }
 
+export async function analyzeTestError(
+  chromiumRoot: vscode.Uri,
+  request: vscode.ChatRequest,
+  stream: vscode.ChatResponseStream,
+  tools: vscode.LanguageModelChatTool[],
+  previousChromiumVersion: string,
+  newChromiumVersion: string,
+  errorText: string,
+  token: vscode.CancellationToken,
+  continuation?: AnalyzeTestErrorContinuation,
+  reverse: boolean = false,
+) {
+  const { nanoid } = await import("nanoid");
+
+  stream.progress("Analyzing test error...");
+
+  // Render the initial prompt
+  let { messages } = await renderPrompt(
+    AnalyzeTestErrorPrompt,
+    {
+      chromiumRoot,
+      errorText,
+      previousChromiumVersion,
+      newChromiumVersion,
+      toolCallResults: {},
+      toolCallRounds: [],
+      toolInvocationToken: request.toolInvocationToken,
+    },
+    { modelMaxPromptTokens: request.model.maxInputTokens },
+    request.model,
+  );
+
+  const chatConfig = vscode.workspace.getConfiguration(
+    "electronBuildTools.chat",
+  );
+  const pageSize = chatConfig.get<number>("chromiumLogPageSize")!;
+
+  // A hackish way to track state for the Chromium log tool without
+  // relying on the model to do it since it constantly gets it wrong
+  const chromiumLogToolState: ChromiumGitLogToolParameters = {
+    startVersion: previousChromiumVersion,
+    endVersion: newChromiumVersion,
+    page: continuation?.page ?? 1,
+    pageSize,
+    continueAfter: continuation?.after,
+    reverse,
+  };
+
+  const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> =
+    {};
+  const toolCallRounds: ToolCallRound[] = [];
+  const runWithTools = async (): Promise<string> => {
+    // Send the request to the LanguageModelChat
+    const response = await request.model.sendRequest(
+      messages,
+      {
+        toolMode: vscode.LanguageModelChatToolMode.Auto,
+        tools: tools.filter(
+          ({ name }) =>
+            name === lmToolNames.chromiumLog ||
+            name === lmToolNames.chromiumGitShow,
+        ),
+      },
+      token,
+    );
+
+    const processToolCall = async (
+      toolCall: vscode.LanguageModelToolCallPart,
+    ) => {
+      if (toolCall.name === lmToolNames.chromiumLog) {
+        stream.progress(
+          `Analyzing page ${chromiumLogToolState.page} of the log...`,
+        );
+
+        // Inject the Chromium log tool state into the input
+        Object.assign(toolCall.input, chromiumLogToolState);
+
+        // Increment the page number for the next call
+        chromiumLogToolState.page += 1;
+
+        // Clear continueAfter so we don't keep passing it
+        chromiumLogToolState.continueAfter = undefined;
+      } else if (toolCall.name === lmToolNames.chromiumGitShow) {
+        const { commit } = toolCall.input as ChromiumGitShowToolParameters;
+        const shortSha = await getShortSha(chromiumRoot, commit);
+        stream.progress(`Analyzing commit ${shortSha}...`);
+
+        const previousLogToolCall = toolCallRounds.findLast(
+          (round) => round.toolCalls[0].name === lmToolNames.chromiumLog,
+        )?.toolCalls[0];
+
+        // Set up continuation state so that the remaining commits
+        // on this page will still be analyzed if this one isn't it
+        chromiumLogToolState.page = (
+          previousLogToolCall!.input as ChromiumGitLogToolParameters
+        ).page;
+        chromiumLogToolState.continueAfter = commit;
+      }
+    };
+
+    // Stream text output and collect tool calls from the response
+    const toolCalls: vscode.LanguageModelToolCallPart[] = [];
+    let responseStr = "";
+    for await (const part of response.stream) {
+      if (part instanceof vscode.LanguageModelTextPart) {
+        // Don't stream out intermediate messages, they're not useful
+        responseStr += part.value;
+      } else if (part instanceof vscode.LanguageModelToolCallPart) {
+        toolCalls.push(part);
+        processToolCall(part);
+      }
+    }
+
+    // OpenAI models sometimes get confused and says it's going to call
+    // the tool, but doesn't actually do it. This is a hack for that.
+    if (toolCalls.length === 0) {
+      let toolCall: vscode.LanguageModelToolCallPart | undefined;
+
+      if (
+        /the next page of the ?(?:Chromium)? log|I will now ?(?:proceed to)? check page|check the next page|continue (?:analyzing|checking|searching)|continue to ?(?:the next)? page/.test(
+          responseStr,
+        )
+      ) {
+        toolCall = new vscode.LanguageModelToolCallPart(
+          nanoid(),
+          lmToolNames.chromiumLog,
+          {},
+        );
+      } else if (
+        /[0-9a-f]{40}/.test(responseStr) &&
+        /(?:fetch|retrieve) the full ?(?:commit)? details|(?:further|more) details about this commit|analysis of this commit/.test(
+          responseStr,
+        )
+      ) {
+        const commit = responseStr.match(/[0-9a-f]{40}/)![0];
+
+        toolCall = new vscode.LanguageModelToolCallPart(
+          nanoid(),
+          lmToolNames.chromiumGitShow,
+          { commit },
+        );
+      }
+
+      if (toolCall) {
+        processToolCall(toolCall);
+        toolCalls.push(toolCall);
+      }
+    }
+
+    if (toolCalls.length) {
+      // If the model called any tools, then we do another round- render the prompt with those tool calls (rendering the PromptElements will invoke the tools)
+      // and include the tool results in the prompt for the next request.
+      toolCallRounds.push({
+        response: responseStr,
+        toolCalls,
+      });
+      const renderToolCall = async () => {
+        const toolCall = toolCalls[0];
+
+        try {
+          return await renderPrompt(
+            AnalyzeTestErrorPrompt,
+            {
+              chromiumRoot,
+              errorText,
+              previousChromiumVersion,
+              newChromiumVersion,
+              toolCallResults: accumulatedToolResults,
+              // Only provide the last round of tool calls
+              toolCallRounds: toolCallRounds.slice(-1),
+              toolInvocationToken: request.toolInvocationToken,
+            },
+            { modelMaxPromptTokens: request.model.maxInputTokens },
+            request.model,
+          );
+        } catch (error) {
+          if (error instanceof EmptyLogPageError) {
+            // Continue on to the next page if the commit the
+            // user continued from was the last one on that page
+            stream.progress(
+              `Analyzing page ${chromiumLogToolState.page} of the log...`,
+            );
+
+            // Inject the Chromium log tool state into the input
+            Object.assign(toolCall.input, chromiumLogToolState);
+
+            // Increment the page number for the next call
+            chromiumLogToolState.page += 1;
+
+            return renderToolCall();
+          } else {
+            throw error;
+          }
+        }
+      };
+      const result = await renderToolCall();
+      messages = result.messages;
+      const toolResultMetadata = result.metadata.getAll(ToolResultMetadata);
+      if (toolResultMetadata?.length) {
+        // Cache tool results for later, so they can be incorporated into later prompts without calling the tool again
+        toolResultMetadata.forEach(
+          (meta) => (accumulatedToolResults[meta.toolCallId] = meta.result),
+        );
+      }
+
+      // This loops until the model doesn't want to call any more tools, then the request is done.
+      return runWithTools();
+    }
+
+    return responseStr;
+  };
+
+  // The final message should have the most useful info for the user
+  const finalResponse = await runWithTools();
+  stream.markdown(finalResponse);
+
+  const result: vscode.ChatResult = {
+    metadata: {
+      // Return tool call metadata so it can be used in prompt history on the next request
+      toolCallsMetadata: {
+        toolCallResults: accumulatedToolResults,
+        toolCallRounds,
+      },
+    },
+  };
+
+  const lastToolCall = toolCallRounds.at(-1)!.toolCalls[0];
+
+  // If the last tool call was getting details for a commit, then we assume there
+  // are more commits available in the log to analyze if the user wants to
+  if (lastToolCall?.name === lmToolNames.chromiumGitShow) {
+    (
+      result.metadata as Record<string, AnalyzeTestErrorContinuation>
+    ).continuation = {
+      after: chromiumLogToolState.continueAfter!,
+      page: chromiumLogToolState.page,
+    };
+  }
+
+  return result;
+}
+
 export async function upgradesFindCL(
   chromiumRoot: vscode.Uri,
   electronRoot: vscode.Uri,
@@ -476,6 +727,7 @@ export async function upgradesFindCL(
   let continuation:
     | AnalyzeBuildErrorContinuation
     | AnalyzeSyncErrorContinuation
+    | AnalyzeTestErrorContinuation
     | undefined;
   let prompt = request.prompt;
   let toolReferences = request.toolReferences;
@@ -682,6 +934,100 @@ export async function upgradesFindCL(
     }
 
     return analyzeBuildError(
+      chromiumRoot,
+      request,
+      stream,
+      tools,
+      previousChromiumVersion,
+      newChromiumVersion,
+      errorText,
+      token,
+      continuation as AnalyzeBuildErrorContinuation,
+      reverse,
+    );
+  } else if (errorType === ErrorType.TEST) {
+    let previousChromiumVersion: string | undefined = versions.previousVersion;
+    let newChromiumVersion: string | undefined = versions.newVersion;
+    let reverse = false;
+
+    if (advanced) {
+      let chromiumVersions = await exec(
+        'git tag --sort=version:refname --list "[1-2]??.*.*.*"',
+        {
+          cwd: chromiumRoot.fsPath,
+          encoding: "utf8",
+        },
+      ).then(({ stdout }) => stdout.trim().split("\n"));
+
+      chromiumVersions = chromiumVersions.filter(
+        (version) =>
+          compareChromiumVersions(version, previousChromiumVersion!) >= 0 &&
+          compareChromiumVersions(version, newChromiumVersion!) <= 0,
+      );
+
+      let quickPick = vscode.window.createQuickPick<vscode.QuickPickItem>();
+      quickPick.title = "Advanced Options";
+      quickPick.canSelectMany = true;
+      quickPick.items = [
+        {
+          label: "Reverse",
+          detail: "Search the git log in reverse order (oldest to newest)",
+        },
+      ];
+      quickPick.step = 1;
+      quickPick.totalSteps = 3;
+
+      const selectedOptions = await showQuickPick(quickPick);
+
+      if (!selectedOptions) {
+        return {};
+      }
+
+      reverse =
+        selectedOptions.find(({ label }) => label === "Reverse") !== undefined;
+
+      quickPick = vscode.window.createQuickPick();
+      quickPick.items = chromiumVersions.map((version) => ({
+        label: version,
+        description:
+          version === previousChromiumVersion ? "Default" : undefined,
+      }));
+      quickPick.title = "Advanced Options";
+      quickPick.placeholder = "Choose Chromium start version";
+      quickPick.step = 2;
+      quickPick.totalSteps = 3;
+
+      previousChromiumVersion = (await showQuickPick(quickPick))?.[0].label;
+
+      if (!previousChromiumVersion) {
+        return {};
+      }
+
+      const remainingVersions = chromiumVersions
+        .filter(
+          (version) =>
+            compareChromiumVersions(version, previousChromiumVersion!) > 0,
+        )
+        .reverse();
+
+      quickPick = vscode.window.createQuickPick();
+      quickPick.items = remainingVersions.map((version) => ({
+        label: version,
+        description: version === newChromiumVersion ? "Default" : undefined,
+      }));
+      quickPick.title = "Advanced Options";
+      quickPick.placeholder = "Choose Chromium end version";
+      quickPick.step = 3;
+      quickPick.totalSteps = 3;
+
+      newChromiumVersion = (await showQuickPick(quickPick))?.[0].label;
+
+      if (!newChromiumVersion) {
+        return {};
+      }
+    }
+
+    return analyzeTestError(
       chromiumRoot,
       request,
       stream,
