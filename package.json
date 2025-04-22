@@ -16,7 +16,9 @@
   },
   "activationEvents": [
     "workspaceContains:electron_resources.grd",
-    "workspaceContains:electron/electron_resources.grd"
+    "workspaceContains:electron/electron_resources.grd",
+    "workspaceContains:typings/internal-electron.d.ts",
+    "workspaceContains:electron/typings/internal-electron.d.ts"
   ],
   "categories": [
     "Extension Packs",
