@@ -160,16 +160,27 @@ export function registerPatchesCommands(
     vscode.commands.registerCommand(
       `${commandPrefix}.viewPullRequestPatch`,
       async () => {
-        const prNumber = await vscode.window.showInputBox({
-          prompt: "Enter the pull request number",
+        const prRegex =
+          /https:\/\/github.com\/electron\/electron\/pull\/(\d+)\/?/;
+
+        let prNumber = await vscode.window.showInputBox({
+          title: "View Pull Request Patches",
+          prompt: "Enter the pull request number or URL",
+          placeHolder:
+            "e.g. 12345 or https://github.com/electron/electron/pull/12345",
           validateInput: (value: string) => {
-            if (isNaN(parseInt(value))) {
-              return "Enter a number only";
+            if (!prRegex.test(value) && isNaN(parseInt(value))) {
+              return "Invalid pull request number or URL";
             }
           },
         });
 
         if (prNumber) {
+          if (prRegex.test(prNumber)) {
+            const matches = prNumber.match(prRegex)!;
+            prNumber = matches[1];
+          }
+
           return vscode.window.withProgress(
             { location: { viewId: viewIds.PATCHES } },
             async () => {
