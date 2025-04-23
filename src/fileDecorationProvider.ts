@@ -23,10 +23,10 @@ export class ElectronFileDecorationProvider
       // TBD - Should color be used here? It's a bit much if everything has color
       if (blobIdA && blobIdB) {
         if (/^[0]+$/.test(blobIdA)) {
-          // All zeroes for blobIdA indciates it is a new file
+          // All zeroes for blobIdA indicates it is a new file
           return new vscode.FileDecoration("A", "Added");
         } else if (/^[0]+$/.test(blobIdB)) {
-          // All zeroes for blobIdB indciates it is a deleted file
+          // All zeroes for blobIdB indicates it is a deleted file
           return new vscode.FileDecoration("D", "Deleted");
         } else {
           return new vscode.FileDecoration("M", "Modified");

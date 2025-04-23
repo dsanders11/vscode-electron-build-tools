@@ -17,7 +17,7 @@ const Base: reporters.Base = require(
   ),
 );
 
-// Encode any newlines so we can use newline as a delimeter
+// Encode any newlines so we can use newline as a delimiter
 function encodeNewlines(value: string) {
   return value.replace(/%|\n/g, (match) => {
     switch (match) {
