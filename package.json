@@ -928,6 +928,10 @@
     },
     "viewsWelcome": [
       {
+        "view": "electron-build-tools:configs",
+        "contents": "No configs found."
+      },
+      {
         "view": "electron-build-tools:welcome",
         "contents": "In order to use the Electron Build Tools extension, you need the npm package @electron/build-tools, version 1.1.0 or newer, installed."
       },
