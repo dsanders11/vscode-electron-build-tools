@@ -163,7 +163,7 @@ export function registerPatchesCommands(
         const prRegex =
           /https:\/\/github.com\/electron\/electron\/pull\/(\d+)\/?/;
 
-        let prNumber = await vscode.window.showInputBox({
+        const input = await vscode.window.showInputBox({
           title: "View Pull Request Patches",
           prompt: "Enter the pull request number or URL",
           placeHolder:
@@ -175,11 +175,8 @@ export function registerPatchesCommands(
           },
         });
 
-        if (prNumber) {
-          if (prRegex.test(prNumber)) {
-            const matches = prNumber.match(prRegex)!;
-            prNumber = matches[1];
-          }
+        if (input) {
+          const prNumber = input.match(prRegex)?.[1] ?? input;
 
           return vscode.window.withProgress(
             { location: { viewId: viewIds.PATCHES } },
