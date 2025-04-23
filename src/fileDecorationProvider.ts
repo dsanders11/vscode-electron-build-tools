@@ -20,29 +20,64 @@ export class ElectronFileDecorationProvider
     ) {
       const { isPatch, blobIdA, blobIdB, status } = querystringParse(uri.query);
 
-      // TBD - Should color be used here? It's a bit much if everything has color
       if (blobIdA && blobIdB) {
         if (/^[0]+$/.test(blobIdA)) {
           // All zeroes for blobIdA indicates it is a new file
-          return new vscode.FileDecoration("A", "Added");
+          return new vscode.FileDecoration(
+            "A",
+            "Added",
+            new vscode.ThemeColor("gitDecoration.addedResourceForeground"),
+          );
         } else if (/^[0]+$/.test(blobIdB)) {
           // All zeroes for blobIdB indicates it is a deleted file
-          return new vscode.FileDecoration("D", "Deleted");
+          return new vscode.FileDecoration(
+            "D",
+            "Deleted",
+            new vscode.ThemeColor("gitDecoration.deletedResourceForeground"),
+          );
         } else {
-          return new vscode.FileDecoration("M", "Modified");
+          return new vscode.FileDecoration(
+            "M",
+            "Modified",
+            new vscode.ThemeColor("gitDecoration.modifiedResourceForeground"),
+          );
         }
       } else if (isPatch && status) {
         switch (status as PullRequestFileStatus) {
           case "added":
+            return new vscode.FileDecoration(
+              "A",
+              "Added",
+              new vscode.ThemeColor("gitDecoration.addedResourceForeground"),
+            );
+
           case "copied":
-            return new vscode.FileDecoration("A", "Added");
+            return new vscode.FileDecoration(
+              "C",
+              "Copied",
+              new vscode.ThemeColor("gitDecoration.renamedResourceForeground"),
+            );
 
           case "modified":
+            return new vscode.FileDecoration(
+              "M",
+              "Modified",
+              new vscode.ThemeColor("gitDecoration.modifiedResourceForeground"),
+            );
+
           case "renamed":
-            return new vscode.FileDecoration("M", "Modified");
+            return new vscode.FileDecoration(
+              "R",
+              "Renamed",
+              new vscode.ThemeColor("gitDecoration.renamedResourceForeground"),
+            );
 
           case "removed":
-            return new vscode.FileDecoration("D", "Deleted");
+            return new vscode.FileDecoration(
+              "D",
+              "Deleted",
+              new vscode.ThemeColor("gitDecoration.deletedResourceForeground"),
+            );
         }
       }
     }
