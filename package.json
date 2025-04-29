@@ -783,7 +783,7 @@
       "explorer/context": [
         {
           "command": "electron-build-tools.revealInElectronSidebar",
-          "group": "navigation",
+          "group": "navigation@21",
           "when": "electron-build-tools:ready && resourceDirname =~ /.*electron(?:\\\\|\\/)patches(?:\\\\|\\/).*$/ && resourceExtname == .patch"
         }
       ],
