@@ -181,6 +181,13 @@
         "enablement": "electron-build-tools:active"
       },
       {
+        "command": "electron-build-tools.searchPatches",
+        "title": "Search Patches",
+        "category": "Electron Build Tools",
+        "icon": "$(search)",
+        "enablement": "electron-build-tools:active"
+      },
+      {
         "command": "electron-build-tools.showPatchesDocs",
         "title": "Show Patches Documentation",
         "category": "Electron Build Tools",
@@ -709,6 +716,10 @@
           "when": "electron-build-tools:active"
         },
         {
+          "command": "electron-build-tools.searchPatches",
+          "when": "electron-build-tools:active"
+        },
+        {
           "command": "electron-build-tools.showPatchesDocs",
           "when": "false"
         },
@@ -837,6 +848,11 @@
         {
           "command": "electron-build-tools.searchDocs",
           "when": "view == electron-build-tools:docs",
+          "group": "navigation"
+        },
+        {
+          "command": "electron-build-tools.searchPatches",
+          "when": "view == electron-build-tools:patches",
           "group": "navigation"
         },
         {

@@ -206,7 +206,7 @@ export function getCheckoutDirectoryForPatchDirectory(
 export async function getPatchSubjectLine(patch: vscode.Uri) {
   const patchContents = (await vscode.workspace.fs.readFile(patch)).toString();
 
-  return /^Subject: (.*)$/m.exec(patchContents)![1];
+  return /^Subject: (.*)$/m.exec(patchContents)?.[1];
 }
 
 export async function getPatchDescription(patch: vscode.Uri) {
@@ -697,6 +697,12 @@ export class OptionalFeature<T> extends vscode.Disposable {
   }
 }
 
+export interface TreeViewRevealOptions {
+  select?: boolean;
+  focus?: boolean;
+  expand?: number | boolean;
+}
+
 export async function drillDown(
   treeView: vscode.TreeView<vscode.TreeItem>,
   treeDataProvider: vscode.TreeDataProvider<vscode.TreeItem>,
@@ -706,11 +712,7 @@ export async function drillDown(
   ) =>
     | Promise<{ item: vscode.TreeItem | undefined; done: boolean }>
     | { item: vscode.TreeItem | undefined; done: boolean },
-  revealOptions?: {
-    select?: boolean | undefined;
-    focus?: boolean | undefined;
-    expand?: number | boolean | undefined;
-  },
+  revealOptions?: TreeViewRevealOptions,
 ): Promise<void> {
   const parentChain: vscode.TreeItem[] = [];
   let children: vscode.TreeItem[] | null | undefined =

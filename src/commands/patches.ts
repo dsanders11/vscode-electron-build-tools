@@ -5,9 +5,11 @@ import * as vscode from "vscode";
 import {
   buildToolsExecutable,
   commandPrefix,
+  patchDirectoryPrettyNames,
   viewIds,
   virtualDocumentScheme,
   virtualFsScheme,
+  PatchDirectoryPrettyName,
 } from "../constants";
 import {
   default as ExtensionState,
@@ -16,11 +18,16 @@ import {
 import Logger from "../logging";
 import {
   exec,
+  getPatches,
+  getPatchesConfigFile,
+  getPatchSubjectLine,
   getOctokit,
   hasContentForBlobId,
+  parsePatchConfig,
   querystringParse,
   setContentForBlobId,
   startProgress,
+  truncateToLength,
 } from "../utils";
 import type {
   ElectronPatchesProvider,
@@ -29,12 +36,18 @@ import type {
   PullRequestTreeItem,
 } from "../views/patches";
 
+interface SearchPatchesQuickPickItem extends vscode.QuickPickItem {
+  uri: vscode.Uri;
+}
+
 export function registerPatchesCommands(
   context: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
   patchesProvider: ElectronPatchesProvider,
   patchesView: vscode.TreeView<vscode.TreeItem>,
 ) {
+  const rootDirectory = vscode.Uri.joinPath(electronRoot, "..", "..");
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       `${commandPrefix}.openPatch`,
@@ -88,6 +101,65 @@ export function registerPatchesCommands(
       `${commandPrefix}.removePullRequestPatch`,
       (treeItem: PullRequestTreeItem) => {
         patchesProvider.removePr(treeItem.pullRequest);
+      },
+    ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.searchPatches`,
+      async () => {
+        const patchesConfig = parsePatchConfig(
+          getPatchesConfigFile(electronRoot),
+        );
+        const patches: SearchPatchesQuickPickItem[] = [];
+
+        for (const { patch_dir: patchDirectory } of await patchesConfig) {
+          const patchDirectoryBasename = path.basename(patchDirectory);
+          const uri = vscode.Uri.joinPath(rootDirectory, patchDirectory);
+          const patchDirectoryLabel =
+            patchDirectoryPrettyNames[
+              patchDirectory as PatchDirectoryPrettyName
+            ] ?? patchDirectoryBasename;
+
+          // Use the patch subject line for a more human-friendly label
+          for (const filename of await getPatches(uri)) {
+            const patch: SearchPatchesQuickPickItem = {
+              label: "",
+              description: patchDirectoryLabel,
+              uri: filename,
+            };
+            let label = await getPatchSubjectLine(filename);
+
+            if (label) {
+              // Only show the filename if the subject line is not empty,
+              // otherwise we're just showing the filename twice
+              patch.detail = path.relative(
+                electronRoot.fsPath,
+                filename.fsPath,
+              );
+            } else {
+              label = path.basename(filename.fsPath);
+            }
+
+            patch.label = truncateToLength(label, 72);
+
+            patches.push(patch);
+          }
+        }
+
+        const patch = await vscode.window.showQuickPick(patches, {
+          title: "Search Electron Patches",
+          placeHolder: "Search by patch subject line or filename",
+          matchOnDetail: true,
+        });
+
+        if (!patch) {
+          return;
+        }
+
+        await vscode.commands.executeCommand(
+          `${commandPrefix}.revealInElectronSidebar`,
+          patch.uri,
+          { expand: false, focus: true },
+        );
       },
     ),
     vscode.commands.registerCommand(

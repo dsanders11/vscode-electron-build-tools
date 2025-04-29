@@ -32,6 +32,7 @@ import {
   getPatchesConfigFile,
   isBuildToolsInstalled,
   setContext,
+  TreeViewRevealOptions,
 } from "./utils";
 import {
   BuildToolsConfigCollector,
@@ -65,7 +66,11 @@ function registerElectronBuildToolsCommands(
   context.subscriptions.push(
     vscode.commands.registerCommand(
       `${commandPrefix}.revealInElectronSidebar`,
-      async (file: vscode.Uri) => {
+      async (file: vscode.Uri, options?: TreeViewRevealOptions) => {
+        if (!options) {
+          options = { expand: true, focus: true };
+        }
+
         if (/.*\/electron\/patches\/.*\.patch$/.test(file.path)) {
           const patchesRoot = vscode.Uri.joinPath(electronRoot, "patches");
 
@@ -108,7 +113,7 @@ function registerElectronBuildToolsCommands(
                   }
                 }
               },
-              { expand: true, focus: true },
+              options,
             );
           } catch (err) {
             Logger.error(err instanceof Error ? err : String(err));
