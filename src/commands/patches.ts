@@ -164,7 +164,7 @@ export function registerPatchesCommands(
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.showPatchedFileDiff`,
-      (file: vscode.Uri, patchedFilename: string) => {
+      (file: vscode.Uri, _patchedFilename: string) => {
         const { blobIdA, blobIdB, patch } = querystringParse(file.query);
 
         if (!blobIdA || !blobIdB || !patch) {
@@ -203,7 +203,7 @@ export function registerPatchesCommands(
             "vscode.diff",
             originalFile,
             patchedFile,
-            `${path.basename(patch)} - ${patchedFilename}`,
+            `${path.basename(patch)} - Diff`,
           );
         }
       },
