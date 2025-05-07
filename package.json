@@ -913,22 +913,26 @@
         {
           "id": "electron-build-tools:configs",
           "name": "Configs",
+          "contextualTitle": "Electron Build Tools Configs",
           "when": "electron-build-tools:build-tools-installed"
         },
         {
           "id": "electron-build-tools:patches",
           "name": "Patches",
+          "contextualTitle": "Electron Patches",
           "when": "!electron-build-tools:ready || electron-build-tools:active"
         },
         {
           "id": "electron-build-tools:docs",
           "name": "Electron Documentation",
+          "contextualTitle": "Electron Documentation",
           "when": "!electron-build-tools:ready || electron-build-tools:active",
           "visibility": "collapsed"
         },
         {
           "id": "electron-build-tools:help",
           "name": "Help and Feedback",
+          "contextualTitle": "Electron Build Tools Help and Feedback",
           "visibility": "collapsed"
         }
       ]
