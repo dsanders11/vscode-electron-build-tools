@@ -50,7 +50,21 @@ export function registerPatchesCommands(
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      `${commandPrefix}.openPatch`,
+      `${commandPrefix}.patches.copyPath`,
+      (patchTreeItem: Patch) => {
+        return vscode.env.clipboard.writeText(patchTreeItem.resourceUri.fsPath);
+      },
+    ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.patches.copyRelativePath`,
+      (patchTreeItem: Patch) => {
+        return vscode.env.clipboard.writeText(
+          path.relative(electronRoot.path, patchTreeItem.resourceUri.path),
+        );
+      },
+    ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.patches.open`,
       (patchTreeItem: Patch) => {
         let uri = patchTreeItem.resourceUri;
 
@@ -70,7 +84,7 @@ export function registerPatchesCommands(
     ),
     ExtensionState.registerExtensionOperationCommand(
       ExtensionOperation.REFRESH_PATCHES,
-      `${commandPrefix}.refreshPatches`,
+      `${commandPrefix}.patches.refresh`,
       () => {
         vscode.window.showErrorMessage(
           "Can't refresh patches, other work in-progress",
@@ -104,7 +118,7 @@ export function registerPatchesCommands(
       },
     ),
     vscode.commands.registerCommand(
-      `${commandPrefix}.searchPatches`,
+      `${commandPrefix}.patches.search`,
       async () => {
         const patchesConfig = parsePatchConfig(
           getPatchesConfigFile(electronRoot),

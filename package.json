@@ -126,16 +126,33 @@
         "enablement": "electron-build-tools:canChangeConfig"
       },
       {
-        "command": "electron-build-tools.openPatch",
+        "command": "electron-build-tools.patches.copyPath",
+        "title": "Copy Path",
+        "category": "Electron Build Tools"
+      },
+      {
+        "command": "electron-build-tools.patches.copyRelativePath",
+        "title": "Copy Relative Path",
+        "category": "Electron Build Tools"
+      },
+      {
+        "command": "electron-build-tools.patches.open",
         "title": "Open Patch",
         "category": "Electron Build Tools"
       },
       {
-        "command": "electron-build-tools.refreshPatches",
+        "command": "electron-build-tools.patches.refresh",
         "title": "Refresh Patches",
         "category": "Electron Build Tools",
         "icon": "$(refresh)",
         "enablement": "electron-build-tools:canRefreshPatches"
+      },
+      {
+        "command": "electron-build-tools.patches.search",
+        "title": "Search Patches",
+        "category": "Electron Build Tools",
+        "icon": "$(search)",
+        "enablement": "electron-build-tools:active"
       },
       {
         "command": "electron-build-tools.removeConfig",
@@ -176,13 +193,6 @@
       {
         "command": "electron-build-tools.searchDocs",
         "title": "Search Docs",
-        "category": "Electron Build Tools",
-        "icon": "$(search)",
-        "enablement": "electron-build-tools:active"
-      },
-      {
-        "command": "electron-build-tools.searchPatches",
-        "title": "Search Patches",
         "category": "Electron Build Tools",
         "icon": "$(search)",
         "enablement": "electron-build-tools:active"
@@ -680,15 +690,27 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
-          "command": "electron-build-tools.openPatch",
+          "command": "electron-build-tools.patches.copyPath",
           "when": "false"
+        },
+        {
+          "command": "electron-build-tools.patches.copyRelativePath",
+          "when": "false"
+        },
+        {
+          "command": "electron-build-tools.patches.open",
+          "when": "false"
+        },
+        {
+          "command": "electron-build-tools.patches.refresh",
+          "when": "false"
+        },
+        {
+          "command": "electron-build-tools.patches.search",
+          "when": "electron-build-tools:active"
         },
         {
           "command": "electron-build-tools.removeConfig",
-          "when": "false"
-        },
-        {
-          "command": "electron-build-tools.refreshPatches",
           "when": "false"
         },
         {
@@ -713,10 +735,6 @@
         },
         {
           "command": "electron-build-tools.searchDocs",
-          "when": "electron-build-tools:active"
-        },
-        {
-          "command": "electron-build-tools.searchPatches",
           "when": "electron-build-tools:active"
         },
         {
@@ -789,11 +807,22 @@
       ],
       "view/item/context": [
         {
-          "command": "electron-build-tools.openPatch",
-          "when": "view == electron-build-tools:patches && viewItem == patch"
+          "command": "electron-build-tools.patches.copyPath",
+          "when": "view == electron-build-tools:patches && viewItem == patch",
+          "group": "6_copypath"
         },
         {
-          "command": "electron-build-tools.refreshPatches",
+          "command": "electron-build-tools.patches.copyRelativePath",
+          "when": "view == electron-build-tools:patches && viewItem == patch",
+          "group": "6_copypath"
+        },
+        {
+          "command": "electron-build-tools.patches.open",
+          "when": "view == electron-build-tools:patches && viewItem == patch",
+          "group": "navigation"
+        },
+        {
+          "command": "electron-build-tools.patches.refresh",
           "when": "view == electron-build-tools:patches && viewItem == repo",
           "group": "inline"
         },
@@ -841,18 +870,18 @@
           "group": "navigation"
         },
         {
-          "command": "electron-build-tools.refreshPatches",
+          "command": "electron-build-tools.patches.refresh",
+          "when": "view == electron-build-tools:patches",
+          "group": "navigation"
+        },
+        {
+          "command": "electron-build-tools.patches.search",
           "when": "view == electron-build-tools:patches",
           "group": "navigation"
         },
         {
           "command": "electron-build-tools.searchDocs",
           "when": "view == electron-build-tools:docs",
-          "group": "navigation"
-        },
-        {
-          "command": "electron-build-tools.searchPatches",
-          "when": "view == electron-build-tools:patches",
           "group": "navigation"
         },
         {
