@@ -148,6 +148,11 @@
         "enablement": "electron-build-tools:canRefreshPatches"
       },
       {
+        "command": "electron-build-tools.patches.remove",
+        "title": "Remove Patch",
+        "category": "Electron Build Tools"
+      },
+      {
         "command": "electron-build-tools.patches.search",
         "title": "Search Patches",
         "category": "Electron Build Tools",
@@ -706,6 +711,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.patches.remove",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.patches.search",
           "when": "electron-build-tools:active"
         },
@@ -825,6 +834,11 @@
           "command": "electron-build-tools.patches.refresh",
           "when": "view == electron-build-tools:patches && viewItem == repo",
           "group": "inline"
+        },
+        {
+          "command": "electron-build-tools.patches.remove",
+          "when": "view == electron-build-tools:patches && viewItem == patch",
+          "group": "7_modification"
         },
         {
           "command": "electron-build-tools.removeConfig",

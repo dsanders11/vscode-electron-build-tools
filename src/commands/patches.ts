@@ -25,6 +25,7 @@ import {
   hasContentForBlobId,
   parsePatchConfig,
   querystringParse,
+  removePatch,
   setContentForBlobId,
   startProgress,
   truncateToLength,
@@ -109,6 +110,15 @@ export function registerPatchesCommands(
         } finally {
           endProgress();
         }
+      },
+    ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.patches.remove`,
+      async (patchTreeItem: Patch) => {
+        await vscode.workspace.fs.delete(patchTreeItem.resourceUri);
+        await removePatch(patchTreeItem.resourceUri);
+
+        patchesProvider.refresh();
       },
     ),
     vscode.commands.registerCommand(

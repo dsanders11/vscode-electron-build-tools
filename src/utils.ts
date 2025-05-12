@@ -147,6 +147,29 @@ export async function getPatches(directory: vscode.Uri): Promise<vscode.Uri[]> {
     );
 }
 
+export async function removePatch(patch: vscode.Uri): Promise<void> {
+  const directory = vscode.Uri.joinPath(patch, "..");
+  const patchListFile = vscode.Uri.joinPath(directory, ".patches");
+  const patchListFileContent = (
+    await vscode.workspace.fs.readFile(patchListFile)
+  )
+    .toString()
+    .trim();
+
+  const patches = patchListFileContent.split("\n");
+  const patchIndex = patches.findIndex(
+    (filename) => filename === path.basename(patch.fsPath),
+  );
+
+  if (patchIndex !== -1) {
+    patches.splice(patchIndex, 1);
+    await vscode.workspace.fs.writeFile(
+      patchListFile,
+      Buffer.from(patches.join("\n") + "\n", "utf8"),
+    );
+  }
+}
+
 export async function getFilesInPatch(
   baseDirectory: vscode.Uri,
   patch: vscode.Uri,
