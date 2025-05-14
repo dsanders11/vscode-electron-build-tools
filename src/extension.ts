@@ -403,6 +403,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
       const patchesConfig = getPatchesConfigFile(electronRoot);
       const patchesProvider = new ElectronPatchesProvider(
+        context,
         electronRoot,
         patchesConfig,
       );

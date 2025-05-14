@@ -115,10 +115,15 @@ export function registerPatchesCommands(
     vscode.commands.registerCommand(
       `${commandPrefix}.patches.remove`,
       async (patchTreeItem: Patch) => {
-        await vscode.workspace.fs.delete(patchTreeItem.resourceUri);
-        await removePatch(patchTreeItem.resourceUri);
-
-        patchesProvider.refresh();
+        await vscode.window.withProgress(
+          { location: { viewId: viewIds.PATCHES } },
+          async () => {
+            await Promise.all([
+              vscode.workspace.fs.delete(patchTreeItem.resourceUri),
+              removePatch(patchTreeItem.resourceUri),
+            ]);
+          },
+        );
       },
     ),
     vscode.commands.registerCommand(

@@ -53,11 +53,26 @@ export class ElectronPatchesProvider
   private readonly rootDirectory: vscode.Uri;
   private readonly viewPullRequestTreeItem: ViewPullRequestPatchTreeItem;
 
-  constructor(_electronRoot: vscode.Uri, patchesConfig: vscode.Uri) {
+  constructor(
+    context: vscode.ExtensionContext,
+    _electronRoot: vscode.Uri,
+    patchesConfig: vscode.Uri,
+  ) {
     this.rootDirectory = vscode.Uri.joinPath(_electronRoot, "..", "..");
     this.patchesConfig = parsePatchConfig(patchesConfig);
 
     this.viewPullRequestTreeItem = new ViewPullRequestPatchTreeItem();
+
+    const fsWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(_electronRoot, "patches/**"),
+    );
+
+    context.subscriptions.push(
+      fsWatcher,
+      fsWatcher.onDidChange(() => this.refresh()),
+      fsWatcher.onDidCreate(() => this.refresh()),
+      fsWatcher.onDidDelete(() => this.refresh()),
+    );
   }
 
   refresh(): void {
