@@ -444,7 +444,7 @@ export async function activate(context: vscode.ExtensionContext) {
         // is why both exist. Namely, VS Code displays a lock icon for
         // read-only content served by a `FileSystemProvider` (undesirable),
         // and any open editor to that content will cause constant hits to the
-        // `stat`method on the `FileSystemProvider`, which is unnecessary for
+        // `stat` method on the `FileSystemProvider`, which is unnecessary for
         // our needs.
         vscode.workspace.registerTextDocumentContentProvider(
           virtualDocumentScheme,
