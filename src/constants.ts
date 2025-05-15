@@ -67,6 +67,8 @@ export const virtualDocumentScheme = "electron-build-tools";
 
 export const virtualFsScheme = "electron-build-tools-fs";
 
+export const virtualPatchFsScheme = "electron-build-tools-patch-fs";
+
 export const buildToolsRepository = "https://github.com/electron/build-tools";
 
 export const repositoryUrl =

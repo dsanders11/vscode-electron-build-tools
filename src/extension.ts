@@ -9,6 +9,7 @@ import {
   buildToolsExecutable,
   commandPrefix,
   outputChannelName,
+  virtualPatchFsScheme,
   viewIds,
   virtualDocumentScheme,
   virtualFsScheme,
@@ -19,7 +20,10 @@ import { DocsLinkablesProvider } from "./docsLinkablesProvider";
 import { setupDocsLinting } from "./docsLinting";
 import ExtensionState from "./extensionState";
 import { ElectronFileDecorationProvider } from "./fileDecorationProvider";
-import { ElectronFileSystemProvider } from "./fileSystemProvider";
+import {
+  ElectronFileSystemProvider,
+  ElectronPatchFileSystemProvider,
+} from "./fileSystemProvider";
 import { GnFormattingProvider } from "./gnFormattingProvider";
 import { GnLinkProvider } from "./gnLinkProvider";
 import Logger from "./logging";
@@ -425,9 +429,10 @@ export async function activate(context: vscode.ExtensionContext) {
           viewIds.ELECTRON,
           new ElectronViewProvider(electronRoot),
         ),
-        // There are two custom schemes used:
+        // There are three custom schemes used:
         //   * electron-build-tools
         //   * electron-build-tools-fs
+        //   * electron-build-tools-patch-fs
         //
         // `electron-build-tools` is for providing read-only content to show
         // the user in an editor, e.g. files inside a patch, patch overview,
@@ -446,6 +451,10 @@ export async function activate(context: vscode.ExtensionContext) {
         // and any open editor to that content will cause constant hits to the
         // `stat` method on the `FileSystemProvider`, which is unnecessary for
         // our needs.
+        //
+        // `electron-build-tools-patch-fs` is a read-write `FileSystemProvider`
+        // that allows for editing files in a patch and updating the patch on
+        // save.
         vscode.workspace.registerTextDocumentContentProvider(
           virtualDocumentScheme,
           new TextDocumentContentProvider(),
@@ -454,6 +463,10 @@ export async function activate(context: vscode.ExtensionContext) {
           virtualFsScheme,
           new ElectronFileSystemProvider(),
           { isReadonly: true },
+        ),
+        vscode.workspace.registerFileSystemProvider(
+          virtualPatchFsScheme,
+          new ElectronPatchFileSystemProvider(patchesProvider),
         ),
         vscode.window.registerFileDecorationProvider(
           new ElectronFileDecorationProvider(),

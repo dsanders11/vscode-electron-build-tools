@@ -9,6 +9,7 @@ import {
   viewIds,
   virtualDocumentScheme,
   virtualFsScheme,
+  virtualPatchFsScheme,
   PatchDirectoryPrettyName,
 } from "../constants";
 import {
@@ -78,6 +79,26 @@ export function registerPatchesCommands(
         }
 
         return vscode.env.clipboard.writeText(relativePath);
+      },
+    ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.patches.editFileInPatch`,
+      (patchFileTreeItem: FileInPatchTreeItem) => {
+        const queryParams = new URLSearchParams(
+          patchFileTreeItem.resourceUri.query,
+        );
+
+        // We want to load the post-patched content of the file.
+        // blobIdA is the unpatched version, blobIdB is the patched version
+        queryParams.set("blobId", queryParams.get("blobIdB") ?? "");
+
+        const uri = patchFileTreeItem.resourceUri.with({
+          scheme: virtualPatchFsScheme,
+          query: queryParams.toString(),
+        });
+
+        // Open editable file which on save updates the patch
+        return vscode.commands.executeCommand("vscode.open", uri);
       },
     ),
     vscode.commands.registerCommand(

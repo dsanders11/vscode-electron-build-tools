@@ -107,6 +107,16 @@ export class ElectronPatchesProvider
     }
   }
 
+  async getCheckoutDirectoryForPatchDirectory(
+    patchDirectory: vscode.Uri,
+  ): Promise<vscode.Uri> {
+    return getCheckoutDirectoryForPatchDirectory(
+      this.rootDirectory,
+      await this.patchesConfig,
+      patchDirectory,
+    );
+  }
+
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }
@@ -185,11 +195,8 @@ export class ElectronPatchesProvider
         const patchDirectory = vscode.Uri.file(
           path.dirname(element.resourceUri.fsPath),
         );
-        const checkoutDirectory = getCheckoutDirectoryForPatchDirectory(
-          this.rootDirectory,
-          await this.patchesConfig,
-          patchDirectory,
-        );
+        const checkoutDirectory =
+          await this.getCheckoutDirectoryForPatchDirectory(patchDirectory);
         const patchedFilenames = await getFilesInPatch(
           checkoutDirectory,
           element.resourceUri,

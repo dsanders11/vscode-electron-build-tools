@@ -246,7 +246,20 @@ export function parsePatchMetadata(patchContents: string) {
   const subjectAndDescription =
     /Subject: (.*?)\n\n([\s\S]*?)\s*(?=diff)/ms.exec(patchContents);
 
+  const regexMatches = patchContents.matchAll(
+    new RegExp(patchedFilenameRegex, "gs"),
+  );
+
+  const files: { filename: string; blobIdA: string; blobIdB: string }[] = [];
+
+  for (const [_, filename, blobIdA, blobIdB] of regexMatches) {
+    files.push({ filename, blobIdA, blobIdB });
+  }
+
   return {
+    preamble: /^(From 0000000000000000000000000000000000000000 .*$)/m.exec(
+      patchContents,
+    )![1],
     from: /^From: ((.*)<(\S*)>)$/m.exec(patchContents)![1],
     date: /^Date: (.*)$/m.exec(patchContents)![1],
     subject: subjectAndDescription![1]
@@ -254,9 +267,8 @@ export function parsePatchMetadata(patchContents: string) {
       .map((text) => text.trim())
       .join(" "),
     description: subjectAndDescription![2],
-    filenames: Array.from(
-      patchContents.matchAll(new RegExp(patchedFilenameRegex, "gs")),
-    ).map((match) => match[1]),
+    files,
+    filenames: files.map((file) => file.filename),
   };
 }
 
@@ -565,7 +577,7 @@ async function getContentForBlobId(
       cwd: checkoutDirectory.fsPath,
     });
 
-    return stdout.trim();
+    return stdout;
   } catch (err) {
     if (
       err instanceof Error &&
@@ -791,4 +803,54 @@ export function applyPatch(source: string, patch: string) {
   }
 
   return patchedResult;
+}
+
+export async function gitHashObject(cwd: vscode.Uri, content: string) {
+  let child: childProcess.ChildProcess;
+
+  const stdoutPromise = new Promise<string>((resolve, reject) => {
+    child = childProcess.exec(
+      "git hash-object --stdin -w",
+      {
+        cwd: cwd.fsPath,
+        encoding: "utf8",
+      },
+      (error, stdout) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(stdout);
+        }
+      },
+    );
+  });
+
+  child!.stdin!.write(content);
+  child!.stdin!.end();
+
+  return (await stdoutPromise).trim();
+}
+
+export async function gitDiffBlobs(
+  cwd: vscode.Uri,
+  blobIdA: string,
+  blobIdB: string,
+) {
+  if (!/^[0-9a-f]+$/.test(blobIdA)) {
+    throw new Error(`Invalid blob ID: ${blobIdA}`);
+  }
+
+  if (!/^[0-9a-f]+$/.test(blobIdB)) {
+    throw new Error(`Invalid blob ID: ${blobIdB}`);
+  }
+
+  const { stdout } = await exec(
+    `git diff --full-index ${blobIdA}..${blobIdB}`,
+    {
+      encoding: "utf8",
+      cwd: cwd.fsPath,
+    },
+  );
+
+  return stdout;
 }

@@ -136,6 +136,11 @@
         "category": "Electron Build Tools"
       },
       {
+        "command": "electron-build-tools.patches.editFileInPatch",
+        "title": "Edit File in Patch",
+        "category": "Electron Build Tools"
+      },
+      {
         "command": "electron-build-tools.patches.open",
         "title": "Open Patch",
         "category": "Electron Build Tools"
@@ -708,6 +713,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.patches.editFileInPatch",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.patches.open",
           "when": "false"
         },
@@ -833,6 +842,11 @@
           "command": "electron-build-tools.patches.copyRelativePath",
           "when": "view == electron-build-tools:patches && (viewItem == patch || viewItem === file-in-patch)",
           "group": "6_copypath"
+        },
+        {
+          "command": "electron-build-tools.patches.editFileInPatch",
+          "when": "view == electron-build-tools:patches && viewItem == file-in-patch",
+          "group": "1_modification"
         },
         {
           "command": "electron-build-tools.patches.open",
