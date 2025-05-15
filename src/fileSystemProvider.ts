@@ -59,7 +59,7 @@ export class ElectronFileSystemProvider implements vscode.FileSystemProvider {
     throw new vscode.FileSystemError("Method not implemented.");
   }
 
-  delete(): void {
+  delete(_uri: vscode.Uri): void {
     throw new vscode.FileSystemError("Method not implemented.");
   }
 
@@ -71,6 +71,26 @@ export class ElectronFileSystemProvider implements vscode.FileSystemProvider {
 export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider {
   constructor(private readonly patchesProvider: ElectronPatchesProvider) {
     super();
+  }
+
+  async delete(uri: vscode.Uri): Promise<void> {
+    const queryParams = new URLSearchParams(uri.query);
+    const patchFileUri = vscode.Uri.parse(queryParams.get("patch")!, true);
+
+    const patchDirectory = vscode.Uri.file(path.dirname(patchFileUri.fsPath));
+    const cwd =
+      await this.patchesProvider.getCheckoutDirectoryForPatchDirectory(
+        patchDirectory,
+      );
+
+    // Update the file so that its start and end blob IDs are the same,
+    // which will result in an empty diff and the file removed from the patch
+    await this.updateFileInPatch(
+      patchFileUri,
+      uri,
+      cwd,
+      queryParams.get("blobIdA")!,
+    );
   }
 
   async writeFile(uri: vscode.Uri, content: Uint8Array): Promise<void> {
@@ -88,6 +108,15 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
       Buffer.from(content).toString("utf8"),
     );
 
+    await this.updateFileInPatch(patchFileUri, uri, cwd, newBlobId);
+  }
+
+  private async updateFileInPatch(
+    patchFileUri: vscode.Uri,
+    uri: vscode.Uri,
+    cwd: vscode.Uri,
+    newBlobId: string,
+  ) {
     // Parse the existing patch file to get the metadata
     const patchContents = (
       await vscode.workspace.fs.readFile(patchFileUri)

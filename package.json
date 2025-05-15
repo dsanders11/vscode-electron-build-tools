@@ -163,6 +163,11 @@
         "category": "Electron Build Tools"
       },
       {
+        "command": "electron-build-tools.patches.removeFileFromPatch",
+        "title": "Remove File from Patch",
+        "category": "Electron Build Tools"
+      },
+      {
         "command": "electron-build-tools.patches.search",
         "title": "Search Patches",
         "category": "Electron Build Tools",
@@ -733,6 +738,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.patches.removeFileFromPatch",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.patches.search",
           "when": "electron-build-tools:active"
         },
@@ -867,6 +876,11 @@
           "command": "electron-build-tools.patches.remove",
           "when": "view == electron-build-tools:patches && viewItem == patch",
           "group": "7_modification"
+        },
+        {
+          "command": "electron-build-tools.patches.removeFileFromPatch",
+          "when": "view == electron-build-tools:patches && viewItem == file-in-patch",
+          "group": "1_modification"
         },
         {
           "command": "electron-build-tools.removeConfig",

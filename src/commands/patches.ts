@@ -175,6 +175,16 @@ export function registerPatchesCommands(
       },
     ),
     vscode.commands.registerCommand(
+      `${commandPrefix}.patches.removeFileFromPatch`,
+      (patchFileTreeItem: FileInPatchTreeItem) => {
+        const uri = patchFileTreeItem.resourceUri.with({
+          scheme: virtualPatchFsScheme,
+        });
+
+        return vscode.workspace.fs.delete(uri);
+      },
+    ),
+    vscode.commands.registerCommand(
       `${commandPrefix}.removePullRequestPatch`,
       (treeItem: PullRequestTreeItem) => {
         patchesProvider.removePr(treeItem.pullRequest);
