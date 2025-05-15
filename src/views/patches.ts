@@ -284,7 +284,7 @@ class PatchOverview extends vscode.TreeItem {
   }
 }
 
-class FileInPatchTreeItem extends vscode.TreeItem {
+export class FileInPatchTreeItem extends vscode.TreeItem {
   constructor(
     public resourceUri: vscode.Uri,
     checkoutDirectory: vscode.Uri,
@@ -303,6 +303,7 @@ class FileInPatchTreeItem extends vscode.TreeItem {
       arguments: [this.resourceUri, this.label],
       title: "Show Patched File Diff",
     };
+    this.contextValue = "file-in-patch";
   }
 }
 

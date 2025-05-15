@@ -30,11 +30,12 @@ import {
   startProgress,
   truncateToLength,
 } from "../utils";
-import type {
-  ElectronPatchesProvider,
-  Patch,
-  PatchDirectory,
-  PullRequestTreeItem,
+import {
+  type ElectronPatchesProvider,
+  FileInPatchTreeItem,
+  type Patch,
+  type PatchDirectory,
+  type PullRequestTreeItem,
 } from "../views/patches";
 
 interface SearchPatchesQuickPickItem extends vscode.QuickPickItem {
@@ -47,21 +48,36 @@ export function registerPatchesCommands(
   patchesProvider: ElectronPatchesProvider,
   patchesView: vscode.TreeView<vscode.TreeItem>,
 ) {
+  const chromiumDirectory = vscode.Uri.joinPath(electronRoot, "..");
   const rootDirectory = vscode.Uri.joinPath(electronRoot, "..", "..");
 
   context.subscriptions.push(
     vscode.commands.registerCommand(
       `${commandPrefix}.patches.copyPath`,
-      (patchTreeItem: Patch) => {
+      (patchTreeItem: Patch | FileInPatchTreeItem) => {
         return vscode.env.clipboard.writeText(patchTreeItem.resourceUri.fsPath);
       },
     ),
     vscode.commands.registerCommand(
       `${commandPrefix}.patches.copyRelativePath`,
-      (patchTreeItem: Patch) => {
-        return vscode.env.clipboard.writeText(
-          path.relative(electronRoot.path, patchTreeItem.resourceUri.path),
-        );
+      (patchTreeItem: Patch | FileInPatchTreeItem) => {
+        let relativePath: string;
+
+        if (patchTreeItem instanceof FileInPatchTreeItem) {
+          // For files in a patch, make them relative to the top-level Chromium directory
+          relativePath = path.relative(
+            chromiumDirectory.path,
+            patchTreeItem.resourceUri.path,
+          );
+        } else {
+          // For patches, make them relative to the Electron root directory
+          relativePath = path.relative(
+            electronRoot.path,
+            patchTreeItem.resourceUri.path,
+          );
+        }
+
+        return vscode.env.clipboard.writeText(relativePath);
       },
     ),
     vscode.commands.registerCommand(
@@ -79,6 +95,17 @@ export function registerPatchesCommands(
             query: queryParams.toString(),
           });
         }
+
+        return vscode.commands.executeCommand("vscode.open", uri);
+      },
+    ),
+    vscode.commands.registerCommand(
+      `${commandPrefix}.patches.openFileInPatch`,
+      (patchFileTreeItem: FileInPatchTreeItem) => {
+        const uri = patchFileTreeItem.resourceUri.with({
+          scheme: "file",
+          query: "",
+        });
 
         return vscode.commands.executeCommand("vscode.open", uri);
       },

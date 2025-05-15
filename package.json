@@ -141,6 +141,11 @@
         "category": "Electron Build Tools"
       },
       {
+        "command": "electron-build-tools.patches.openFileInPatch",
+        "title": "Open File",
+        "category": "Electron Build Tools"
+      },
+      {
         "command": "electron-build-tools.patches.refresh",
         "title": "Refresh Patches",
         "category": "Electron Build Tools",
@@ -707,6 +712,10 @@
           "when": "false"
         },
         {
+          "command": "electron-build-tools.patches.openFileInPatch",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.patches.refresh",
           "when": "false"
         },
@@ -817,17 +826,22 @@
       "view/item/context": [
         {
           "command": "electron-build-tools.patches.copyPath",
-          "when": "view == electron-build-tools:patches && viewItem == patch",
+          "when": "view == electron-build-tools:patches && (viewItem == patch || viewItem === file-in-patch)",
           "group": "6_copypath"
         },
         {
           "command": "electron-build-tools.patches.copyRelativePath",
-          "when": "view == electron-build-tools:patches && viewItem == patch",
+          "when": "view == electron-build-tools:patches && (viewItem == patch || viewItem === file-in-patch)",
           "group": "6_copypath"
         },
         {
           "command": "electron-build-tools.patches.open",
           "when": "view == electron-build-tools:patches && viewItem == patch",
+          "group": "navigation"
+        },
+        {
+          "command": "electron-build-tools.patches.openFileInPatch",
+          "when": "view == electron-build-tools:patches && viewItem == file-in-patch",
           "group": "navigation"
         },
         {
