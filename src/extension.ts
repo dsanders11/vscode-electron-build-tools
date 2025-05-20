@@ -499,7 +499,7 @@ export async function activate(context: vscode.ExtensionContext) {
           new DocsLinkCompletionProvider(linkableProvider),
           ...DocsLinkCompletionProvider.TRIGGER_CHARACTERS,
         ),
-        registerChatParticipant(context, electronRoot),
+        registerChatParticipant(context, electronRoot, patchesProvider),
       );
       registerElectronBuildToolsCommands(
         context,

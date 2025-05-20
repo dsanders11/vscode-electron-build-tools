@@ -1,8 +1,10 @@
 import * as vscode from "vscode";
 
 import { chatParticipantId } from "../constants";
+import { type ElectronPatchesProvider } from "../views/patches";
 
 import { findUpstreamFiles } from "./commands/findUpstreamFiles";
+import { listPatches } from "./commands/listPatches";
 import { upgradesFindCL } from "./commands/upgradesFindCL";
 import { searchCLs } from "./commands/searchCLs";
 import { getPrivateTools } from "./tools";
@@ -10,6 +12,7 @@ import { getPrivateTools } from "./tools";
 export function registerChatParticipant(
   { extension, extensionUri }: vscode.ExtensionContext,
   electronRoot: vscode.Uri,
+  patchesProvider: ElectronPatchesProvider,
 ) {
   const chromiumRoot = vscode.Uri.joinPath(electronRoot, "..");
 
@@ -24,6 +27,15 @@ export function registerChatParticipant(
     if (request.command === "findUpstreamFiles") {
       await findUpstreamFiles(chromiumRoot, request, stream, token);
       return {};
+    } else if (request.command === "listPatches") {
+      await listPatches(
+        chromiumRoot,
+        electronRoot,
+        patchesProvider,
+        request,
+        stream,
+        token,
+      );
     } else if (
       request.command === "upgradesFindCL" ||
       request.command === "upgradesFindCLAdvanced"

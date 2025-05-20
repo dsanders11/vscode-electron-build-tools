@@ -53,6 +53,10 @@
             "description": "Attempt to find upstream Chromium files that Electron files are derived from."
           },
           {
+            "name": "listPatches",
+            "description": "List the patches that touch a given filename."
+          },
+          {
             "name": "upgradesFindCL",
             "description": "Attempt to find the Chromium CL related to the current sync/build failure."
           },
