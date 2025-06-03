@@ -806,9 +806,12 @@ export async function upgradesFindCL(
     cwd: electronRoot.fsPath,
     encoding: "utf8",
   }).then(({ stdout }) => stdout.trim());
-  if (branchName !== "roller/chromium/main") {
+  if (
+    branchName !== "roller/chromium/main" &&
+    !/^roller\/chromium\/\d+-x-y$/.test(branchName)
+  ) {
     stream.markdown(
-      "Confirm you have a Chromium roll branch checked out - only `roller/chromium/main is supported for now.",
+      "Confirm you have a Chromium roll branch checked out - only `roller/chromium/main` and `roller/chromium/*-x-y` are supported.",
     );
     return {};
   }
@@ -825,7 +828,7 @@ export async function upgradesFindCL(
     compareChromiumVersions(versions.newVersion, versions.previousVersion) <= 0
   ) {
     stream.markdown(
-      "Chromium version in this branch is the same or older than `origin/main`.",
+      "Chromium version in this branch is the same or older than its parent.",
     );
     return {};
   }
