@@ -246,7 +246,7 @@ export async function searchChromiumLog(
     },
   };
 
-  const lastToolCall = toolCallRounds.at(-1)!.toolCalls[0];
+  const lastToolCall = toolCallRounds.at(-1)?.toolCalls[0];
 
   // If the last tool call was getting details for a commit, then we assume there
   // are more commits available in the log to analyze if the user wants to
