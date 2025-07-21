@@ -181,11 +181,15 @@ export class AnalyzeSyncErrorPrompt extends PromptElement<AnalyzeSyncErrorProps>
           <br />
           {this.props.errorText}
         </UserMessage>
-        <UserMessage>
-          Here is the output of `git diff` after the patch failed to apply:
-          <br />
-          {this.props.gitDiffOutput}
-        </UserMessage>
+        {this.props.gitDiffOutput ? (
+          <UserMessage>
+            Here is the output of `git diff` after the patch failed to apply:
+            <br />
+            {this.props.gitDiffOutput}
+          </UserMessage>
+        ) : (
+          <></>
+        )}
         <ToolCalls
           chromiumRoot={this.props.chromiumRoot}
           toolCallRounds={this.props.toolCallRounds}
