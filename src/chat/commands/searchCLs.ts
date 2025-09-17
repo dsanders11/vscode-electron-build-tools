@@ -139,7 +139,7 @@ export async function searchChromiumLog(
       let toolCall: vscode.LanguageModelToolCallPart | undefined;
 
       if (
-        /the next page of the ?(?:Chromium)? log|I will now ?(?:proceed to)? check page|check the next page|continue (?:analyzing|checking|searching)|continue to ?(?:the next)? page|Would you like to check page/.test(
+        /the next page of the ?(?:Chromium)? log|I will now ?(?:proceed to)? check page|check the next page|continue (?:analyzing|checking|searching)|continue to ?(?:the next)? page|Would you like to check page|Please provide page/.test(
           responseStr,
         )
       ) {
