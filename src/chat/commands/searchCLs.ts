@@ -11,7 +11,11 @@ import {
   EmptyLogPageError,
 } from "../tools";
 import { ToolResultMetadata, ToolCallRound } from "../toolsPrompts";
-import { compareChromiumVersions, showQuickPick } from "../utils";
+import {
+  compareChromiumVersions,
+  getChromiumVersions,
+  showQuickPick,
+} from "../utils";
 
 const CONTINUE_SEARCHING_PROMPT = "continue";
 
@@ -266,7 +270,7 @@ export async function searchChromiumLog(
 
 export async function searchCLs(
   chromiumRoot: vscode.Uri,
-  _electronRoot: vscode.Uri,
+  electronRoot: vscode.Uri,
   tools: vscode.LanguageModelChatTool[],
   request: vscode.ChatRequest,
   context: vscode.ChatContext,
@@ -317,10 +321,38 @@ export async function searchCLs(
       },
     ).then(({ stdout }) => stdout.trim().split("\n"));
 
-    let quickPick = vscode.window.createQuickPick();
-    quickPick.items = versions.map((version) => ({
+    let chromiumVersions: {
+      previousVersion: string | undefined;
+      newVersion: string | undefined;
+    } = { previousVersion: undefined, newVersion: undefined };
+    const versionItems: vscode.QuickPickItem[] = versions.map((version) => ({
       label: version,
     }));
+
+    const branchName = await exec("git rev-parse --abbrev-ref HEAD", {
+      cwd: electronRoot.fsPath,
+      encoding: "utf8",
+    }).then(({ stdout }) => stdout.trim());
+    if (
+      branchName === "roller/chromium/main" ||
+      /^roller\/chromium\/\d+-x-y$/.test(branchName)
+    ) {
+      chromiumVersions = await getChromiumVersions(electronRoot, branchName);
+      if (chromiumVersions.previousVersion) {
+        versionItems.unshift(
+          {
+            label: chromiumVersions.previousVersion,
+          },
+          {
+            label: "All Versions",
+            kind: vscode.QuickPickItemKind.Separator,
+          },
+        );
+      }
+    }
+
+    let quickPick = vscode.window.createQuickPick();
+    quickPick.items = versionItems;
     quickPick.title = "Search Chromium CLs";
     quickPick.placeholder = "Choose Chromium start version";
     quickPick.step = 1;
@@ -332,14 +364,29 @@ export async function searchCLs(
       return {};
     }
 
-    const remainingVersions = versions.filter(
-      (version) => compareChromiumVersions(version, startChromiumVersion!) > 0,
-    );
+    const remainingVersions: vscode.QuickPickItem[] = versions
+      .filter(
+        (version) =>
+          compareChromiumVersions(version, startChromiumVersion!) > 0,
+      )
+      .map((version) => ({
+        label: version,
+      }));
+
+    if (chromiumVersions.newVersion) {
+      remainingVersions.unshift(
+        {
+          label: chromiumVersions.newVersion,
+        },
+        {
+          label: "All Versions",
+          kind: vscode.QuickPickItemKind.Separator,
+        },
+      );
+    }
 
     quickPick = vscode.window.createQuickPick();
-    quickPick.items = remainingVersions.map((version) => ({
-      label: version,
-    }));
+    quickPick.items = remainingVersions;
     quickPick.title = "Search Chromium CLs";
     quickPick.placeholder = "Choose Chromium end version";
     quickPick.step = 2;
