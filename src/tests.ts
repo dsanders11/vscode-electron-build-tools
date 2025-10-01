@@ -355,6 +355,8 @@ export async function createTestController(
           type: "node",
           request: "attach",
           port: 9229,
+          // XXX: On macOS Chromium's --wait-for-debugger flag waits 60 seconds
+          timeout: 61_000,
           continueOnAttach: true,
         },
         { testRun: run, parentSession: vscode.debug.activeDebugSession },
