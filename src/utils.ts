@@ -34,6 +34,8 @@ const remoteFileContentCache = new LRU<string, string>({
   sizeCalculation: (value) => value.length,
 });
 
+const EMPTY_BLOB_SHA = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391";
+
 export const patchedFilenameRegex =
   /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:[\w \t]+ mode \d+[\r\n]+)*index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|(?=\s--\s.+$)|$)/;
 
@@ -842,6 +844,33 @@ export async function gitDiffBlobs(
 
   if (!/^[0-9a-f]+$/.test(blobIdB)) {
     throw new Error(`Invalid blob ID: ${blobIdB}`);
+  }
+
+  // Special case of new file being added
+  if (/^[0]+$/.test(blobIdA)) {
+    // Git doesn't like the all-zero blob ID, so use the empty blob SHA instead
+    // The empty blob SHA is the SHA of an empty file (e.g., /dev/null)
+    let { stdout: fileDiff } = await exec(
+      `git diff --full-index ${EMPTY_BLOB_SHA}..${blobIdB}`,
+      {
+        encoding: "utf8",
+        cwd: cwd.fsPath,
+      },
+    );
+
+    // Restore the original all zero blob ID in the diff output
+    fileDiff = fileDiff.replaceAll(`a/${EMPTY_BLOB_SHA}`, `a/${blobIdA}`);
+
+    // Replace the original filename with /dev/null
+    fileDiff = fileDiff.replaceAll(`--- a/${blobIdA}`, `--- /dev/null`);
+
+    // Final fix ups
+    fileDiff = fileDiff.replaceAll(
+      `index ${EMPTY_BLOB_SHA}..${blobIdB} 100644`,
+      `new file mode 100644\nindex ${blobIdA}..${blobIdB}`,
+    );
+
+    return fileDiff;
   }
 
   const { stdout } = await exec(
