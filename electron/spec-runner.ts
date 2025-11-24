@@ -21,7 +21,7 @@ export async function setupSpecRunner(
   const utils = await import(
     pathToFileURL(path.resolve(SCRIPT_DIR, "lib", "utils.js")).toString()
   );
-  const { YARN_VERSION } = await import(
+  const { YARN_SCRIPT_PATH, YARN_VERSION } = await import(
     pathToFileURL(path.resolve(SCRIPT_DIR, "yarn.js")).toString()
   );
 
@@ -51,9 +51,16 @@ export async function setupSpecRunner(
         hasher.update(
           fs.readFileSync(path.resolve(electronRoot, "spec", "package.json")),
         );
-        hasher.update(
-          fs.readFileSync(path.resolve(electronRoot, "spec", "yarn.lock")),
-        );
+        try {
+          hasher.update(
+            fs.readFileSync(path.resolve(electronRoot, "spec", "yarn.lock")),
+          );
+        } catch {
+          // With the Yarn v4 transition, spec/yarn.lock may not exist anymore
+          hasher.update(
+            fs.readFileSync(path.resolve(electronRoot, "yarn.lock")),
+          );
+        }
         hasher.update(
           fs.readFileSync(path.resolve(SCRIPT_DIR, "spec-runner.js")),
         );
@@ -99,17 +106,26 @@ export async function setupSpecRunner(
         recursive: true,
       });
     }
-    const { status, stderr } = childProcess.spawnSync(
-      "e",
-      ["d", "npx", `yarn@${YARN_VERSION}`, "install", "--frozen-lockfile"],
-      {
-        env,
-        cwd: dir,
-        stdio: "pipe",
-        shell: process.platform === "win32",
-        encoding: "utf-8",
-      },
-    );
+    let yarnArgs;
+    if (YARN_SCRIPT_PATH) {
+      yarnArgs = ["d", YARN_SCRIPT_PATH, "install", "--immutable"];
+    } else {
+      yarnArgs = [
+        "d",
+        "npx",
+        `yarn@${YARN_VERSION}`,
+        "install",
+        "--frozen-lockfile",
+      ];
+    }
+
+    const { status, stderr } = childProcess.spawnSync("e", yarnArgs, {
+      env,
+      cwd: dir,
+      stdio: "pipe",
+      shell: process.platform === "win32",
+      encoding: "utf-8",
+    });
     if (status !== 0 && !process.env.IGNORE_YARN_INSTALL_ERROR) {
       if (stderr.includes("missing any VC++ toolset")) {
         throw new Error(
