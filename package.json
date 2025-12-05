@@ -1087,7 +1087,7 @@
     "@types/node": "^22.8.6",
     "@types/uuid": "^10.0.0",
     "@types/vscode": "1.96.0",
-    "esbuild": "^0.24.2",
+    "esbuild": "^0.25.0",
     "eslint": "^9.13.0",
     "husky": "^9.1.6",
     "json-schema-to-typescript": "^15.0.2",
