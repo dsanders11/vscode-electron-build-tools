@@ -18,7 +18,8 @@ export class ElectronFileDecorationProvider
       uri.scheme === virtualDocumentScheme ||
       uri.scheme === virtualFsScheme
     ) {
-      const { isPatch, blobIdA, blobIdB, status } = querystringParse(uri.query);
+      const { isPatch, blobIdA, blobIdB, oldFilename, status } =
+        querystringParse(uri.query);
 
       if (blobIdA && blobIdB) {
         if (/^[0]+$/.test(blobIdA)) {
@@ -34,6 +35,12 @@ export class ElectronFileDecorationProvider
             "D",
             "Deleted",
             new vscode.ThemeColor("gitDecoration.deletedResourceForeground"),
+          );
+        } else if (oldFilename) {
+          return new vscode.FileDecoration(
+            "R",
+            "Renamed",
+            new vscode.ThemeColor("gitDecoration.renamedResourceForeground"),
           );
         } else {
           return new vscode.FileDecoration(

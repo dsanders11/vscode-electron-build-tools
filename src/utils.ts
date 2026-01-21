@@ -37,7 +37,7 @@ const remoteFileContentCache = new LRU<string, string>({
 const EMPTY_BLOB_SHA = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391";
 
 export const patchedFilenameRegex =
-  /diff --git a\/\S+ b\/(\S+)[\r\n]+(?:[\w \t]+ mode \d+[\r\n]+)*index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|(?=\s--\s.+$)|$)/;
+  /diff --git a\/(\S+) b\/(\S+)[\r\n]+(?:similarity index \d+%[\r\n]+)?(?:rename from \S+[\r\n]+rename to \S+[\r\n]+)?(?:[\w \t]+ mode \d+[\r\n]+)*index (\S+)\.\.(\S+).*?(?:(?=\ndiff)|(?=\s--\s.+$)|$)/;
 
 export interface DocLink {
   description: string;
@@ -182,13 +182,20 @@ export async function getFilesInPatch(
     new RegExp(patchedFilenameRegex, "gs"),
   );
 
-  for (const [_, filename, blobIdA, blobIdB] of regexMatches) {
+  for (const [_, oldFilename, filename, blobIdA, blobIdB] of regexMatches) {
     // Retain the scheme and query params from the patch URI, but tweak a few params
     const queryParams = new URLSearchParams(patch.query);
     queryParams.set("patch", patch.toString());
     queryParams.delete("blobId");
     queryParams.set("blobIdA", blobIdA);
     queryParams.set("blobIdB", blobIdB);
+
+    if (oldFilename !== filename) {
+      queryParams.set(
+        "oldFilename",
+        vscode.Uri.joinPath(baseDirectory, oldFilename).fsPath,
+      );
+    }
 
     const ghRepo = checkoutDirectoryGitHubRepo[baseDirectory.path];
 
@@ -252,10 +259,15 @@ export function parsePatchMetadata(patchContents: string) {
     new RegExp(patchedFilenameRegex, "gs"),
   );
 
-  const files: { filename: string; blobIdA: string; blobIdB: string }[] = [];
+  const files: {
+    oldFilename: string;
+    filename: string;
+    blobIdA: string;
+    blobIdB: string;
+  }[] = [];
 
-  for (const [_, filename, blobIdA, blobIdB] of regexMatches) {
-    files.push({ filename, blobIdA, blobIdB });
+  for (const [_, oldFilename, filename, blobIdA, blobIdB] of regexMatches) {
+    files.push({ oldFilename, filename, blobIdA, blobIdB });
   }
 
   return {
@@ -532,7 +544,7 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
     );
     let filePatch: string | undefined = undefined;
 
-    for (const [patch, filename] of regexMatches) {
+    for (const [patch, _oldFilename, filename] of regexMatches) {
       if (filename === relativePath) {
         filePatch = patch;
         break;

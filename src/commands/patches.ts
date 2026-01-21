@@ -252,7 +252,9 @@ export function registerPatchesCommands(
     vscode.commands.registerCommand(
       `${commandPrefix}.showPatchedFileDiff`,
       (file: vscode.Uri, _patchedFilename: string) => {
-        const { blobIdA, blobIdB, patch } = querystringParse(file.query);
+        const { blobIdA, blobIdB, patch, oldFilename } = querystringParse(
+          file.query,
+        );
 
         if (!blobIdA || !blobIdB || !patch) {
           throw new Error("Required query params missing");
@@ -282,6 +284,7 @@ export function registerPatchesCommands(
           queryParams.set("view", "contents");
 
           const originalFile = file.with({
+            path: oldFilename ? oldFilename : file.path,
             scheme: virtualDocumentScheme,
             query: queryParams.toString(),
           });
