@@ -658,7 +658,7 @@ export async function findElectronRoot(
         string
       >;
 
-      if (name === "electron") {
+      if (name === "electron" || name === "@electron-ci/dev-root") {
         return vscode.Uri.joinPath(workspaceFolder.uri, possibleRoot);
       }
     } catch {
