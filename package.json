@@ -11,8 +11,8 @@
   "license": "MIT",
   "version": "0.0.0",
   "engines": {
-    "node": ">=18",
-    "vscode": "^1.96.0"
+    "node": ">=22.12.0",
+    "vscode": "^1.101.0"
   },
   "activationEvents": [
     "workspaceContains:electron_resources.grd",
@@ -1061,7 +1061,7 @@
     "vscode:prepublish": "run-p \"esbuild:* -- {1}\" -- --minify",
     "esbuild": "run-p \"esbuild:* -- {1}\" -- --sourcemap",
     "watch": "run-p \"esbuild:* -- {1} {2}\" -- --sourcemap --watch",
-    "esbuild:extension": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --external:original-fs --format=cjs --platform=node",
+    "esbuild:extension": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --external:original-fs --external:@electron/fiddle-core --external:@electron/asar --format=cjs --platform=node",
     "esbuild:list-tests": "esbuild ./electron/listMochaTests.ts --bundle --outfile=out/electron/listMochaTests.js --external:electron --format=cjs --platform=node",
     "esbuild:mocha-interface": "esbuild ./electron/mocha-interface.ts --bundle --outfile=out/electron/mocha-interface.js --format=cjs --platform=node",
     "esbuild:mocha-reporter": "esbuild ./electron/mocha-reporter.ts --bundle --outfile=out/electron/mocha-reporter.js --format=cjs --platform=node",
@@ -1103,7 +1103,7 @@
   },
   "dependencies": {
     "@electron/docs-parser": "^2.0.0",
-    "@electron/fiddle-core": "^1.4.0",
+    "@electron/fiddle-core": "^2.0.1",
     "@octokit/rest": "^19.0.4",
     "@vscode/prompt-tsx": "^0.3.0-alpha.20",
     "diff": "^5.0.0",
