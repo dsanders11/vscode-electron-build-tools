@@ -1106,7 +1106,7 @@
     "@electron/fiddle-core": "^2.0.1",
     "@octokit/rest": "^19.0.4",
     "@vscode/prompt-tsx": "^0.3.0-alpha.20",
-    "diff": "^5.0.0",
+    "diff": "^5.2.2",
     "lru-cache": "^7.14.0",
     "markdown-it": "^14.1.0",
     "markdown-it-emoji": "^3.0.0",
