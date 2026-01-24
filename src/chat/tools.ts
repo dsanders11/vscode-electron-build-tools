@@ -4,11 +4,14 @@ import LRU from "lru-cache";
 import * as vscode from "vscode";
 
 import { lmToolNames } from "../constants";
+import Logger from "../logging";
 import { exec } from "../utils";
+import { getFilenamesFromBuildError } from "./utils";
 
 const chromiumVersionRegex = /\d+\.\d+\.\d+\.\d+/;
 const commitLogWithNameStatusRegex =
   /commit ([0-9a-f]+)\n(.*?)\n\n((?:[A|M|D]|[R|C]\d*)\s.*?)\n?(?:\n|$)(?:(?=commit (?:[0-9a-f]+))|$)/;
+const commitLogOneLineRegex = /([0-9a-f]+) .*/;
 
 export class EmptyLogPageError extends Error {}
 
@@ -28,6 +31,18 @@ async function validateGitToolFilename(
   // Use the dirname for the file as the working directory so
   // that we properly handle filenames in nested git trees
   const cwd = path.dirname(vscode.Uri.joinPath(chromiumRoot, filename).fsPath);
+
+  // Confirm that cwd is within the main Chromium git tree
+  const gitRoot = path.normalize(
+    await exec("git rev-parse --show-toplevel", {
+      cwd,
+      encoding: "utf8",
+    }).then(({ stdout }) => stdout.trim()),
+  );
+
+  if (gitRoot !== chromiumRoot.fsPath) {
+    throw new Error(`File is not in the main Chromium git tree: ${filename}`);
+  }
 
   return { cwd };
 }
@@ -183,6 +198,7 @@ export interface ChromiumGitLogToolParameters {
   pageSize: number;
   continueAfter?: string;
   reverse?: boolean;
+  errorText?: string;
 }
 
 async function chromiumGitLog(
@@ -193,6 +209,7 @@ async function chromiumGitLog(
   pageSize: number,
   continueAfter?: string,
   reverse?: boolean,
+  errorText?: string,
 ) {
   if (!chromiumVersionRegex.test(startVersion)) {
     throw new Error(`Invalid Chromium version: ${startVersion}`);
@@ -200,6 +217,47 @@ async function chromiumGitLog(
 
   if (!chromiumVersionRegex.test(endVersion)) {
     throw new Error(`Invalid Chromium version: ${endVersion}`);
+  }
+
+  const fileLogCommits: string[] = [];
+
+  // If error text is provided, try to extract filenames and then pull the
+  // log for those files and prepend it to logCommits so they're checked first
+  if (errorText) {
+    const filenames = getFilenamesFromBuildError(errorText).map((filename) =>
+      path.relative(
+        chromiumRoot.fsPath,
+        path.join(chromiumRoot.fsPath, "out", "Default", filename),
+      ),
+    );
+
+    for (const filename of filenames) {
+      let cwd: string | undefined;
+
+      try {
+        ({ cwd } = await validateGitToolFilename(chromiumRoot, filename));
+      } catch {
+        // Ignore invalid filenames
+        Logger.info(`Skipping invalid filename for git log: ${filename}`);
+        continue;
+      }
+
+      const fileLog = await exec(
+        `git log --oneline --no-abbrev-commit ${startVersion}..${endVersion} ${path.basename(filename)}`,
+        {
+          cwd,
+          encoding: "utf8",
+        },
+      ).then(({ stdout }) => stdout.trim());
+
+      const regexMatches = fileLog.matchAll(
+        new RegExp(commitLogOneLineRegex, "g"),
+      );
+
+      for (const [, commit] of regexMatches) {
+        fileLogCommits.push(commit);
+      }
+    }
   }
 
   let logCommits =
@@ -241,6 +299,15 @@ async function chromiumGitLog(
     }
 
     chromiumGitLogCache.set(`${startVersion}..${endVersion}`, logCommits);
+  }
+
+  if (fileLogCommits.length > 0) {
+    // Make sure there's no duplication of file-specific commits, and
+    // prepend them to the logCommits list so they're checked first
+    logCommits = logCommits.filter(
+      (commit) => !fileLogCommits.includes(commit),
+    );
+    logCommits = [...fileLogCommits, ...logCommits];
   }
 
   if (reverse) {
@@ -321,7 +388,12 @@ async function chromiumGitShow(chromiumRoot: vscode.Uri, commit: string) {
       },
     ).then(({ stdout }) => stdout.trim());
 
-    diff = output;
+    diff = output
+      .split("\n")
+      .filter(
+        (line) => !line.startsWith("diff --git ") && !line.startsWith("index "),
+      )
+      .join("\n");
     chromiumGitDiffCache.set(commit, diff);
   }
 
@@ -380,8 +452,15 @@ export function invokePrivateTool(
     const { commit, filename } = options.input as GitShowToolParameters;
     return gitShow(chromiumRoot, commit, filename);
   } else if (name === lmToolNames.chromiumLog) {
-    const { startVersion, endVersion, page, pageSize, continueAfter, reverse } =
-      options.input as ChromiumGitLogToolParameters;
+    const {
+      startVersion,
+      endVersion,
+      page,
+      pageSize,
+      continueAfter,
+      reverse,
+      errorText,
+    } = options.input as ChromiumGitLogToolParameters;
     return chromiumGitLog(
       chromiumRoot,
       startVersion,
@@ -390,6 +469,7 @@ export function invokePrivateTool(
       pageSize,
       continueAfter,
       reverse,
+      errorText,
     );
   } else if (name === lmToolNames.chromiumGitShow) {
     const { commit } = options.input as ChromiumGitShowToolParameters;

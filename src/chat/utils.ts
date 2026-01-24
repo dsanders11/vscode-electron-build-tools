@@ -8,6 +8,9 @@ const TERMINAL_SELECTION_PREAMBLE = "The active terminal's selection:\n";
 const TERMINAL_SELECTION_NO_TEXT =
   "No text is currently selected in the active terminal.";
 
+const CLANG_ERROR_REGEX =
+  /^(.+)[(:](\d+)[:,](\d+)\)?:\s+(warning|error|note):\s+(.*)$/;
+
 // Copied from https://github.com/electron/electron/blob/3a3595f2af59cb08fb09e3e2e4b7cdf713db2b27/script/release/notes/notes.ts#L605-L623
 export const compareChromiumVersions = (v1: string, v2: string) => {
   const [split1, split2] = [v1.split("."), v2.split(".")];
@@ -91,4 +94,17 @@ export async function showQuickPick(
     });
     quickPick.show();
   });
+}
+
+export function getFilenamesFromBuildError(errorText: string): string[] {
+  const filenames = new Set<string>();
+  const matches = errorText.matchAll(new RegExp(CLANG_ERROR_REGEX, "gm"));
+
+  for (const match of matches) {
+    if (match[1]) {
+      filenames.add(match[1]);
+    }
+  }
+
+  return [...filenames];
 }

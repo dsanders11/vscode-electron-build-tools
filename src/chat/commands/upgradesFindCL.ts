@@ -276,6 +276,7 @@ export async function analyzeBuildError(
     pageSize,
     continueAfter: continuation?.after,
     reverse,
+    errorText,
   };
 
   const accumulatedToolResults: Record<string, vscode.LanguageModelToolResult> =
