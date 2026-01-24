@@ -366,9 +366,14 @@ const chromiumGitDiffCache = new LRU<string, string>({
 
 export interface ChromiumGitShowToolParameters {
   commit: string;
+  contextLines: number;
 }
 
-async function chromiumGitShow(chromiumRoot: vscode.Uri, commit: string) {
+async function chromiumGitShow(
+  chromiumRoot: vscode.Uri,
+  commit: string,
+  contextLines: number,
+) {
   if (!/^[0-9a-f]+$/.test(commit)) {
     throw new Error(`Invalid commit SHA: ${commit}`);
   }
@@ -381,7 +386,7 @@ async function chromiumGitShow(chromiumRoot: vscode.Uri, commit: string) {
   let diff = chromiumGitDiffCache.get(commit);
   if (!diff) {
     const output = await exec(
-      `git show --no-notes --pretty=format:"" ${commit}`,
+      `git show -U${contextLines} --no-notes --pretty=format:"" ${commit}`,
       {
         cwd: chromiumRoot.fsPath,
         encoding: "utf8",
@@ -472,8 +477,9 @@ export function invokePrivateTool(
       errorText,
     );
   } else if (name === lmToolNames.chromiumGitShow) {
-    const { commit } = options.input as ChromiumGitShowToolParameters;
-    return chromiumGitShow(chromiumRoot, commit);
+    const { commit, contextLines } =
+      options.input as ChromiumGitShowToolParameters;
+    return chromiumGitShow(chromiumRoot, commit, contextLines);
   }
 
   throw new Error(`Tool not found: ${name}`);

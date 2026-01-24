@@ -340,6 +340,12 @@
           "default": false,
           "description": "When building, show a list of build targets to choose from."
         },
+        "electronBuildTools.chat.chromiumShowContextLines": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 1,
+          "description": "Number of context lines to include when getting the diff for a commit in the Chromium git log. Larger values may cause the model to lose context."
+        },
         "electronBuildTools.chat.chromiumLogPageSize": {
           "type": "integer",
           "default": 15,

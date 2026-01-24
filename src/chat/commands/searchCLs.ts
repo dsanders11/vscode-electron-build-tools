@@ -44,6 +44,7 @@ export async function searchChromiumLog(
   const chatConfig = vscode.workspace.getConfiguration(
     "electronBuildTools.chat",
   );
+  const contextLines = chatConfig.get<number>("chromiumShowContextLines")!;
   const pageSize = chatConfig.get<number>("chromiumLogPageSize")!;
 
   // Render the initial prompt
@@ -108,6 +109,8 @@ export async function searchChromiumLog(
         chromiumLogToolState.continueAfter = undefined;
       } else if (toolCall.name === lmToolNames.chromiumGitShow) {
         const { commit } = toolCall.input as ChromiumGitShowToolParameters;
+        (toolCall.input as ChromiumGitShowToolParameters).contextLines =
+          contextLines;
         const shortSha = await getShortSha(chromiumRoot, commit);
         stream.progress(`Analyzing commit ${shortSha}...`);
 
