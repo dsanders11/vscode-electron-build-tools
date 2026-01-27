@@ -160,7 +160,7 @@ export async function createTestController(
     const env: Record<string, string> = {
       MOCHA_REPORTER: "mocha-multi-reporters",
       MOCHA_MULTI_REPORTERS: `${context.asAbsolutePath(
-        "out/electron/mocha-reporter.js",
+        "out/electron/mocha-reporter.cjs",
       )}, spec`,
       ELECTRON_ROOT: electronRoot.fsPath,
     };
@@ -668,7 +668,7 @@ export async function createTestController(
         }
 
         const specRunnerContents = await vscode.workspace.fs.readFile(
-          vscode.Uri.joinPath(electronRoot, "script", "spec-runner.js"),
+          vscode.Uri.joinPath(electronRoot, "script", "spec-runner.cjs"),
         );
 
         if (
@@ -796,9 +796,9 @@ async function getElectronTests(
   const electronExe = await vscode.commands.executeCommand<string>(
     `${commandPrefix}.show.exec`,
   );
-  const scriptName = context.asAbsolutePath("out/electron/listMochaTests.js");
+  const scriptName = context.asAbsolutePath("out/electron/listMochaTests.cjs");
   const tsNodeCompiler = context.asAbsolutePath(
-    "out/electron/electron-build-tools-typescript.js",
+    "out/electron/electron-build-tools-typescript.cjs",
   );
   const socketName = generateSocketName();
 

@@ -267,7 +267,7 @@ function registerElectronBuildToolsCommands(
       // Use a custom reporter to send output to an OutputChannel, and
       // also output the number of continuations a given test needed
       const reporterModule = await import(
-        vscode.Uri.joinPath(context.extensionUri, "out/lm-tests/reporter.js")
+        vscode.Uri.joinPath(context.extensionUri, "out/lm-tests/reporter.cjs")
           .fsPath
       );
 

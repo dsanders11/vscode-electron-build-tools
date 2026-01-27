@@ -24,7 +24,7 @@ const { retrieveSourceMap } = require(
   path.resolve(process.cwd(), "node_modules", "source-map-support"),
 );
 const { getFileContent } = require(
-  path.resolve(__dirname, "electron-build-tools-typescript"),
+  path.resolve(__dirname, "electron-build-tools-typescript.cjs"),
 );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -133,7 +133,7 @@ app
     );
 
     const mocha: MochaType = new Mocha({
-      ui: path.resolve(__dirname, "mocha-interface.js"),
+      ui: path.resolve(__dirname, "mocha-interface.cjs"),
     });
 
     // Use a socket to pass filenames rather than command line
