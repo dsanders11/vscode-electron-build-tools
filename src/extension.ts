@@ -297,7 +297,7 @@ function registerElectronBuildToolsCommands(
       const files = await vscode.workspace.findFiles(
         new vscode.RelativePattern(
           context.extensionUri,
-          `out/lm-tests/**/*.test.js`,
+          `out/lm-tests/**/*.test.cjs`,
         ),
       );
       for (const file of files) {
