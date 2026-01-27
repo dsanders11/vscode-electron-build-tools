@@ -1068,7 +1068,7 @@
     "vscode:prepublish": "run-p \"esbuild:* -- {1}\" -- --minify",
     "esbuild": "run-p \"esbuild:* -- {1}\" -- --sourcemap",
     "watch": "run-p \"esbuild:* -- {1} {2}\" -- --sourcemap --watch",
-    "esbuild:extension": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --external:original-fs --format=esm --platform=node --banner:js=\"import { createRequire as createRequireBanner } from 'node:module'; var require = createRequireBanner(import.meta.url);\"",
+    "esbuild:extension": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --external:original-fs --external:mocha --format=esm --platform=node --banner:js=\"import { createRequire as createRequireBanner } from 'node:module'; var require = createRequireBanner(import.meta.url);\"",
     "esbuild:list-tests": "esbuild ./electron/listMochaTests.ts --bundle --outfile=out/electron/listMochaTests.cjs --external:electron --format=cjs --platform=node",
     "esbuild:mocha-interface": "esbuild ./electron/mocha-interface.ts --bundle --outfile=out/electron/mocha-interface.cjs --format=cjs --platform=node",
     "esbuild:mocha-reporter": "esbuild ./electron/mocha-reporter.ts --bundle --outfile=out/electron/mocha-reporter.cjs --format=cjs --platform=node",
