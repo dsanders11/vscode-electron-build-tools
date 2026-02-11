@@ -117,12 +117,27 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
     cwd: vscode.Uri,
     newBlobId: string,
   ) {
+    const queryParams = new URLSearchParams(uri.query);
+
     // Parse the existing patch file to get the metadata
     const patchContents = (
       await vscode.workspace.fs.readFile(patchFileUri)
     ).toString();
     const { preamble, from, date, subject, description, files } =
       parsePatchMetadata(patchContents);
+
+    const relativeFilePath = path.relative(cwd.fsPath, uri.fsPath);
+
+    // If the file isn't already in the patch, add it as a new file
+    if (!files.some((file) => file.filename === relativeFilePath)) {
+      files.push({
+        oldFilename: relativeFilePath,
+        filename: relativeFilePath,
+        blobIdA: queryParams.get("blobIdA") ?? "",
+        blobIdB: "",
+      });
+      files.sort((a, b) => a.filename.localeCompare(b.filename));
+    }
 
     // Now reconstruct the whole patch file
     let newPatchContents = `${preamble}\nFrom: ${from}\nDate: ${date}\nSubject: ${subject}\n\n${description}\n\n`;
