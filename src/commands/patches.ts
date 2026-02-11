@@ -23,6 +23,7 @@ import {
   getPatchesConfigFile,
   getPatchSubjectLine,
   getOctokit,
+  gitHashObject,
   hasContentForBlobId,
   parsePatchConfig,
   querystringParse,
@@ -53,6 +54,115 @@ export function registerPatchesCommands(
   const rootDirectory = vscode.Uri.joinPath(electronRoot, "..", "..");
 
   context.subscriptions.push(
+    vscode.commands.registerCommand(
+      `${commandPrefix}.patches.addFileToPatch`,
+      async (patchTreeItem: Patch) => {
+        // Show text input with file picker action button
+        const relativePath = await new Promise<string | undefined>(
+          (resolve) => {
+            const inputBox = vscode.window.createInputBox();
+            inputBox.title = "Add File to Patch";
+            inputBox.prompt =
+              "Enter the file path relative to the Chromium source directory";
+            inputBox.placeholder = "e.g. base/logging.cc";
+
+            const browseButton: vscode.QuickInputButton = {
+              iconPath: new vscode.ThemeIcon("file"),
+              tooltip: "Browse for file",
+            };
+            inputBox.buttons = [browseButton];
+
+            inputBox.onDidTriggerButton(async (button) => {
+              if (button === browseButton) {
+                const [picked] =
+                  (await vscode.window.showOpenDialog({
+                    canSelectMany: false,
+                    defaultUri: chromiumDirectory,
+                    openLabel: "Select file to add to patch",
+                  })) ?? [];
+
+                if (picked) {
+                  inputBox.value = path.relative(
+                    chromiumDirectory.fsPath,
+                    picked.fsPath,
+                  );
+                }
+              }
+            });
+
+            inputBox.onDidChangeValue(async (value) => {
+              if (value) {
+                try {
+                  const fileUri = vscode.Uri.joinPath(chromiumDirectory, value);
+                  await vscode.workspace.fs.stat(fileUri);
+                  inputBox.validationMessage = undefined;
+                } catch {
+                  inputBox.validationMessage = "File does not exist";
+                }
+              } else {
+                inputBox.validationMessage = undefined;
+              }
+            });
+
+            inputBox.onDidAccept(async () => {
+              if (inputBox.value) {
+                try {
+                  const fileUri = vscode.Uri.joinPath(
+                    chromiumDirectory,
+                    inputBox.value,
+                  );
+                  await vscode.workspace.fs.stat(fileUri);
+                  resolve(inputBox.value);
+                  inputBox.dispose();
+                } catch {
+                  inputBox.validationMessage = "File does not exist";
+                }
+              }
+            });
+
+            inputBox.onDidHide(() => {
+              resolve(undefined);
+              inputBox.dispose();
+            });
+
+            inputBox.show();
+          },
+        );
+
+        if (!relativePath) {
+          return;
+        }
+
+        const selectedFile = vscode.Uri.joinPath(
+          chromiumDirectory,
+          relativePath,
+        );
+        const content = await vscode.workspace.fs
+          .readFile(selectedFile)
+          .then((buffer) => buffer.toString());
+
+        const blobId = await gitHashObject(
+          chromiumDirectory,
+          Buffer.from(content).toString("utf8"),
+        );
+
+        const queryParams = new URLSearchParams();
+        queryParams.set("patch", patchTreeItem.resourceUri.toString());
+        // All blobIds are the same for now since we're just loading
+        // the file content as-is without any modifications (yet)
+        queryParams.set("blobId", blobId);
+        queryParams.set("blobIdA", blobId);
+        queryParams.set("blobIdB", blobId);
+
+        const uri = selectedFile.with({
+          scheme: virtualPatchFsScheme,
+          query: queryParams.toString(),
+        });
+
+        // Open editable file which on save updates the patch
+        return vscode.commands.executeCommand("vscode.open", uri);
+      },
+    ),
     vscode.commands.registerCommand(
       `${commandPrefix}.patches.copyPath`,
       (patchTreeItem: Patch | FileInPatchTreeItem) => {

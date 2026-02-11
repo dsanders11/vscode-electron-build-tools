@@ -131,6 +131,11 @@
         "enablement": "electron-build-tools:canChangeConfig"
       },
       {
+        "command": "electron-build-tools.patches.addFileToPatch",
+        "title": "Add File to Patch",
+        "category": "Electron Build Tools"
+      },
+      {
         "command": "electron-build-tools.patches.copyPath",
         "title": "Copy Path",
         "category": "Electron Build Tools"
@@ -721,6 +726,10 @@
           "when": "electron-build-tools:build-tools-installed"
         },
         {
+          "command": "electron-build-tools.patches.addFileToPatch",
+          "when": "false"
+        },
+        {
           "command": "electron-build-tools.patches.copyPath",
           "when": "false"
         },
@@ -853,6 +862,11 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "electron-build-tools.patches.addFileToPatch",
+          "when": "view == electron-build-tools:patches && viewItem == patch",
+          "group": "1_modification"
+        },
         {
           "command": "electron-build-tools.patches.copyPath",
           "when": "view == electron-build-tools:patches && (viewItem == patch || viewItem === file-in-patch)",
