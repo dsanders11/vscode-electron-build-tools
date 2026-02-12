@@ -283,7 +283,8 @@ export function parsePatchMetadata(patchContents: string) {
     )![1],
     from: /^From: ((.*)<(\S*)>)$/m.exec(patchContents)![1],
     date: /^Date: (.*)$/m.exec(patchContents)![1],
-    subject: subjectAndDescription![1]
+    subject: subjectAndDescription![1],
+    prettySubject: subjectAndDescription![1]
       .split("\n")
       .map((text) => text.trim())
       .join(" "),
@@ -307,7 +308,7 @@ export async function patchTooltipMarkdown(patch: vscode.Uri) {
       year: "numeric",
     })}\n\n`,
   );
-  markdown.appendMarkdown(`${patchMetadata.subject}`);
+  markdown.appendMarkdown(`${patchMetadata.prettySubject}`);
 
   if (patchMetadata.description) {
     markdown.appendMarkdown(
@@ -335,7 +336,7 @@ export function patchOverviewMarkdown(
       year: "numeric",
     })}\n\n`,
   );
-  markdown.appendMarkdown(`## ${patchMetadata.subject}\n\n`);
+  markdown.appendMarkdown(`## ${patchMetadata.prettySubject}\n\n`);
   markdown.appendMarkdown(`${patchMetadata.description}\n\n`);
   markdown.appendMarkdown(`## Patch Filename\n\n`);
   markdown.appendMarkdown(`\`${path.basename(patch.fsPath)}\`\n\n`);
