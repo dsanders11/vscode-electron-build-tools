@@ -26,6 +26,7 @@ import {
   gitHashObject,
   hasContentForBlobId,
   parsePatchConfig,
+  parsePatchMetadata,
   querystringParse,
   removePatch,
   setContentForBlobId,
@@ -57,6 +58,12 @@ export function registerPatchesCommands(
     vscode.commands.registerCommand(
       `${commandPrefix}.patches.addFileToPatch`,
       async (patchTreeItem: Patch) => {
+        // Parse the patch file to get the metadata
+        const patchContents = await vscode.workspace.fs
+          .readFile(patchTreeItem.resourceUri)
+          .then((buffer) => buffer.toString());
+        const { files } = parsePatchMetadata(patchContents);
+
         // Show text input with file picker action button
         const relativePath = await new Promise<string | undefined>(
           (resolve) => {
@@ -92,12 +99,19 @@ export function registerPatchesCommands(
 
             inputBox.onDidChangeValue(async (value) => {
               if (value) {
-                try {
-                  const fileUri = vscode.Uri.joinPath(chromiumDirectory, value);
-                  await vscode.workspace.fs.stat(fileUri);
-                  inputBox.validationMessage = undefined;
-                } catch {
-                  inputBox.validationMessage = "File does not exist";
+                if (files.some((f) => f.filename === value)) {
+                  inputBox.validationMessage = "File is already in this patch";
+                } else {
+                  try {
+                    const fileUri = vscode.Uri.joinPath(
+                      chromiumDirectory,
+                      value,
+                    );
+                    await vscode.workspace.fs.stat(fileUri);
+                    inputBox.validationMessage = undefined;
+                  } catch {
+                    inputBox.validationMessage = "File does not exist";
+                  }
                 }
               } else {
                 inputBox.validationMessage = undefined;
@@ -106,16 +120,20 @@ export function registerPatchesCommands(
 
             inputBox.onDidAccept(async () => {
               if (inputBox.value) {
-                try {
-                  const fileUri = vscode.Uri.joinPath(
-                    chromiumDirectory,
-                    inputBox.value,
-                  );
-                  await vscode.workspace.fs.stat(fileUri);
-                  resolve(inputBox.value);
-                  inputBox.dispose();
-                } catch {
-                  inputBox.validationMessage = "File does not exist";
+                if (files.some((f) => f.filename === inputBox.value)) {
+                  inputBox.validationMessage = "File is already in this patch";
+                } else {
+                  try {
+                    const fileUri = vscode.Uri.joinPath(
+                      chromiumDirectory,
+                      inputBox.value,
+                    );
+                    await vscode.workspace.fs.stat(fileUri);
+                    resolve(inputBox.value);
+                    inputBox.dispose();
+                  } catch {
+                    inputBox.validationMessage = "File does not exist";
+                  }
                 }
               }
             });
