@@ -1,4 +1,5 @@
 import * as childProcess from "node:child_process";
+import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { promisify } from "node:util";
@@ -845,8 +846,59 @@ export async function gitHashObject(cwd: vscode.Uri, content: string) {
   return (await stdoutPromise).trim();
 }
 
+async function gitDiffBlobsInternal(
+  cwd: vscode.Uri,
+  filename: string,
+  blobIdA: string,
+  blobIdB: string,
+) {
+  const ext = path.extname(filename);
+  const tmpDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), "electron-build-tools-"),
+  );
+  const tmpFileA = path.join(tmpDir, `${blobIdA}${ext}`);
+  const tmpFileB = path.join(tmpDir, `${blobIdB}${ext}`);
+
+  let stdout: string;
+
+  const [contentA, contentB] = await Promise.all([
+    getContentForBlobId(blobIdA, cwd),
+    getContentForBlobId(blobIdB, cwd),
+  ]);
+
+  await Promise.all([
+    fs.writeFile(tmpFileA, contentA),
+    fs.writeFile(tmpFileB, contentB),
+  ]);
+
+  try {
+    ({ stdout } = await exec(
+      `git diff --full-index --no-index ${tmpFileA} ${tmpFileB}`,
+      { encoding: "utf8", cwd: cwd.fsPath },
+    ));
+  } catch (err) {
+    // git diff --no-index exits with code 1 when files differ
+    if (
+      err instanceof Error &&
+      Object.prototype.hasOwnProperty.call(err, "code") &&
+      (err as PromisifiedExecError).code === 1
+    ) {
+      stdout = (err as PromisifiedExecError).stdout;
+    } else {
+      throw err;
+    }
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+  }
+
+  return stdout
+    .replaceAll(`a${tmpFileA}`, `a/${blobIdA}`)
+    .replaceAll(`b${tmpFileB}`, `b/${blobIdB}`);
+}
+
 export async function gitDiffBlobs(
   cwd: vscode.Uri,
+  filename: string,
   blobIdA: string,
   blobIdB: string,
 ) {
@@ -862,12 +914,11 @@ export async function gitDiffBlobs(
   if (/^[0]+$/.test(blobIdA)) {
     // Git doesn't like the all-zero blob ID, so use the empty blob SHA instead
     // The empty blob SHA is the SHA of an empty file (e.g., /dev/null)
-    let { stdout: fileDiff } = await exec(
-      `git diff --full-index ${EMPTY_BLOB_SHA}..${blobIdB}`,
-      {
-        encoding: "utf8",
-        cwd: cwd.fsPath,
-      },
+    let fileDiff = await gitDiffBlobsInternal(
+      cwd,
+      filename,
+      EMPTY_BLOB_SHA,
+      blobIdB,
     );
 
     // Restore the original all zero blob ID in the diff output
@@ -885,13 +936,7 @@ export async function gitDiffBlobs(
     return fileDiff;
   }
 
-  const { stdout } = await exec(
-    `git diff --full-index ${blobIdA}..${blobIdB}`,
-    {
-      encoding: "utf8",
-      cwd: cwd.fsPath,
-    },
-  );
+  const stdout = await gitDiffBlobsInternal(cwd, filename, blobIdA, blobIdB);
 
   return stdout;
 }

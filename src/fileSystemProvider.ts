@@ -149,11 +149,11 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
       if (vscode.Uri.joinPath(cwd, filename).fsPath === uri.fsPath) {
         // Get the diff between the original blob (before the original patch)
         // and the new blob content so that we have the new patch content
-        fileDiff = await gitDiffBlobs(cwd, blobIdA, newBlobId);
+        fileDiff = await gitDiffBlobs(cwd, filename, blobIdA, newBlobId);
         fileDiff = fileDiff.replaceAll(`a/${blobIdA}`, `a/${filename}`);
         fileDiff = fileDiff.replaceAll(`b/${newBlobId}`, `b/${filename}`);
       } else {
-        fileDiff = await gitDiffBlobs(cwd, blobIdA, blobIdB);
+        fileDiff = await gitDiffBlobs(cwd, filename, blobIdA, blobIdB);
         fileDiff = fileDiff.replaceAll(`a/${blobIdA}`, `a/${filename}`);
         fileDiff = fileDiff.replaceAll(`b/${blobIdB}`, `b/${filename}`);
       }
