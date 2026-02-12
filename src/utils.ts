@@ -35,6 +35,12 @@ const remoteFileContentCache = new LRU<string, string>({
   sizeCalculation: (value) => value.length,
 });
 
+const gitDiffCache = new LRU<string, string>({
+  max: 500,
+  maxSize: 10485760,
+  sizeCalculation: (value) => value.length,
+});
+
 const EMPTY_BLOB_SHA = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391";
 
 export const patchedFilenameRegex =
@@ -902,6 +908,12 @@ export async function gitDiffBlobs(
   blobIdA: string,
   blobIdB: string,
 ) {
+  const cacheKey = `${filename}:${blobIdA}..${blobIdB}`;
+
+  if (gitDiffCache.has(cacheKey)) {
+    return gitDiffCache.get(cacheKey)!;
+  }
+
   if (!/^[0-9a-f]+$/.test(blobIdA)) {
     throw new Error(`Invalid blob ID: ${blobIdA}`);
   }
@@ -933,10 +945,12 @@ export async function gitDiffBlobs(
       `new file mode 100644\nindex ${blobIdA}..${blobIdB}`,
     );
 
+    gitDiffCache.set(cacheKey, fileDiff);
     return fileDiff;
   }
 
   const stdout = await gitDiffBlobsInternal(cwd, filename, blobIdA, blobIdB);
+  gitDiffCache.set(cacheKey, stdout);
 
   return stdout;
 }
