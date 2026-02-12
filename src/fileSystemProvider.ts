@@ -11,6 +11,7 @@ import {
   parsePatchMetadata,
 } from "./utils";
 import { type ElectronPatchesProvider } from "./views/patches";
+import { getPatches } from "./utils.js";
 
 export class ElectronFileSystemProvider implements vscode.FileSystemProvider {
   protected readonly _statCache = new LRU<string, number>({ max: 500 });
@@ -83,6 +84,20 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
         patchDirectory,
       );
 
+    const patches = await getPatches(patchDirectory);
+
+    // Find current patch and remove everything up to and including it, so only
+    // remaining patches that still remain in the patch chain are present.
+    const idx = patches.findIndex(
+      (patch) => patch.fsPath === patchFileUri.fsPath,
+    );
+
+    if (idx === -1) {
+      throw new Error(
+        `Patch file ${patchFileUri.fsPath} not found in patch directory ${patchDirectory.fsPath}`,
+      );
+    }
+
     // Update the file so that its start and end blob IDs are the same,
     // which will result in an empty diff and the file removed from the patch
     await this.updateFileInPatch(
@@ -90,6 +105,7 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
       uri,
       cwd,
       queryParams.get("blobIdA")!,
+      patches.slice(idx + 1),
     );
   }
 
@@ -108,16 +124,41 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
       Buffer.from(content).toString("utf8"),
     );
 
-    await this.updateFileInPatch(patchFileUri, uri, cwd, newBlobId);
+    const patches = await getPatches(patchDirectory);
+
+    // Find current patch and remove everything up to and including it, so only
+    // remaining patches that still remain in the patch chain are present.
+    const idx = patches.findIndex(
+      (patch) => patch.fsPath === patchFileUri.fsPath,
+    );
+
+    if (idx === -1) {
+      throw new Error(
+        `Patch file ${patchFileUri.fsPath} not found in patch directory ${patchDirectory.fsPath}`,
+      );
+    }
+
+    await this.updateFileInPatch(
+      patchFileUri,
+      uri,
+      cwd,
+      newBlobId,
+      patches.slice(idx + 1),
+    );
   }
 
   private async updateFileInPatch(
     patchFileUri: vscode.Uri,
     uri: vscode.Uri,
     cwd: vscode.Uri,
-    newBlobId: string,
+    newBlobIdB: string,
+    remainingPatches: vscode.Uri[],
+    newBlobIdA?: string,
   ) {
     const queryParams = new URLSearchParams(uri.query);
+
+    let originalBlobIdB = "";
+    let originalFilename = "";
 
     // Parse the existing patch file to get the metadata
     const patchContents = (
@@ -134,8 +175,15 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
         oldFilename: relativeFilePath,
         filename: relativeFilePath,
         blobIdA: queryParams.get("blobIdA") ?? "",
-        blobIdB: "",
+        blobIdB: newBlobIdB,
       };
+
+      // Since this file wasn't previously in this patch, we can
+      // imagine it as having previously been a no-op with the chunk
+      // header having been ${blobIdA}..${blobIdA} - as such the
+      // `originalBlobIdB` is actually just `blobIdA`
+      originalBlobIdB = newFile.blobIdA;
+      originalFilename = relativeFilePath;
 
       // Insert at the correct position to match Git's sorting
       const insertIndex = files.findIndex(
@@ -156,12 +204,29 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
       let fileDiff: string;
 
       if (vscode.Uri.joinPath(cwd, filename).fsPath === uri.fsPath) {
+        // Only update these if they're not already set (i.e. new file being added to patch)
+        if (!originalBlobIdB && !originalFilename) {
+          originalBlobIdB = blobIdB;
+          originalFilename = filename;
+        }
+
         // Get the diff between the original blob (before the original patch)
         // and the new blob content so that we have the new patch content
-        fileDiff = await gitDiffBlobs(cwd, filename, blobIdA, newBlobId);
-        fileDiff = fileDiff.replaceAll(`a/${blobIdA}`, `a/${filename}`);
-        fileDiff = fileDiff.replaceAll(`b/${newBlobId}`, `b/${filename}`);
+        fileDiff = await gitDiffBlobs(
+          cwd,
+          filename,
+          newBlobIdA ?? blobIdA,
+          newBlobIdB,
+        );
+        fileDiff = fileDiff.replaceAll(
+          `a/${newBlobIdA ?? blobIdA}`,
+          `a/${filename}`,
+        );
+        fileDiff = fileDiff.replaceAll(`b/${newBlobIdB}`, `b/${filename}`);
       } else {
+        // TODO - It's inefficient to redo the git diff here since it should be unchanged,
+        //        so look into having `parsePatchMetadata` also return the diff content
+        //        for each file so we don't have to redo it here
         fileDiff = await gitDiffBlobs(cwd, filename, blobIdA, blobIdB);
         fileDiff = fileDiff.replaceAll(`a/${blobIdA}`, `a/${filename}`);
         fileDiff = fileDiff.replaceAll(`b/${blobIdB}`, `b/${filename}`);
@@ -174,5 +239,57 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
       patchFileUri,
       Buffer.from(newPatchContents, "utf8"),
     );
+
+    if (originalBlobIdB) {
+      for (const [idx, patch] of remainingPatches.entries()) {
+        // Parse the patch file to get the metadata
+        const patchContents = await vscode.workspace.fs
+          .readFile(patch)
+          .then((buffer) => buffer.toString());
+        const { files } = parsePatchMetadata(patchContents);
+
+        const file = files.find(
+          ({ filename }) => filename === originalFilename,
+        );
+
+        if (file) {
+          if (file.blobIdA !== originalBlobIdB) {
+            throw new Error(
+              `Unexpected blob ID for file ${originalFilename} in patch ${patch.fsPath}. Expected ${originalBlobIdB}, got ${file.blobIdA}`,
+            );
+          }
+
+          // Update query params appropriately - the patch
+          // should now be applied to `newBlobIdB`
+          const contentQueryParams = new URLSearchParams();
+          contentQueryParams.set("blobId", newBlobIdB);
+          contentQueryParams.set("unpatchedBlobId", newBlobIdB);
+          contentQueryParams.set("patch", patch.toString());
+
+          const content = await getContentForUri(
+            uri.with({ query: contentQueryParams.toString() }),
+          );
+          const patchNewBlobId = await gitHashObject(
+            cwd,
+            Buffer.from(content).toString("utf8"),
+          );
+
+          // Change the blobIdA for the file to reflect the blob ID
+          // that resulted after we updated the original patch
+          const updatedQueryParams = new URLSearchParams(uri.query);
+          updatedQueryParams.set("blobIdA", newBlobIdB);
+
+          await this.updateFileInPatch(
+            patch,
+            uri.with({ query: updatedQueryParams.toString() }),
+            cwd,
+            patchNewBlobId,
+            remainingPatches.slice(idx + 1),
+            newBlobIdB,
+          );
+          break;
+        }
+      }
+    }
   }
 }
