@@ -130,13 +130,22 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
 
     // If the file isn't already in the patch, add it as a new file
     if (!files.some((file) => file.filename === relativeFilePath)) {
-      files.push({
+      const newFile = {
         oldFilename: relativeFilePath,
         filename: relativeFilePath,
         blobIdA: queryParams.get("blobIdA") ?? "",
         blobIdB: "",
-      });
-      files.sort((a, b) => a.filename.localeCompare(b.filename));
+      };
+
+      // Insert at the correct position to match Git's sorting
+      const insertIndex = files.findIndex(
+        (file) => file.filename > relativeFilePath,
+      );
+      if (insertIndex === -1) {
+        files.push(newFile);
+      } else {
+        files.splice(insertIndex, 0, newFile);
+      }
     }
 
     // Now reconstruct the whole patch file
