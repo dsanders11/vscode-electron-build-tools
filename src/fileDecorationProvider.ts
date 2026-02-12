@@ -2,7 +2,11 @@ import * as vscode from "vscode";
 
 import type { RestEndpointMethodTypes } from "@octokit/rest";
 
-import { virtualDocumentScheme, virtualFsScheme } from "./constants";
+import {
+  virtualDocumentScheme,
+  virtualFsScheme,
+  virtualPatchFsScheme,
+} from "./constants";
 import { querystringParse } from "./utils";
 
 type PullRequestFileStatus =
@@ -14,7 +18,13 @@ export class ElectronFileDecorationProvider
   provideFileDecoration(
     uri: vscode.Uri,
   ): vscode.ProviderResult<vscode.FileDecoration> {
-    if (
+    if (uri.scheme === virtualPatchFsScheme) {
+      return new vscode.FileDecoration(
+        "PF",
+        "File inside a patch",
+        new vscode.ThemeColor("terminal.ansiBrightMagenta"),
+      );
+    } else if (
       uri.scheme === virtualDocumentScheme ||
       uri.scheme === virtualFsScheme
     ) {
