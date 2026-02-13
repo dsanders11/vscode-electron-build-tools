@@ -216,6 +216,7 @@ export function registerPatchesCommands(
           );
           const chromiumVersion = DEPS_REGEX.exec(depsContent.toString())?.[1];
 
+          // TODO - Make this work even if you don't have a local synced checkout
           const { stdout } = await exec(
             `git rev-parse ${chromiumVersion}:${relativePath}`,
             {
