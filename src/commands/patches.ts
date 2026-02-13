@@ -40,6 +40,7 @@ import {
   type PatchDirectory,
   type PullRequestTreeItem,
 } from "../views/patches";
+import { DEPS_REGEX } from "../chat/utils";
 
 interface SearchPatchesQuickPickItem extends vscode.QuickPickItem {
   uri: vscode.Uri;
@@ -58,9 +59,11 @@ export function registerPatchesCommands(
     vscode.commands.registerCommand(
       `${commandPrefix}.patches.addFileToPatch`,
       async (patchTreeItem: Patch) => {
+        const patchFileUri = patchTreeItem.resourceUri;
+
         // Parse the patch file to get the metadata
         const patchContents = await vscode.workspace.fs
-          .readFile(patchTreeItem.resourceUri)
+          .readFile(patchFileUri)
           .then((buffer) => buffer.toString());
         const { files } = parsePatchMetadata(patchContents);
 
@@ -155,14 +158,74 @@ export function registerPatchesCommands(
           chromiumDirectory,
           relativePath,
         );
-        const content = await vscode.workspace.fs
-          .readFile(selectedFile)
-          .then((buffer) => buffer.toString());
 
-        const blobId = await gitHashObject(
-          chromiumDirectory,
-          Buffer.from(content).toString("utf8"),
+        const patchDirectory = vscode.Uri.file(
+          path.dirname(patchFileUri.fsPath),
         );
+        const patches = await getPatches(patchDirectory);
+
+        const idx = patches.findIndex(
+          (patch) => patch.fsPath === patchFileUri.fsPath,
+        );
+
+        if (idx === -1) {
+          throw new Error(
+            `Patch file ${patchFileUri.fsPath} not found in patch directory ${patchDirectory.fsPath}`,
+          );
+        }
+
+        let blobId = "";
+
+        // Check backwards if the file is already in a previous patch, and if so get
+        // the blob ID from that patch to use as the "original" version of the file
+        for (let i = idx - 1; i >= 0; i--) {
+          const patchContents = await vscode.workspace.fs
+            .readFile(patches[i])
+            .then((buffer) => buffer.toString());
+          const { files } = parsePatchMetadata(patchContents);
+          const fileInPatch = files.find((f) => f.filename === relativePath);
+
+          if (fileInPatch) {
+            blobId = fileInPatch.blobIdB;
+            break;
+          }
+        }
+
+        // If the file isn't in any previous patch, then we need to look forward to
+        // find any patches that touch the file and grab the blobIdA as our blob ID
+        if (!blobId) {
+          for (let i = idx + 1; i < patches.length; i++) {
+            const patchContents = await vscode.workspace.fs
+              .readFile(patches[i])
+              .then((buffer) => buffer.toString());
+            const { files } = parsePatchMetadata(patchContents);
+            const fileInPatch = files.find((f) => f.filename === relativePath);
+
+            if (fileInPatch) {
+              blobId = fileInPatch.blobIdA;
+              break;
+            }
+          }
+        }
+
+        // If no patches touch the file, we need to find what the pristine blob
+        // ID is for the file in the Chromium source at the current DEPS version
+        if (!blobId) {
+          const depsContent = await vscode.workspace.fs.readFile(
+            vscode.Uri.joinPath(electronRoot, "DEPS"),
+          );
+          const chromiumVersion = DEPS_REGEX.exec(depsContent.toString())?.[1];
+
+          const { stdout } = await exec(
+            `git rev-parse ${chromiumVersion}:${relativePath}`,
+            {
+              encoding: "utf8",
+              cwd: chromiumDirectory.fsPath,
+            },
+          );
+
+          blobId = stdout.trim();
+        }
 
         const queryParams = new URLSearchParams();
         queryParams.set("patch", patchTreeItem.resourceUri.toString());

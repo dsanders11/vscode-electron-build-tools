@@ -98,14 +98,17 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
       );
     }
 
+    const blobIdA = queryParams.get("blobIdA")!;
+
     // Update the file so that its start and end blob IDs are the same,
     // which will result in an empty diff and the file removed from the patch
     await this.updateFileInPatch(
       patchFileUri,
       uri,
       cwd,
-      queryParams.get("blobIdA")!,
+      blobIdA,
       patches.slice(idx + 1),
+      blobIdA,
     );
   }
 
@@ -157,6 +160,7 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
   ) {
     const queryParams = new URLSearchParams(uri.query);
 
+    let originalBlobIdA: string | undefined = undefined;
     let originalBlobIdB = "";
     let originalFilename = "";
 
@@ -204,6 +208,14 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
       let fileDiff: string;
 
       if (vscode.Uri.joinPath(cwd, filename).fsPath === uri.fsPath) {
+        // If the file is being removed from the patch, there's nothing more to do
+        if ((newBlobIdA ?? blobIdA) === newBlobIdB) {
+          originalBlobIdA = blobIdA;
+          originalBlobIdB = blobIdB;
+          originalFilename = filename;
+          continue;
+        }
+
         // Only update these if they're not already set (i.e. new file being added to patch)
         if (!originalBlobIdB && !originalFilename) {
           originalBlobIdB = blobIdB;
@@ -262,8 +274,11 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
           // Update query params appropriately - the patch
           // should now be applied to `newBlobIdB`
           const contentQueryParams = new URLSearchParams();
-          contentQueryParams.set("blobId", newBlobIdB);
-          contentQueryParams.set("unpatchedBlobId", newBlobIdB);
+          contentQueryParams.set("blobId", originalBlobIdA ?? newBlobIdB);
+          contentQueryParams.set(
+            "unpatchedBlobId",
+            originalBlobIdA ?? newBlobIdB,
+          );
           contentQueryParams.set("patch", patch.toString());
 
           const content = await getContentForUri(
@@ -277,7 +292,7 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
           // Change the blobIdA for the file to reflect the blob ID
           // that resulted after we updated the original patch
           const updatedQueryParams = new URLSearchParams(uri.query);
-          updatedQueryParams.set("blobIdA", newBlobIdB);
+          updatedQueryParams.set("blobIdA", originalBlobIdA ?? newBlobIdB);
 
           await this.updateFileInPatch(
             patch,

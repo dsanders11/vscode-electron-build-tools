@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import Logger from "../logging";
 import { exec } from "../utils";
 
-const DEPS_REGEX = new RegExp(`chromium_version':\n +'(.+?)',`, "m");
+export const DEPS_REGEX = new RegExp(`chromium_version':\n +'(.+?)',`, "m");
 const TERMINAL_SELECTION_PREAMBLE = "The active terminal's selection:\n";
 const TERMINAL_SELECTION_NO_TEXT =
   "No text is currently selected in the active terminal.";
