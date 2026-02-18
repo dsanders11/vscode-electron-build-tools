@@ -180,6 +180,7 @@ export async function removePatch(patch: vscode.Uri): Promise<void> {
 }
 
 export async function getFilesInPatch(
+  rootDirectory: vscode.Uri,
   baseDirectory: vscode.Uri,
   patch: vscode.Uri,
 ): Promise<vscode.Uri[]> {
@@ -204,7 +205,10 @@ export async function getFilesInPatch(
       );
     }
 
-    const ghRepo = checkoutDirectoryGitHubRepo[baseDirectory.path];
+    const ghRepo =
+      checkoutDirectoryGitHubRepo[
+        path.relative(rootDirectory.path, baseDirectory.path)
+      ];
 
     if (ghRepo) {
       queryParams.set("repoOwner", ghRepo.owner);

@@ -198,6 +198,7 @@ export class ElectronPatchesProvider
         const checkoutDirectory =
           await this.getCheckoutDirectoryForPatchDirectory(patchDirectory);
         const patchedFilenames = await getFilesInPatch(
+          this.rootDirectory,
           checkoutDirectory,
           element.resourceUri,
         );
