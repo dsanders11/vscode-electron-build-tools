@@ -214,6 +214,11 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
 
     // This isn't the most efficient way to do this, but it requires the least refactoring
     for (const { filename, blobIdA, blobIdB } of files) {
+      const fileUri = vscode.Uri.joinPath(cwd, filename).with({
+        query: new URLSearchParams({
+          patch: patchFileUri.toString(),
+        }).toString(),
+      });
       let fileDiff: string;
 
       if (vscode.Uri.joinPath(cwd, filename).fsPath === uri.fsPath) {
@@ -235,10 +240,9 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
         // and the new blob content so that we have the new patch content
         fileDiff = await gitDiffBlobs(
           cwd,
-          filename,
+          fileUri,
           newBlobIdA ?? blobIdA,
           newBlobIdB,
-          ghRepo,
         );
         fileDiff = fileDiff.replaceAll(
           `a/${newBlobIdA ?? blobIdA}`,
@@ -249,7 +253,7 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
         // TODO - It's inefficient to redo the git diff here since it should be unchanged,
         //        so look into having `parsePatchMetadata` also return the diff content
         //        for each file so we don't have to redo it here
-        fileDiff = await gitDiffBlobs(cwd, filename, blobIdA, blobIdB, ghRepo);
+        fileDiff = await gitDiffBlobs(cwd, fileUri, blobIdA, blobIdB);
         fileDiff = fileDiff.replaceAll(`a/${blobIdA}`, `a/${filename}`);
         fileDiff = fileDiff.replaceAll(`b/${blobIdB}`, `b/${filename}`);
       }

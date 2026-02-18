@@ -296,6 +296,7 @@ export function registerPatchesCommands(
 
         // We want to load the post-patched content of the file.
         // blobIdA is the unpatched version, blobIdB is the patched version
+        queryParams.set("unpatchedBlobId", queryParams.get("blobIdA")!);
         queryParams.set("blobId", queryParams.get("blobIdB") ?? "");
 
         const uri = patchFileTreeItem.resourceUri.with({

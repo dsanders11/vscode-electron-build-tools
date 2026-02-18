@@ -540,13 +540,36 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
   try {
     return await getContentForBlobId(blobId, checkoutDirectory, ghRepo);
   } catch (err) {
-    if (patch && unpatchedBlobId) {
-      // If it's a patched file, apply the patch if the unpatched content is found
-      const unpatchedContents = await getContentForBlobId(
-        unpatchedBlobId,
-        checkoutDirectory,
-        ghRepo,
-      );
+    if (patch) {
+      let unpatchedContents: string | undefined = undefined;
+
+      // If it's a patched file, resolve the unpatched content by walking
+      // preceding patches via getContentForUri until we find a resolvable blob
+      if (unpatchedBlobId) {
+        try {
+          unpatchedContents = await getContentForBlobId(
+            unpatchedBlobId,
+            checkoutDirectory,
+            ghRepo,
+          );
+        } catch {
+          // Fall through to the below
+        }
+      }
+
+      if (!unpatchedContents) {
+        const unpatchedFileUri = await buildUnpatchedFileUri(
+          uri,
+          patch,
+          checkoutDirectory,
+        );
+        unpatchedContents = await getContentForUri(unpatchedFileUri);
+      }
+
+      if (!unpatchedBlobId) {
+        return unpatchedContents;
+      }
+
       const patchContents = (
         await vscode.workspace.fs.readFile(vscode.Uri.parse(patch, true))
       ).toString();
@@ -571,11 +594,83 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
         throw new ContentNotFoundError(`Couldn't load content for ${blobId}`);
       }
 
-      return Buffer.from(applyPatch(unpatchedContents, filePatch)).toString();
+      const patchedContents = Buffer.from(
+        applyPatch(unpatchedContents, filePatch),
+      ).toString();
+      const patchedBlobId = await gitHashObject(
+        checkoutDirectory,
+        patchedContents,
+        false,
+      );
+
+      if (patchedBlobId !== blobId) {
+        throw new ContentNotFoundError(
+          `Content mismatch for ${blobId} after applying patch`,
+        );
+      }
+
+      return patchedContents;
     } else {
       throw err;
     }
   }
+}
+
+/**
+ * Builds a URI representing the unpatched version of a file. Walks backward
+ * through preceding patches in the same patch directory to find one that
+ * modifies the same file, setting `patch` and `unpatchedBlobId` from that
+ * preceding patch so that {@link getContentForUri} can recursively resolve
+ * the content through the patch chain.
+ */
+async function buildUnpatchedFileUri(
+  uri: vscode.Uri,
+  currentPatch: string,
+  checkoutDirectory: vscode.Uri,
+): Promise<vscode.Uri> {
+  const queryParams = new URLSearchParams(uri.query);
+
+  // Set blobId to the unpatched version
+  queryParams.delete("unpatchedBlobId");
+  queryParams.delete("patch");
+
+  // Find a preceding patch that modifies this file (if any)
+  const currentPatchUri = vscode.Uri.parse(currentPatch, true);
+  const patchDirectory = vscode.Uri.joinPath(currentPatchUri, "..");
+  const patches = await getPatches(patchDirectory);
+  const idx = patches.findIndex((p) => p.fsPath === currentPatchUri.fsPath);
+
+  if (idx > 0) {
+    const relativePath = ensurePosixSeparators(
+      path.relative(checkoutDirectory.path, uri.path),
+    );
+
+    // Walk backward through preceding patches to find the most recent
+    // one that modifies this file, linking up the patch chain
+    for (let i = idx - 1; i >= 0; i--) {
+      const patchContents = await vscode.workspace.fs
+        .readFile(patches[i])
+        .then((buffer) => buffer.toString());
+
+      const { files } = parsePatchMetadata(patchContents);
+      const fileInPatch = files.find((f) => f.filename === relativePath);
+
+      if (fileInPatch) {
+        queryParams.set("patch", patches[i].toString());
+        queryParams.set("blobId", fileInPatch.blobIdB);
+        queryParams.set("unpatchedBlobId", fileInPatch.blobIdA);
+        break;
+      }
+    }
+  }
+
+  if (!queryParams.has("patch")) {
+    throw new ContentNotFoundError(
+      `Couldn't find preceding patch for ${uri.toString()}`,
+    );
+  }
+
+  return uri.with({ query: queryParams.toString() });
 }
 
 export function hasContentForBlobId(blobId: string) {
@@ -835,12 +930,16 @@ export function applyPatch(source: string, patch: string) {
   return patchedResult;
 }
 
-export async function gitHashObject(cwd: vscode.Uri, content: string) {
+export async function gitHashObject(
+  cwd: vscode.Uri,
+  content: string,
+  write: boolean = true,
+): Promise<string> {
   let child: childProcess.ChildProcess;
 
   const stdoutPromise = new Promise<string>((resolve, reject) => {
     child = childProcess.exec(
-      "git hash-object --stdin -w",
+      `git hash-object --stdin${write ? " -w" : ""}`,
       {
         cwd: cwd.fsPath,
         encoding: "utf8",
@@ -863,12 +962,11 @@ export async function gitHashObject(cwd: vscode.Uri, content: string) {
 
 async function gitDiffBlobsInternal(
   cwd: vscode.Uri,
-  filename: string,
+  filename: vscode.Uri,
   blobIdA: string,
   blobIdB: string,
-  ghRepo?: { owner: string; repo: string },
 ) {
-  const ext = path.extname(filename);
+  const ext = path.extname(filename.fsPath);
   const tmpDir = await fs.mkdtemp(
     path.join(os.tmpdir(), "electron-build-tools-"),
   );
@@ -877,9 +975,16 @@ async function gitDiffBlobsInternal(
 
   let stdout: string;
 
+  const queryParamsA = new URLSearchParams(filename.query);
+  queryParamsA.set("blobId", blobIdA);
+
+  const queryParamsB = new URLSearchParams(filename.query);
+  queryParamsB.set("unpatchedBlobId", blobIdB);
+  queryParamsB.set("blobId", blobIdB);
+
   const [contentA, contentB] = await Promise.all([
-    getContentForBlobId(blobIdA, cwd, ghRepo),
-    getContentForBlobId(blobIdB, cwd, ghRepo),
+    getContentForUri(filename.with({ query: queryParamsA.toString() })),
+    getContentForUri(filename.with({ query: queryParamsB.toString() })),
   ]);
 
   await Promise.all([
@@ -914,12 +1019,11 @@ async function gitDiffBlobsInternal(
 
 export async function gitDiffBlobs(
   cwd: vscode.Uri,
-  filename: string,
+  filename: vscode.Uri,
   blobIdA: string,
   blobIdB: string,
-  ghRepo?: { owner: string; repo: string },
 ) {
-  const cacheKey = `${filename}:${blobIdA}..${blobIdB}`;
+  const cacheKey = `${filename.fsPath}:${blobIdA}..${blobIdB}`;
 
   if (gitDiffCache.has(cacheKey)) {
     return gitDiffCache.get(cacheKey)!;
@@ -942,7 +1046,6 @@ export async function gitDiffBlobs(
       filename,
       EMPTY_BLOB_SHA,
       blobIdB,
-      ghRepo,
     );
 
     // Restore the original all zero blob ID in the diff output
@@ -961,13 +1064,7 @@ export async function gitDiffBlobs(
     return fileDiff;
   }
 
-  const stdout = await gitDiffBlobsInternal(
-    cwd,
-    filename,
-    blobIdA,
-    blobIdB,
-    ghRepo,
-  );
+  const stdout = await gitDiffBlobsInternal(cwd, filename, blobIdA, blobIdB);
   gitDiffCache.set(cacheKey, stdout);
 
   return stdout;
