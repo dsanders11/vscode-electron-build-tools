@@ -537,41 +537,45 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
   const ghRepo = repo && repoOwner ? { owner: repoOwner, repo } : undefined;
   const checkoutDirectory = await getCheckoutDirectoryForUri(uri);
 
-  if (patch && unpatchedBlobId) {
-    // If it's a patched file, apply the patch if the unpatched content is found
-    const unpatchedContents = await getContentForBlobId(
-      unpatchedBlobId,
-      checkoutDirectory,
-      ghRepo,
-    );
-    const patchContents = (
-      await vscode.workspace.fs.readFile(vscode.Uri.parse(patch, true))
-    ).toString();
-    const relativePath = ensurePosixSeparators(
-      path.relative(checkoutDirectory.path, uri.path),
-    );
+  try {
+    return await getContentForBlobId(blobId, checkoutDirectory, ghRepo);
+  } catch (err) {
+    if (patch && unpatchedBlobId) {
+      // If it's a patched file, apply the patch if the unpatched content is found
+      const unpatchedContents = await getContentForBlobId(
+        unpatchedBlobId,
+        checkoutDirectory,
+        ghRepo,
+      );
+      const patchContents = (
+        await vscode.workspace.fs.readFile(vscode.Uri.parse(patch, true))
+      ).toString();
+      const relativePath = ensurePosixSeparators(
+        path.relative(checkoutDirectory.path, uri.path),
+      );
 
-    const regexMatches = patchContents.matchAll(
-      new RegExp(patchedFilenameRegex, "gs"),
-    );
-    let filePatch: string | undefined = undefined;
+      const regexMatches = patchContents.matchAll(
+        new RegExp(patchedFilenameRegex, "gs"),
+      );
+      let filePatch: string | undefined = undefined;
 
-    for (const [patch, _oldFilename, filename] of regexMatches) {
-      if (filename === relativePath) {
-        filePatch = patch;
-        break;
+      for (const [patch, _oldFilename, filename] of regexMatches) {
+        if (filename === relativePath) {
+          filePatch = patch;
+          break;
+        }
       }
-    }
 
-    // Patch was provided, but it doesn't modify the provided URI... programming error
-    if (!filePatch) {
-      throw new ContentNotFoundError(`Couldn't load content for ${blobId}`);
-    }
+      // Patch was provided, but it doesn't modify the provided URI... programming error
+      if (!filePatch) {
+        throw new ContentNotFoundError(`Couldn't load content for ${blobId}`);
+      }
 
-    return Buffer.from(applyPatch(unpatchedContents, filePatch)).toString();
+      return Buffer.from(applyPatch(unpatchedContents, filePatch)).toString();
+    } else {
+      throw err;
+    }
   }
-
-  return getContentForBlobId(blobId, checkoutDirectory, ghRepo);
 }
 
 export function hasContentForBlobId(blobId: string) {
