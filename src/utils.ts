@@ -529,8 +529,8 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
     uri.query,
   );
 
-  if (!blobId) {
-    // If there's no blobId, only choice is to read the path from disk
+  if (!blobId && !unpatchedBlobId) {
+    // If there's no blobId or unpatchedBlobId, only choice is to read the path from disk
     return (await vscode.workspace.fs.readFile(uri)).toString();
   }
 
@@ -538,7 +538,12 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
   const checkoutDirectory = await getCheckoutDirectoryForUri(uri);
 
   try {
-    return await getContentForBlobId(blobId, checkoutDirectory, ghRepo);
+    if (blobId) {
+      return await getContentForBlobId(blobId, checkoutDirectory, ghRepo);
+    } else {
+      // Give the patch a chance to apply below
+      throw new ContentNotFoundError(`Couldn't load content for ${blobId}`);
+    }
   } catch (err) {
     if (patch) {
       let unpatchedContents: string | undefined = undefined;
@@ -603,7 +608,7 @@ export async function getContentForUri(uri: vscode.Uri): Promise<string> {
         false,
       );
 
-      if (patchedBlobId !== blobId) {
+      if (blobId && patchedBlobId !== blobId) {
         throw new ContentNotFoundError(
           `Content mismatch for ${blobId} after applying patch`,
         );
@@ -979,7 +984,7 @@ async function gitDiffBlobsInternal(
   queryParamsA.set("blobId", blobIdA);
 
   const queryParamsB = new URLSearchParams(filename.query);
-  queryParamsB.set("unpatchedBlobId", blobIdB);
+  queryParamsB.set("unpatchedBlobId", blobIdA);
   queryParamsB.set("blobId", blobIdB);
 
   const [contentA, contentB] = await Promise.all([

@@ -169,15 +169,6 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
   ) {
     const queryParams = new URLSearchParams(uri.query);
 
-    let ghRepo: { owner: string; repo: string } | undefined = undefined;
-
-    if (queryParams.has("repoOwner") && queryParams.has("repo")) {
-      ghRepo = {
-        owner: queryParams.get("repoOwner")!,
-        repo: queryParams.get("repo")!,
-      };
-    }
-
     let originalBlobIdA: string | undefined = undefined;
     let originalBlobIdB = "";
     let originalFilename = "";
@@ -223,10 +214,17 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
 
     // This isn't the most efficient way to do this, but it requires the least refactoring
     for (const { filename, blobIdA, blobIdB } of files) {
+      const newQueryParams = new URLSearchParams({
+        patch: patchFileUri.toString(),
+      });
+
+      if (queryParams.has("repoOwner") && queryParams.has("repo")) {
+        newQueryParams.set("repoOwner", queryParams.get("repoOwner")!);
+        newQueryParams.set("repo", queryParams.get("repo")!);
+      }
+
       const fileUri = vscode.Uri.joinPath(cwd, filename).with({
-        query: new URLSearchParams({
-          patch: patchFileUri.toString(),
-        }).toString(),
+        query: newQueryParams.toString(),
       });
       let fileDiff: string;
 
@@ -297,7 +295,6 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
           // Update query params appropriately - the patch
           // should now be applied to `newBlobIdB`
           const contentQueryParams = new URLSearchParams();
-          contentQueryParams.set("blobId", originalBlobIdA ?? newBlobIdB);
           contentQueryParams.set(
             "unpatchedBlobId",
             originalBlobIdA ?? newBlobIdB,
