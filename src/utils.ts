@@ -862,6 +862,7 @@ async function gitDiffBlobsInternal(
   filename: string,
   blobIdA: string,
   blobIdB: string,
+  ghRepo?: { owner: string; repo: string },
 ) {
   const ext = path.extname(filename);
   const tmpDir = await fs.mkdtemp(
@@ -873,8 +874,8 @@ async function gitDiffBlobsInternal(
   let stdout: string;
 
   const [contentA, contentB] = await Promise.all([
-    getContentForBlobId(blobIdA, cwd),
-    getContentForBlobId(blobIdB, cwd),
+    getContentForBlobId(blobIdA, cwd, ghRepo),
+    getContentForBlobId(blobIdB, cwd, ghRepo),
   ]);
 
   await Promise.all([
@@ -912,6 +913,7 @@ export async function gitDiffBlobs(
   filename: string,
   blobIdA: string,
   blobIdB: string,
+  ghRepo?: { owner: string; repo: string },
 ) {
   const cacheKey = `${filename}:${blobIdA}..${blobIdB}`;
 
@@ -936,6 +938,7 @@ export async function gitDiffBlobs(
       filename,
       EMPTY_BLOB_SHA,
       blobIdB,
+      ghRepo,
     );
 
     // Restore the original all zero blob ID in the diff output
@@ -954,7 +957,13 @@ export async function gitDiffBlobs(
     return fileDiff;
   }
 
-  const stdout = await gitDiffBlobsInternal(cwd, filename, blobIdA, blobIdB);
+  const stdout = await gitDiffBlobsInternal(
+    cwd,
+    filename,
+    blobIdA,
+    blobIdB,
+    ghRepo,
+  );
   gitDiffCache.set(cacheKey, stdout);
 
   return stdout;

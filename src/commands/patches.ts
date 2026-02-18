@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 
 import {
   buildToolsExecutable,
+  checkoutDirectoryGitHubRepo,
   commandPrefix,
   patchDirectoryPrettyNames,
   viewIds,
@@ -162,6 +163,15 @@ export function registerPatchesCommands(
         const patchDirectory = vscode.Uri.file(
           path.dirname(patchFileUri.fsPath),
         );
+        const checkoutDirectory =
+          await patchesProvider.getCheckoutDirectoryForPatchDirectory(
+            patchDirectory,
+          );
+        const ghRepo =
+          checkoutDirectoryGitHubRepo[
+            path.relative(rootDirectory.path, checkoutDirectory.path)
+          ];
+
         const patches = await getPatches(patchDirectory);
 
         const idx = patches.findIndex(
@@ -235,6 +245,10 @@ export function registerPatchesCommands(
         queryParams.set("blobId", blobId);
         queryParams.set("blobIdA", blobId);
         queryParams.set("blobIdB", blobId);
+
+        // TODO - Where can I get these?
+        queryParams.set("repoOwner", ghRepo.owner);
+        queryParams.set("repo", ghRepo.repo);
 
         const uri = selectedFile.with({
           scheme: virtualPatchFsScheme,

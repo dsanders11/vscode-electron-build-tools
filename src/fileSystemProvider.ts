@@ -160,6 +160,15 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
   ) {
     const queryParams = new URLSearchParams(uri.query);
 
+    let ghRepo: { owner: string; repo: string } | undefined = undefined;
+
+    if (queryParams.has("repoOwner") && queryParams.has("repo")) {
+      ghRepo = {
+        owner: queryParams.get("repoOwner")!,
+        repo: queryParams.get("repo")!,
+      };
+    }
+
     let originalBlobIdA: string | undefined = undefined;
     let originalBlobIdB = "";
     let originalFilename = "";
@@ -229,6 +238,7 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
           filename,
           newBlobIdA ?? blobIdA,
           newBlobIdB,
+          ghRepo,
         );
         fileDiff = fileDiff.replaceAll(
           `a/${newBlobIdA ?? blobIdA}`,
@@ -239,7 +249,7 @@ export class ElectronPatchFileSystemProvider extends ElectronFileSystemProvider 
         // TODO - It's inefficient to redo the git diff here since it should be unchanged,
         //        so look into having `parsePatchMetadata` also return the diff content
         //        for each file so we don't have to redo it here
-        fileDiff = await gitDiffBlobs(cwd, filename, blobIdA, blobIdB);
+        fileDiff = await gitDiffBlobs(cwd, filename, blobIdA, blobIdB, ghRepo);
         fileDiff = fileDiff.replaceAll(`a/${blobIdA}`, `a/${filename}`);
         fileDiff = fileDiff.replaceAll(`b/${blobIdB}`, `b/${filename}`);
       }
