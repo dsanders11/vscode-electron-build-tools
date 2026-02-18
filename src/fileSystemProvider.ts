@@ -33,9 +33,18 @@ export class ElectronFileSystemProvider implements vscode.FileSystemProvider {
       this._statCache.set(key, fileContents.length);
     }
 
+    let mtime = 0;
+    const queryParams = new URLSearchParams(uri.query);
+    const patch = queryParams.get("patch");
+
+    if (patch) {
+      const patchFileUri = vscode.Uri.parse(patch, true);
+      ({ mtime } = await vscode.workspace.fs.stat(patchFileUri));
+    }
+
     return {
       ctime: 0,
-      mtime: 0,
+      mtime,
       size: this._statCache.get(key)!,
       type: vscode.FileType.File,
     };
