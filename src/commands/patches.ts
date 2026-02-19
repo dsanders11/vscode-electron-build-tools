@@ -24,7 +24,6 @@ import {
   getPatchesConfigFile,
   getPatchSubjectLine,
   getOctokit,
-  gitHashObject,
   hasContentForBlobId,
   parsePatchConfig,
   parsePatchMetadata,
