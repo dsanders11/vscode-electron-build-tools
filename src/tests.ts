@@ -668,7 +668,7 @@ export async function createTestController(
         }
 
         const specRunnerContents = await vscode.workspace.fs.readFile(
-          vscode.Uri.joinPath(electronRoot, "script", "spec-runner.cjs"),
+          vscode.Uri.joinPath(electronRoot, "script", "spec-runner.js"),
         );
 
         if (
