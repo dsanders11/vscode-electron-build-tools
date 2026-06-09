@@ -462,10 +462,6 @@ export function alphabetizeByLabel<T extends vscode.TreeItem>(
   });
 }
 
-export function escapeStringForRegex(str: string) {
-  return str.replace("(", "\\(").replace(")", "\\)").replace(".", "\\.");
-}
-
 export function ensurePosixSeparators(filePath: string) {
   return filePath.split(path.sep).join(path.posix.sep);
 }

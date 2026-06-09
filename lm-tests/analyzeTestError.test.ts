@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import escapeRegExp from "lodash.escaperegexp";
+import escapeRegExp from "regexp.escape";
 import * as vscode from "vscode";
 
 import {

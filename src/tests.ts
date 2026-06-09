@@ -2,6 +2,7 @@ import * as net from "node:net";
 import * as os from "node:os";
 
 import { ElectronVersions, SemVer } from "@electron/fiddle-core";
+import escapeRegExp from "regexp.escape";
 import * as vscode from "vscode";
 
 import { setupSpecRunner } from "../electron/spec-runner";
@@ -13,7 +14,7 @@ import {
 } from "./extensionState";
 import Logger from "./logging";
 import { runAsTask } from "./tasks";
-import { escapeStringForRegex, generateSocketName } from "./utils";
+import { generateSocketName } from "./utils";
 
 interface ParsedTestData {
   title: string;
@@ -146,7 +147,7 @@ export async function createTestController(
     testsToAdd?.forEach((test) => {
       if (!request.exclude?.includes(test)) {
         addTests(test);
-        testRegexes.push(escapeStringForRegex(test.id));
+        testRegexes.push(escapeRegExp(test.id));
       } else {
         testsById.delete(test.id);
       }
