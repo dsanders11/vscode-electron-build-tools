@@ -1129,7 +1129,7 @@
     "@vscode/prompt-tsx": "^0.3.0-alpha.20",
     "diff": "^5.2.2",
     "lru-cache": "^7.14.0",
-    "markdown-it": "^14.1.0",
+    "markdown-it": "^14.2.0",
     "markdown-it-emoji": "^3.0.0",
     "nanoid": "^5.1.5",
     "regexp.escape": "^2.0.1",
